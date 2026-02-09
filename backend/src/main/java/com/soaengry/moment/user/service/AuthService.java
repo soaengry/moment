@@ -4,10 +4,7 @@ import com.soaengry.moment.global.exception.BusinessException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import com.soaengry.moment.global.security.JwtProvider;
 import com.soaengry.moment.global.util.CodeGenerator;
-import com.soaengry.moment.user.dto.LoginRequest;
-import com.soaengry.moment.user.dto.SignupRequest;
-import com.soaengry.moment.user.dto.TokenResponse;
-import com.soaengry.moment.user.dto.VerifyEmailRequest;
+import com.soaengry.moment.user.dto.*;
 import com.soaengry.moment.user.entity.EmailVerification;
 import com.soaengry.moment.user.entity.User;
 import com.soaengry.moment.user.repository.EmailVerificationRepository;
@@ -33,10 +30,10 @@ public class AuthService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
-
+    
     @Value("${app.max-devices-per-user}")
     private int maxDevicesPerUser;
-
+    
     @Value("${jwt.access-token-expiration}")
     private Long accessTokenExpiration;
 
@@ -63,20 +60,20 @@ public class AuthService {
         // 이메일 인증 코드 생성 및 저장
         String verificationCode = CodeGenerator.generateAlphanumeric(6);
         EmailVerification verification = EmailVerification.builder()
-                .email(user.getEmail())
-                .verificationCode(verificationCode)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
-                .build();
+            .email(user.getEmail())
+            .verificationCode(verificationCode)
+            .expiresAt(LocalDateTime.now().plusMinutes(5))
+            .build();
         emailVerificationRepository.save(verification);
 
-        log.info("회원가입 완료 - 사용자 ID: {}, 이메일: {}, 인증 코드: {}",
-                user.getId(), user.getEmail(), verificationCode);
+        log.info("회원가입 완료 - 사용자 ID: {}, 이메일: {}, 인증 코드: {}", 
+            user.getId(), user.getEmail(), verificationCode);
 
         return new SignupResponse(
-                user.getId(),
-                user.getEmail(),
-                verificationCode,
-                "회원가입이 완료되었습니다. 이메일 인증을 진행해주세요."
+            user.getId(), 
+            user.getEmail(), 
+            verificationCode,
+            "회원가입이 완료되었습니다. 이메일 인증을 진행해주세요."
         );
     }
 
@@ -87,8 +84,8 @@ public class AuthService {
     public void verifyEmail(VerifyEmailRequest request) {
         // 인증 정보 조회
         EmailVerification verification = emailVerificationRepository
-                .findLatestByEmailAndCode(request.email(), request.verificationCode())
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_007));
+            .findLatestByEmailAndCode(request.email(), request.verificationCode())
+            .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_007));
 
         // 잠금 상태 확인
         if (verification.isLockedNow()) {
@@ -105,7 +102,7 @@ public class AuthService {
 
         // 사용자 이메일 인증 상태 업데이트
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
         user.verifyEmail();
 
         log.info("이메일 인증 완료 - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
@@ -118,7 +115,7 @@ public class AuthService {
     public TokenResponse login(LoginRequest request) {
         // 사용자 조회
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_001));
+            .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_001));
 
         // 탈퇴한 사용자 체크
         if (user.isDeleted()) {
@@ -131,8 +128,8 @@ public class AuthService {
         }
 
         // Device ID 생성
-        String deviceId = request.deviceId() != null ?
-                request.deviceId() : UUID.randomUUID().toString();
+        String deviceId = request.deviceId() != null ? 
+            request.deviceId() : UUID.randomUUID().toString();
 
         // 다중 디바이스 관리
         manageDeviceLimit(user.getId());
@@ -140,9 +137,9 @@ public class AuthService {
         // Token 생성
         String accessToken = jwtProvider.generateAccessToken(user);
         String refreshToken = jwtProvider.generateRefreshToken(
-                user.getId(),
-                deviceId,
-                user.getTokenVersion()
+            user.getId(), 
+            deviceId, 
+            user.getTokenVersion()
         );
 
         // RefreshToken Redis 저장 (해시값만)
@@ -163,15 +160,14 @@ public class AuthService {
         String deviceId = jwtProvider.getDeviceIdFromToken(refreshToken);
         Integer tokenVersion = jwtProvider.getTokenVersionFromToken(refreshToken);
 
-        // Redis에서 토큰 검증 (해시 기반)
-        boolean exists = refreshTokenRepository.existsByToken(userId, deviceId, refreshToken);
-        if (!exists) {
-            throw new BusinessException(ErrorCode.AUTH_002, "Refresh Token이 유효하지 않습니다");
+        // Redis에서 토큰 검증
+        if (!refreshTokenRepository.existsByToken(userId, deviceId, refreshToken)) {
+            throw new BusinessException(ErrorCode.AUTH_002);
         }
 
         // 사용자 조회 및 token version 검증
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
 
         if (!user.getTokenVersion().equals(tokenVersion)) {
             // 보안 위협 감지 - 모든 토큰 무효화
@@ -184,9 +180,11 @@ public class AuthService {
 
         // 새 토큰 생성
         String newAccessToken = jwtProvider.generateAccessToken(user);
-        String newRefreshToken = jwtProvider.generateRefreshToken(userId, deviceId, user.getTokenVersion());
+        String newRefreshToken = jwtProvider.generateRefreshToken(
+            userId, deviceId, user.getTokenVersion()
+        );
 
-        // 새 RefreshToken 해시 저장
+        // 새 RefreshToken 저장
         refreshTokenRepository.save(userId, deviceId, newRefreshToken);
 
         log.info("토큰 갱신 완료 - 사용자 ID: {}", userId);
@@ -201,7 +199,7 @@ public class AuthService {
     public void logout(String refreshToken) {
         Long userId = jwtProvider.getUserIdFromToken(refreshToken);
         String deviceId = jwtProvider.getDeviceIdFromToken(refreshToken);
-
+        
         refreshTokenRepository.deleteByUserIdAndDeviceId(userId, deviceId);
         log.info("로그아웃 완료 - 사용자 ID: {}, 디바이스: {}", userId, deviceId);
     }
@@ -212,10 +210,10 @@ public class AuthService {
     @Transactional
     public void logoutAll(Long userId) {
         refreshTokenRepository.deleteAllByUserId(userId);
-
+        
         // Token Version 증가
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
         user.incrementTokenVersion();
 
         log.info("모든 디바이스 로그아웃 완료 - 사용자 ID: {}", userId);
@@ -226,7 +224,7 @@ public class AuthService {
      */
     private void manageDeviceLimit(Long userId) {
         long activeTokenCount = refreshTokenRepository.countActiveTokensByUserId(userId);
-
+        
         if (activeTokenCount >= maxDevicesPerUser) {
             refreshTokenRepository.deleteOldestToken(userId);
             log.info("디바이스 제한 초과 - 가장 오래된 토큰 삭제");
@@ -234,6 +232,3 @@ public class AuthService {
     }
 }
 
-// 회원가입 응답 DTO
-record SignupResponse(Long userId, String email, String verificationCode, String message) {
-}
