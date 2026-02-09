@@ -27,8 +27,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
-        
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+
         return UserResponse.from(user);
     }
 
@@ -38,7 +38,7 @@ public class UserService {
     @Transactional
     public UserResponse updateProfile(Long userId, String nickname, String profileImageUrl) {
         User user = userRepository.findByIdWithOptimisticLock(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
 
         // 닉네임 중복 체크
         if (nickname != null && !nickname.equals(user.getNickname())) {
@@ -48,9 +48,9 @@ public class UserService {
         }
 
         user.updateProfile(nickname, profileImageUrl);
-        
+
         log.info("프로필 수정 완료 - 사용자 ID: {}", userId);
-        
+
         return UserResponse.from(user);
     }
 
@@ -60,7 +60,7 @@ public class UserService {
     @Transactional
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
 
         // 소셜 로그인 사용자 체크
         if (user.isSocialLogin()) {
@@ -88,7 +88,7 @@ public class UserService {
     @Transactional
     public void deleteAccount(Long userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
 
         // Soft Delete
         user.softDelete();
@@ -105,8 +105,8 @@ public class UserService {
     @Transactional
     public void restoreAccount(String email, String password) {
         User user = userRepository.findDeletedUserByEmailAfter(
-            email, 
-            java.time.LocalDateTime.now().minusDays(30)
+                email,
+                java.time.LocalDateTime.now().minusDays(30)
         ).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001, "복구 가능한 계정이 없습니다"));
 
         // 비밀번호 확인
@@ -118,5 +118,21 @@ public class UserService {
         user.restore();
 
         log.info("계정 복구 완료 - 사용자 ID: {}", user.getId());
+    }
+
+    /**
+     * 이메일 중복 체크
+     */
+    @Transactional(readOnly = true)
+    public boolean checkEmailExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    /**
+     * 닉네임 중복 체크
+     */
+    @Transactional(readOnly = true)
+    public boolean checkNicknameExists(String nickname) {
+        return userRepository.existsByNickname(nickname);
     }
 }

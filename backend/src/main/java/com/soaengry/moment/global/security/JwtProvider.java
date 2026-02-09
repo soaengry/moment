@@ -40,6 +40,7 @@ public class JwtProvider {
         claims.put("email", user.getEmail());
         claims.put("role", user.getRole().name());
         claims.put("token_version", user.getTokenVersion());
+        claims.put("nonce", UUID.randomUUID().toString());
 
         return generateToken(claims, user.getId().toString(), jwtProperties.accessTokenExpiration());
     }
@@ -49,7 +50,7 @@ public class JwtProvider {
         claims.put("device_id", deviceId);
         claims.put("token_version", tokenVersion);
         claims.put("nonce", UUID.randomUUID().toString());
-        
+
         return generateToken(claims, userId.toString(), jwtProperties.refreshTokenExpiration());
     }
 
