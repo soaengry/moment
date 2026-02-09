@@ -3,10 +3,7 @@ package com.soaengry.moment.user.service;
 import com.soaengry.moment.global.exception.BusinessException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import com.soaengry.moment.global.security.JwtProvider;
-import com.soaengry.moment.user.dto.LoginRequest;
-import com.soaengry.moment.user.dto.SignupRequest;
-import com.soaengry.moment.user.dto.TokenResponse;
-import com.soaengry.moment.user.dto.VerifyEmailRequest;
+import com.soaengry.moment.user.dto.*;
 import com.soaengry.moment.user.entity.User;
 import com.soaengry.moment.user.repository.EmailVerificationRepository;
 import com.soaengry.moment.user.repository.RefreshTokenRepository;
@@ -208,7 +205,7 @@ class AuthServiceTest {
 
         System.out.println("✅ 잘못된 비밀번호 테스트 통과");
     }
-    
+
     @Test
     @DisplayName("토큰 갱신 성공")
     void refresh_Success() {
