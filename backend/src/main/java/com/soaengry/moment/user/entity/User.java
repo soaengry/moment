@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users", indexes = {
-    @Index(name = "idx_email", columnList = "email"),
-    @Index(name = "idx_provider", columnList = "auth_provider, provider_id")
+        @Index(name = "idx_email", columnList = "email"),
+        @Index(name = "idx_provider", columnList = "auth_provider, provider_id")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

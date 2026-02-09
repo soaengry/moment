@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "password_reset_tokens", indexes = {
-    @Index(name = "idx_token_expires", columnList = "token, expires_at, is_used")
+        @Index(name = "idx_token_expires", columnList = "token, expires_at, is_used")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
