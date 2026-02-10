@@ -1,0 +1,105 @@
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { ENV } from "../config/env";
+import { tokenStorage, isTokenExpired } from "../../domain/auth/auth.utils";
+import { AUTH_API } from "../../domain/auth/auth.constants";
+import type {
+  ApiErrorResponse,
+  TokenRefreshResponse,
+} from "../../domain/auth/types";
+
+const axiosInstance = axios.create({
+  baseURL: ENV.API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null): void => {
+  failedQueue.forEach((promise) => {
+    if (token) {
+      promise.resolve(token);
+    } else {
+      promise.reject(error);
+    }
+  });
+  failedQueue = [];
+};
+
+axiosInstance.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = tokenStorage.getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
+  },
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError<ApiErrorResponse>) => {
+    const originalRequest = error.config;
+
+    if (!originalRequest || error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    const isAuthRequest =
+      originalRequest.url === AUTH_API.REFRESH ||
+      originalRequest.url === AUTH_API.LOGIN;
+
+    if (isAuthRequest) {
+      tokenStorage.clearTokens();
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise<string>((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then((token) => {
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return axiosInstance(originalRequest);
+      });
+    }
+
+    isRefreshing = true;
+
+    try {
+      const refreshToken = tokenStorage.getRefreshToken();
+      if (!refreshToken || isTokenExpired(refreshToken)) {
+        throw new Error("Refresh token expired");
+      }
+
+      const { data } = await axiosInstance.post<TokenRefreshResponse>(
+        AUTH_API.REFRESH,
+        { refreshToken },
+      );
+
+      tokenStorage.setTokens(data.accessToken, refreshToken);
+      processQueue(null, data.accessToken);
+
+      originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+      return axiosInstance(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      tokenStorage.clearTokens();
+      window.location.href = "/login";
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  },
+);
+
+export default axiosInstance;
