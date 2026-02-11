@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AuthState, AuthResponse } from "../types";
+import type { AuthState, TokenResponse, UserResponse } from "../types";
 import { tokenStorage } from "../auth.utils";
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -9,23 +9,27 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
 
-  setAuth: (response: AuthResponse) => {
-    tokenStorage.setTokens(response.accessToken, response.refreshToken);
+  setAuth: (token: TokenResponse, user: UserResponse) => {
+    tokenStorage.setTokens(token.accessToken, token.refreshToken);
     set({
-      user: response.user,
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
+      user,
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken,
       isAuthenticated: true,
       isLoading: false,
     });
   },
 
-  setAccessToken: (token: string) => {
+  setAccessToken: (accessToken: string) => {
     const refreshToken = tokenStorage.getRefreshToken();
     if (refreshToken) {
-      tokenStorage.setTokens(token, refreshToken);
+      tokenStorage.setTokens(accessToken, refreshToken);
     }
-    set({ accessToken: token });
+    set({ accessToken });
+  },
+
+  setUser: (user: UserResponse) => {
+    set({ user });
   },
 
   logout: () => {

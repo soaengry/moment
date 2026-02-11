@@ -4,22 +4,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { authApi } from "../api/authApi";
-import { useAuthStore } from "../store/useAuthStore";
 import { AUTH_VALIDATION } from "../auth.constants";
 import { isAxiosError } from "axios";
 
 const signUpSchema = z
   .object({
-    name: z
-      .string()
-      .min(
-        AUTH_VALIDATION.NAME_MIN_LENGTH,
-        `이름은 ${AUTH_VALIDATION.NAME_MIN_LENGTH}자 이상이어야 합니다.`,
-      )
-      .max(
-        AUTH_VALIDATION.NAME_MAX_LENGTH,
-        `이름은 ${AUTH_VALIDATION.NAME_MAX_LENGTH}자 이하여야 합니다.`,
-      ),
     email: z
       .string()
       .min(1, "이메일을 입력해주세요.")
@@ -30,9 +19,19 @@ const signUpSchema = z
         AUTH_VALIDATION.PASSWORD_MIN_LENGTH,
         `비밀번호는 ${AUTH_VALIDATION.PASSWORD_MIN_LENGTH}자 이상이어야 합니다.`,
       )
+      .regex(
+        AUTH_VALIDATION.PASSWORD_PATTERN,
+        "비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다.",
+      ),
+    nickname: z
+      .string()
+      .min(
+        AUTH_VALIDATION.NICKNAME_MIN_LENGTH,
+        `닉네임은 ${AUTH_VALIDATION.NICKNAME_MIN_LENGTH}자 이상이어야 합니다.`,
+      )
       .max(
-        AUTH_VALIDATION.PASSWORD_MAX_LENGTH,
-        `비밀번호는 ${AUTH_VALIDATION.PASSWORD_MAX_LENGTH}자 이하여야 합니다.`,
+        AUTH_VALIDATION.NICKNAME_MAX_LENGTH,
+        `닉네임은 ${AUTH_VALIDATION.NICKNAME_MAX_LENGTH}자 이하여야 합니다.`,
       ),
     passwordConfirm: z.string().min(1, "비밀번호 확인을 입력해주세요."),
   })
@@ -45,41 +44,71 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 const SignUpForm: FC = () => {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailDupError, setEmailDupError] = useState<string | null>(null);
+  const [nicknameDupError, setNicknameDupError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      name: "",
       email: "",
       password: "",
+      nickname: "",
       passwordConfirm: "",
     },
   });
 
+  const handleEmailBlur = async () => {
+    const email = getValues("email");
+    if (!email || !AUTH_VALIDATION.EMAIL_REGEX.test(email)) return;
+
+    try {
+      const { exists } = await authApi.checkEmail(email);
+      setEmailDupError(exists ? "이미 사용 중인 이메일입니다." : null);
+    } catch {
+      // 중복 체크 실패 시 무시 (가입 시 서버에서 재검증)
+    }
+  };
+
+  const handleNicknameBlur = async () => {
+    const nickname = getValues("nickname");
+    if (!nickname || nickname.length < AUTH_VALIDATION.NICKNAME_MIN_LENGTH)
+      return;
+
+    try {
+      const { exists } = await authApi.checkNickname(nickname);
+      setNicknameDupError(exists ? "이미 사용 중인 닉네임입니다." : null);
+    } catch {
+      // 중복 체크 실패 시 무시
+    }
+  };
+
   const onSubmit = async (values: SignUpFormValues) => {
+    if (emailDupError || nicknameDupError) return;
+
     setServerError(null);
     setIsSubmitting(true);
 
     try {
-      const response = await authApi.signUp({
-        name: values.name,
+      await authApi.signup({
         email: values.email,
         password: values.password,
+        nickname: values.nickname,
       });
-      setAuth(response);
-      navigate("/");
+      navigate("/login", {
+        state: { message: "회원가입이 완료되었습니다. 로그인해주세요." },
+      });
     } catch (error: unknown) {
       if (isAxiosError(error) && error.response) {
         const status = error.response.status;
         if (status === 409) {
-          setServerError("이미 사용 중인 이메일입니다.");
+          setServerError("이미 사용 중인 이메일 또는 닉네임입니다.");
         } else if (status === 400) {
           setServerError("입력 정보를 확인해주세요.");
         } else {
@@ -118,27 +147,6 @@ const SignUpForm: FC = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
             <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              이름
-            </label>
-            <input
-              id="name"
-              type="text"
-              placeholder="이름을 입력해주세요"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
-              {...register("name")}
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
-                {errors.name.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
@@ -149,11 +157,16 @@ const SignUpForm: FC = () => {
               type="email"
               placeholder="example@email.com"
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
-              {...register("email")}
+              {...register("email", { onBlur: handleEmailBlur })}
             />
             {errors.email && (
               <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
                 {errors.email.message}
+              </p>
+            )}
+            {emailDupError && (
+              <p className="mt-1 text-sm" style={{ color: "#DC2626" }}>
+                {emailDupError}
               </p>
             )}
           </div>
@@ -168,7 +181,7 @@ const SignUpForm: FC = () => {
             <input
               id="password"
               type="password"
-              placeholder="8자 이상 입력해주세요"
+              placeholder="영문, 숫자, 특수문자 포함 8자 이상"
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
               {...register("password")}
             />
@@ -200,9 +213,35 @@ const SignUpForm: FC = () => {
             )}
           </div>
 
+          <div>
+            <label
+              htmlFor="nickname"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              닉네임
+            </label>
+            <input
+              id="nickname"
+              type="text"
+              placeholder="닉네임 (2-50자)"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
+              {...register("nickname", { onBlur: handleNicknameBlur })}
+            />
+            {errors.nickname && (
+              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+                {errors.nickname.message}
+              </p>
+            )}
+            {nicknameDupError && (
+              <p className="mt-1 text-sm" style={{ color: "#DC2626" }}>
+                {nicknameDupError}
+              </p>
+            )}
+          </div>
+
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !!emailDupError || !!nicknameDupError}
             className="w-full py-3 rounded-lg text-white font-medium transition-opacity disabled:opacity-50"
             style={{ backgroundColor: "#88AF64" }}
           >

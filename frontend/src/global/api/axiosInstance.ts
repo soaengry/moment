@@ -2,10 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { ENV } from "../config/env";
 import { tokenStorage, isTokenExpired } from "../../domain/auth/auth.utils";
 import { AUTH_API } from "../../domain/auth/auth.constants";
-import type {
-  ApiErrorResponse,
-  TokenRefreshResponse,
-} from "../../domain/auth/types";
+import type { ApiErrorResponse, TokenResponse } from "../../domain/auth/types";
 
 const axiosInstance = axios.create({
   baseURL: ENV.API_BASE_URL,
@@ -81,12 +78,12 @@ axiosInstance.interceptors.response.use(
         throw new Error("Refresh token expired");
       }
 
-      const { data } = await axiosInstance.post<TokenRefreshResponse>(
+      const { data } = await axiosInstance.post<TokenResponse>(
         AUTH_API.REFRESH,
         { refreshToken },
       );
 
-      tokenStorage.setTokens(data.accessToken, refreshToken);
+      tokenStorage.setTokens(data.accessToken, data.refreshToken);
       processQueue(null, data.accessToken);
 
       originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
