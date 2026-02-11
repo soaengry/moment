@@ -62,9 +62,9 @@ app:
   password-reset-token-expiration: 3600000  # 1시간
   max-devices-per-user: 5
   email:
-    verification-url: http://localhost:3000/verify-email
-    password-reset-url: http://localhost:3000/reset-password
-    
+    verification-url: ${EMAIL_VERIFICATION_URL}
+    password-reset-url: ${EMAIL_PASSWORD_RESET_URL}
+
 logging:
   level:
     com.soaengry.moment: DEBUG
