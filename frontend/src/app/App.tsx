@@ -26,7 +26,7 @@ const App: FC = () => {
 
       try {
         const user = await authApi.getMe();
-        setAuth({ accessToken, refreshToken, user });
+        setAuth({ accessToken, refreshToken, expiresIn: 0 }, user);
       } catch {
         logout();
       }

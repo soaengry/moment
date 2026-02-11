@@ -37,7 +37,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 
           <div className="flex items-center gap-4">
             {user && (
-              <span className="text-sm text-gray-600">{user.name}님</span>
+              <span className="text-sm text-gray-600">{user.nickname}님</span>
             )}
             <button
               onClick={handleLogout}

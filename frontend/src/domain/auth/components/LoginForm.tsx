@@ -1,12 +1,12 @@
 import { type FC, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { authApi } from "../api/authApi";
 import { useAuthStore } from "../store/useAuthStore";
 import { AUTH_VALIDATION } from "../auth.constants";
-import type { LoginRequest } from "../types";
+import { tokenStorage } from "../auth.utils";
 import { isAxiosError } from "axios";
 
 const loginSchema = z.object({
@@ -14,25 +14,19 @@ const loginSchema = z.object({
     .string()
     .min(1, "이메일을 입력해주세요.")
     .regex(AUTH_VALIDATION.EMAIL_REGEX, "올바른 이메일 형식이 아닙니다."),
-  password: z
-    .string()
-    .min(
-      AUTH_VALIDATION.PASSWORD_MIN_LENGTH,
-      `비밀번호는 ${AUTH_VALIDATION.PASSWORD_MIN_LENGTH}자 이상이어야 합니다.`,
-    )
-    .max(
-      AUTH_VALIDATION.PASSWORD_MAX_LENGTH,
-      `비밀번호는 ${AUTH_VALIDATION.PASSWORD_MAX_LENGTH}자 이하여야 합니다.`,
-    ),
+  password: z.string().min(1, "비밀번호를 입력해주세요."),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginForm: FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const stateMessage =
+    (location.state as { message?: string })?.message ?? null;
 
   const {
     register,
@@ -51,8 +45,13 @@ const LoginForm: FC = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await authApi.login(values);
-      setAuth(response);
+      const tokenResponse = await authApi.login(values);
+      tokenStorage.setTokens(
+        tokenResponse.accessToken,
+        tokenResponse.refreshToken,
+      );
+      const user = await authApi.getMe();
+      setAuth(tokenResponse, user);
       navigate("/");
     } catch (error: unknown) {
       if (isAxiosError(error) && error.response) {
@@ -83,6 +82,15 @@ const LoginForm: FC = () => {
           소중한 순간을 함께 나눠보세요
         </p>
 
+        {stateMessage && (
+          <div
+            className="mb-4 p-3 rounded-lg text-sm"
+            style={{ backgroundColor: "#F0FFF4", color: "#16A34A" }}
+          >
+            {stateMessage}
+          </div>
+        )}
+
         {serverError && (
           <div
             className="mb-4 p-3 rounded-lg text-sm"
@@ -104,7 +112,7 @@ const LoginForm: FC = () => {
               id="email"
               type="email"
               placeholder="example@email.com"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#88AF64]  transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
               {...register("email")}
             />
             {errors.email && (
@@ -145,8 +153,7 @@ const LoginForm: FC = () => {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
-          아직 계정이 없으신가요?{" "}
+        <div className="mt-6 flex items-center justify-between text-sm text-gray-500">
           <Link
             to="/signup"
             className="font-medium hover:underline"
@@ -154,7 +161,10 @@ const LoginForm: FC = () => {
           >
             회원가입
           </Link>
-        </p>
+          <Link to="/restore-account" className="hover:underline text-gray-400">
+            계정 복구
+          </Link>
+        </div>
       </div>
     </div>
   );

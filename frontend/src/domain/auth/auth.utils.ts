@@ -26,6 +26,21 @@ export const tokenStorage = {
   },
 };
 
+export const deviceStorage = {
+  getDeviceId: (): string => {
+    let deviceId = localStorage.getItem(TOKEN_KEY.DEVICE_ID);
+    if (!deviceId) {
+      deviceId = crypto.randomUUID();
+      localStorage.setItem(TOKEN_KEY.DEVICE_ID, deviceId);
+    }
+    return deviceId;
+  },
+
+  getDeviceName: (): string => {
+    return navigator.userAgent;
+  },
+};
+
 export const parseJwt = (token: string): JwtPayload | null => {
   try {
     const base64Url = token.split(".")[1];

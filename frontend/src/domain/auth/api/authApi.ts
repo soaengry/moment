@@ -1,30 +1,128 @@
 import axiosInstance from "../../../global/api/axiosInstance";
-import { AUTH_API } from "../auth.constants";
-import type { LoginRequest, SignUpRequest, AuthResponse, User } from "../types";
+import { AUTH_API, USER_API } from "../auth.constants";
+import { deviceStorage, tokenStorage } from "../auth.utils";
+import type {
+  LoginRequest,
+  SignupRequest,
+  SignupResponse,
+  TokenResponse,
+  UserResponse,
+  MessageResponse,
+  CheckResponse,
+  UpdateProfileRequest,
+  ChangePasswordRequest,
+  RestoreAccountRequest,
+} from "../types";
 
 export const authApi = {
-  login: async (request: LoginRequest): Promise<AuthResponse> => {
-    const { data } = await axiosInstance.post<AuthResponse>(
-      AUTH_API.LOGIN,
-      request,
-    );
-    return data;
-  },
+  // ─── Auth ───
 
-  signUp: async (request: SignUpRequest): Promise<AuthResponse> => {
-    const { data } = await axiosInstance.post<AuthResponse>(
+  signup: async (request: SignupRequest): Promise<SignupResponse> => {
+    const { data } = await axiosInstance.post<SignupResponse>(
       AUTH_API.SIGN_UP,
       request,
     );
     return data;
   },
 
-  logout: async (): Promise<void> => {
-    await axiosInstance.post(AUTH_API.LOGOUT);
+  verifyEmail: async (token: string): Promise<MessageResponse> => {
+    const { data } = await axiosInstance.get<MessageResponse>(
+      AUTH_API.VERIFY_EMAIL,
+      { params: { token } },
+    );
+    return data;
   },
 
-  getMe: async (): Promise<User> => {
-    const { data } = await axiosInstance.get<User>(AUTH_API.ME);
+  resendVerification: async (email: string): Promise<MessageResponse> => {
+    const { data } = await axiosInstance.post<MessageResponse>(
+      AUTH_API.RESEND_VERIFICATION,
+      { email },
+    );
+    return data;
+  },
+
+  login: async (
+    request: Omit<LoginRequest, "deviceId" | "deviceName">,
+  ): Promise<TokenResponse> => {
+    const { data } = await axiosInstance.post<TokenResponse>(AUTH_API.LOGIN, {
+      ...request,
+      deviceId: deviceStorage.getDeviceId(),
+      deviceName: deviceStorage.getDeviceName(),
+    });
+    return data;
+  },
+
+  logout: async (): Promise<MessageResponse> => {
+    const refreshToken = tokenStorage.getRefreshToken();
+    const { data } = await axiosInstance.post<MessageResponse>(
+      AUTH_API.LOGOUT,
+      { refreshToken },
+    );
+    return data;
+  },
+
+  refresh: async (refreshToken: string): Promise<TokenResponse> => {
+    const { data } = await axiosInstance.post<TokenResponse>(AUTH_API.REFRESH, {
+      refreshToken,
+    });
+    return data;
+  },
+
+  checkEmail: async (email: string): Promise<CheckResponse> => {
+    const { data } = await axiosInstance.post<CheckResponse>(
+      AUTH_API.CHECK_EMAIL,
+      { email },
+    );
+    return data;
+  },
+
+  checkNickname: async (nickname: string): Promise<CheckResponse> => {
+    const { data } = await axiosInstance.post<CheckResponse>(
+      AUTH_API.CHECK_NICKNAME,
+      { nickname },
+    );
+    return data;
+  },
+
+  // ─── User ───
+
+  getMe: async (): Promise<UserResponse> => {
+    const { data } = await axiosInstance.get<UserResponse>(USER_API.ME);
+    return data;
+  },
+
+  updateProfile: async (
+    request: UpdateProfileRequest,
+  ): Promise<UserResponse> => {
+    const { data } = await axiosInstance.patch<UserResponse>(
+      USER_API.ME,
+      request,
+    );
+    return data;
+  },
+
+  changePassword: async (
+    request: ChangePasswordRequest,
+  ): Promise<MessageResponse> => {
+    const { data } = await axiosInstance.patch<MessageResponse>(
+      USER_API.PASSWORD,
+      request,
+    );
+    return data;
+  },
+
+  deleteAccount: async (): Promise<MessageResponse> => {
+    const { data } = await axiosInstance.delete<MessageResponse>(USER_API.ME);
+    return data;
+  },
+
+  restoreAccount: async (
+    request: RestoreAccountRequest,
+  ): Promise<MessageResponse> => {
+    const { data } = await axiosInstance.post<MessageResponse>(
+      USER_API.RESTORE,
+      request,
+    );
     return data;
   },
 };
