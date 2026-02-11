@@ -1,10 +1,15 @@
 package com.soaengry.moment.user.service;
 
+import com.soaengry.moment.global.exception.BusinessException;
+import com.soaengry.moment.global.exception.ErrorCode;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -18,28 +23,23 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    @Value("${app.email.verification-url}")
+    private String verificationUrl;
+
+    @Value("${app.email.password-reset-url}")
+    private String passwordResetUrl;
+
     /**
      * 이메일 인증 코드 발송
      */
     @Async
     public void sendVerificationEmail(String toEmail, String verificationCode) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("[MOMENT] 이메일 인증 코드");
-            message.setText(String.format(
-                    """
-                            안녕하세요, MOMENT입니다.
+            String link = verificationUrl + "?token=" + verificationCode;
+            String subject = "[MOMENT] 이메일 인증 코드";
+            String content = buildVerificationEmailContent(link);
 
-                            이메일 인증 코드: %s
-
-                            인증 코드는 5분간 유효합니다.
-                            본인이 요청하지 않았다면 이 메일을 무시하세요.""",
-                    verificationCode
-            ));
-
-            mailSender.send(message);
+            sendEmail(toEmail, subject, content);
             log.info("이메일 인증 코드 발송 완료 - 수신: {}", toEmail);
         } catch (Exception e) {
             log.error("이메일 발송 실패 - 수신: {}, 오류: {}", toEmail, e.getMessage());
@@ -58,14 +58,11 @@ public class EmailService {
             message.setTo(toEmail);
             message.setSubject("[MOMENT] 비밀번호 재설정");
             message.setText(String.format(
-                    """
-                            안녕하세요, MOMENT입니다.
-
-                            비밀번호 재설정 링크:
-                            https://moment.com/reset-password?token=%s
-
-                            링크는 1시간 동안 유효합니다.
-                            본인이 요청하지 않았다면 이 메일을 무시하세요.""",
+                    "안녕하세요, MOMENT입니다.\n\n" +
+                            "비밀번호 재설정 링크:\n" +
+                            "https://moment.com/reset-password?token=%s\n\n" +
+                            "링크는 1시간 동안 유효합니다.\n" +
+                            "본인이 요청하지 않았다면 이 메일을 무시하세요.",
                     resetToken
             ));
 
@@ -76,32 +73,82 @@ public class EmailService {
         }
     }
 
-    /**
-     * 환영 이메일 발송
-     */
-    @Async
-    public void sendWelcomeEmail(String toEmail, String nickname) {
+    private void sendEmail(String to, String subject, String content) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("[MOMENT] 가입을 환영합니다!");
-            message.setText(String.format(
-                    """
-                            안녕하세요, %s님!
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-                            MOMENT 가입을 진심으로 환영합니다.
-                            특별한 순간을 함께 만들어가요.
-
-                            감사합니다.
-                            MOMENT 팀 드림""",
-                    nickname
-            ));
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, true);
 
             mailSender.send(message);
-            log.info("환영 메일 발송 완료 - 수신: {}", toEmail);
-        } catch (Exception e) {
-            log.error("환영 메일 발송 실패 - 수신: {}, 오류: {}", toEmail, e.getMessage());
+            log.info("이메일 전송 완료: {}", to);
+        } catch (MessagingException e) {
+            log.error("이메일 전송 실패: {}", to, e);
+            throw new BusinessException(ErrorCode.EMAIL_001);
         }
+    }
+
+    private String buildVerificationEmailContent(String link) {
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                </head>
+                <body>
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2>이메일 인증</h2>
+                        <p>회원가입을 완료하려면 아래 버튼을 클릭해주세요.</p>
+                        <p>링크는 24시간 동안 유효합니다.</p>
+                        <div style="margin: 30px 0;">
+                            <a href="%s"
+                               style="background-color: #4CAF50; color: white; padding: 14px 20px; 
+                                      text-decoration: none; border-radius: 4px; display: inline-block;">
+                                이메일 인증하기
+                            </a>
+                        </div>
+                        <p style="color: #666; font-size: 14px;">
+                            버튼이 작동하지 않으면 아래 링크를 복사하여 브라우저에 붙여넣으세요:<br>
+                            <a href="%s">%s</a>
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """.formatted(link, link, link);
+    }
+
+    private String buildPasswordResetEmailContent(String link) {
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                </head>
+                <body>
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2>비밀번호 재설정</h2>
+                        <p>비밀번호를 재설정하려면 아래 버튼을 클릭해주세요.</p>
+                        <p>링크는 1시간 동안 유효합니다.</p>
+                        <div style="margin: 30px 0;">
+                            <a href="%s"
+                               style="background-color: #2196F3; color: white; padding: 14px 20px; 
+                                      text-decoration: none; border-radius: 4px; display: inline-block;">
+                                비밀번호 재설정하기
+                            </a>
+                        </div>
+                        <p style="color: #666; font-size: 14px;">
+                            버튼이 작동하지 않으면 아래 링크를 복사하여 브라우저에 붙여넣으세요:<br>
+                            <a href="%s">%s</a>
+                        </p>
+                        <p style="color: #f44336; font-size: 14px;">
+                            본인이 요청하지 않은 경우 이 메일을 무시하세요.
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """.formatted(link, link, link);
     }
 }

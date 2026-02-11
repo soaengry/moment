@@ -1,8 +1,11 @@
 package com.soaengry.moment.user.controller;
 
-import com.soaengry.moment.user.dto.UserResponse;
+import com.soaengry.moment.user.dto.response.UserResponse;
 import com.soaengry.moment.user.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -35,8 +38,8 @@ public class UserController {
             @Valid @RequestBody UpdateProfileRequest request
     ) {
         UserResponse response = userService.updateProfile(
-                userId, 
-                request.nickname(), 
+                userId,
+                request.nickname(),
                 request.profileImageUrl()
         );
         return ResponseEntity.ok(response);
@@ -80,26 +83,34 @@ public class UserController {
 }
 
 // Request DTOs
-record UpdateProfileRequest(String nickname, String profileImageUrl) {}
+record UpdateProfileRequest(String nickname, String profileImageUrl) {
+}
 
 record ChangePasswordRequest(
-        @jakarta.validation.constraints.NotBlank String currentPassword,
-        @jakarta.validation.constraints.NotBlank 
-        @jakarta.validation.constraints.Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[~!@#$%^&*()_+<>?,./-=]).{8,}$",
-                message = "비밀번호는 8자 이상, 영문 대소문자, 숫자, 특수문자를 포함해야 합니다"
+        @NotBlank String currentPassword,
+        @NotBlank
+        @Pattern(
+                regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[~!@#$%^&*()_+<>?,./-=]).{8,}$",
+                message = "비밀번호는 8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다"
         )
         String newPassword
-) {}
+) {
+}
 
 record RestoreAccountRequest(
-        @jakarta.validation.constraints.NotBlank 
-        @jakarta.validation.constraints.Email 
+        @NotBlank
+        @Email
         String email,
-        @jakarta.validation.constraints.NotBlank String password
-) {}
+        @NotBlank String password
+) {
+}
 
 // Response DTOs
-record ChangePasswordResponse(String message) {}
-record DeleteAccountResponse(String message) {}
-record RestoreAccountResponse(String message) {}
+record ChangePasswordResponse(String message) {
+}
+
+record DeleteAccountResponse(String message) {
+}
+
+record RestoreAccountResponse(String message) {
+}
