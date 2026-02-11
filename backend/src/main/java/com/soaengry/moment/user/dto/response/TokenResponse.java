@@ -1,4 +1,4 @@
-package com.soaengry.moment.user.dto;
+package com.soaengry.moment.user.dto.response;
 
 public record TokenResponse(
         String accessToken,

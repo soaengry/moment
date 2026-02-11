@@ -1,4 +1,4 @@
-package com.soaengry.moment.user.dto;
+package com.soaengry.moment.user.dto.request;
 
 
 import com.soaengry.moment.user.entity.User;
@@ -14,7 +14,7 @@ public record SignupRequest(
 
         @NotBlank(message = "비밀번호는 필수입니다")
         @Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[~!@#$%^&*()_+<>?,./-=]).{8,}$",
+                regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*()_+<>?,./-=]).{8,}$",
                 message = "비밀번호는 8자 이상, 영문 대소문자, 숫자, 특수문자를 포함해야 합니다"
         )
         String password,

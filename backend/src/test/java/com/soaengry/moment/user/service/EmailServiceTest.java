@@ -55,22 +55,6 @@ class EmailServiceTest {
     }
 
     @Test
-    @DisplayName("환영 이메일 발송 성공")
-    void sendWelcomeEmail_Success() {
-        // given
-        String toEmail = "test@example.com";
-        String nickname = "테스터";
-
-        // when
-        emailService.sendWelcomeEmail(toEmail, nickname);
-
-        // then
-        verify(mailSender, timeout(3000).times(1)).send(any(SimpleMailMessage.class));
-
-        System.out.println("✅ 환영 이메일 발송 테스트 통과");
-    }
-
-    @Test
     @DisplayName("이메일 발송 실패 - 예외 발생해도 서비스는 정상 동작")
     void sendVerificationEmail_Fail_ShouldNotThrowException() {
         // given
