@@ -1,9 +1,9 @@
 package com.soaengry.moment.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.soaengry.moment.user.dto.SignupRequest;
-import com.soaengry.moment.user.dto.SignupResponse;
-import com.soaengry.moment.user.dto.VerifyEmailRequest;
+import com.soaengry.moment.user.dto.request.SignupRequest;
+import com.soaengry.moment.user.dto.request.VerifyEmailRequest;
+import com.soaengry.moment.user.dto.response.SignupResponse;
 import com.soaengry.moment.user.repository.EmailVerificationRepository;
 import com.soaengry.moment.user.repository.UserRepository;
 import com.soaengry.moment.user.service.AuthService;
@@ -18,8 +18,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc

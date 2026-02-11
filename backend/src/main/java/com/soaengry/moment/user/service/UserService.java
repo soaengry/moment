@@ -2,7 +2,7 @@ package com.soaengry.moment.user.service;
 
 import com.soaengry.moment.global.exception.BusinessException;
 import com.soaengry.moment.global.exception.ErrorCode;
-import com.soaengry.moment.user.dto.UserResponse;
+import com.soaengry.moment.user.dto.response.UserResponse;
 import com.soaengry.moment.user.entity.User;
 import com.soaengry.moment.user.repository.RefreshTokenRepository;
 import com.soaengry.moment.user.repository.UserRepository;

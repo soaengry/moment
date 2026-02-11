@@ -1,4 +1,4 @@
-package com.soaengry.moment.user.dto;
+package com.soaengry.moment.user.dto.response;
 
 import com.soaengry.moment.user.entity.User;
 

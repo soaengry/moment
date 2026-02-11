@@ -1,4 +1,4 @@
-package com.soaengry.moment.user.dto;
+package com.soaengry.moment.user.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

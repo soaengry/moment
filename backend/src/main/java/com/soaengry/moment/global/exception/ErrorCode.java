@@ -25,6 +25,8 @@ public enum ErrorCode {
     DUPLICATE_001("이미 사용 중인 이메일입니다"),
     DUPLICATE_002("이미 사용 중인 닉네임입니다"),
 
+    EMAIL_001("이메일 전송에 실패했습니다"),
+
     // 찾을 수 없음
     NOT_FOUND_001("사용자를 찾을 수 없습니다"),
     NOT_FOUND_002("토큰을 찾을 수 없습니다"),

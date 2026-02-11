@@ -2,10 +2,9 @@ package com.soaengry.moment.user.service;
 
 import com.soaengry.moment.global.exception.BusinessException;
 import com.soaengry.moment.global.exception.ErrorCode;
-import com.soaengry.moment.user.dto.SignupRequest;
-import com.soaengry.moment.user.dto.SignupResponse;
-import com.soaengry.moment.user.dto.UserResponse;
-import com.soaengry.moment.user.dto.VerifyEmailRequest;
+import com.soaengry.moment.user.dto.request.SignupRequest;
+import com.soaengry.moment.user.dto.response.SignupResponse;
+import com.soaengry.moment.user.dto.response.UserResponse;
 import com.soaengry.moment.user.entity.User;
 import com.soaengry.moment.user.repository.EmailVerificationRepository;
 import com.soaengry.moment.user.repository.RefreshTokenRepository;
@@ -19,7 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
