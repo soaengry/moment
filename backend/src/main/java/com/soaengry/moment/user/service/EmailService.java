@@ -7,7 +7,6 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -53,20 +52,11 @@ public class EmailService {
     @Async
     public void sendPasswordResetEmail(String toEmail, String resetToken) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("[MOMENT] 비밀번호 재설정");
-            message.setText(String.format(
-                    "안녕하세요, MOMENT입니다.\n\n" +
-                            "비밀번호 재설정 링크:\n" +
-                            "https://moment.com/reset-password?token=%s\n\n" +
-                            "링크는 1시간 동안 유효합니다.\n" +
-                            "본인이 요청하지 않았다면 이 메일을 무시하세요.",
-                    resetToken
-            ));
+            String link = verificationUrl + "?token=" + resetToken;
+            String subject = "[MOMENT] 이메일 인증 코드";
+            String content = buildPasswordResetEmailContent(link);
 
-            mailSender.send(message);
+            sendEmail(toEmail, subject, content);
             log.info("비밀번호 재설정 메일 발송 완료 - 수신: {}", toEmail);
         } catch (Exception e) {
             log.error("비밀번호 재설정 메일 발송 실패 - 수신: {}, 오류: {}", toEmail, e.getMessage());

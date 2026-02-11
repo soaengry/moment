@@ -3,7 +3,6 @@ package com.soaengry.moment.user.service;
 import com.soaengry.moment.global.exception.BusinessException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import com.soaengry.moment.global.security.JwtProvider;
-import com.soaengry.moment.global.util.CodeGenerator;
 import com.soaengry.moment.user.dto.request.LoginRequest;
 import com.soaengry.moment.user.dto.request.SignupRequest;
 import com.soaengry.moment.user.dto.request.VerifyEmailRequest;
@@ -62,31 +61,31 @@ public class AuthService {
         User user = request.toEntity(encodedPassword);
         user = userRepository.save(user);
 
-        // 이메일 인증 코드 생성 및 저장
-        String verificationCode = CodeGenerator.generateAlphanumeric(6);
+        // 이메일 인증 토큰 생성 (UUID 사용)
+        String verificationToken = UUID.randomUUID().toString();
         EmailVerification verification = EmailVerification.builder()
                 .email(user.getEmail())
-                .verificationCode(verificationCode)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
+                .verificationCode(verificationToken)  // 긴 토큰 저장
+                .expiresAt(LocalDateTime.now().plusHours(24))  // 24시간 유효
                 .build();
         emailVerificationRepository.save(verification);
 
-        // 이메일 발송
-        emailService.sendVerificationEmail(user.getEmail(), verificationCode);
+        // 이메일 발송 (토큰 링크)
+        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
 
-        log.info("회원가입 완료 - 사용자 ID: {}, 이메일: {}, 인증 코드: {}",
-                user.getId(), user.getEmail(), verificationCode);
+        log.info("회원가입 완료 - 사용자 ID: {}, 이메일: {}",
+                user.getId(), user.getEmail());
 
         return new SignupResponse(
                 user.getId(),
                 user.getEmail(),
-                verificationCode,
-                "회원가입이 완료되었습니다. 이메일 인증을 진행해주세요."
+                null,  // 토큰은 응답에 포함하지 않음 (이메일로만 전송)
+                "회원가입이 완료되었습니다. 이메일을 확인하여 인증을 완료해주세요."
         );
     }
 
     /**
-     * 이메일 인증
+     * 이메일 인증 (코드 입력 방식)
      */
     @Transactional
     public void verifyEmail(VerifyEmailRequest request) {
@@ -114,6 +113,37 @@ public class AuthService {
         user.verifyEmail();
 
         log.info("이메일 인증 완료 - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+    }
+
+    /**
+     * 이메일 인증 (토큰 링크 클릭 방식)
+     */
+    @Transactional
+    public void verifyEmailByToken(String token) {
+        // 토큰으로 인증 정보 조회
+        EmailVerification verification = emailVerificationRepository
+                .findByVerificationCode(token)
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_007, "유효하지 않은 인증 링크입니다"));
+
+        // 이미 인증된 경우
+        if (verification.getIsVerified()) {
+            throw new BusinessException(ErrorCode.AUTH_001, "이미 인증이 완료되었습니다");
+        }
+
+        // 만료 확인
+        if (verification.isExpired()) {
+            throw new BusinessException(ErrorCode.AUTH_002, "인증 링크가 만료되었습니다");
+        }
+
+        // 인증 처리
+        verification.verify();
+
+        // 사용자 이메일 인증 상태 업데이트
+        User user = userRepository.findByEmail(verification.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+        user.verifyEmail();
+
+        log.info("이메일 인증 완료 (토큰 방식) - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
     }
 
     /**

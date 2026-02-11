@@ -9,13 +9,12 @@ import com.soaengry.moment.user.service.AuthService;
 import com.soaengry.moment.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -36,13 +35,24 @@ public class AuthController {
     }
 
     /**
-     * 이메일 인증
+     * 이메일 인증 (POST - 코드 입력 방식)
      */
     @PostMapping("/verify-email")
     public ResponseEntity<VerifyEmailResponse> verifyEmail(
             @Valid @RequestBody VerifyEmailRequest request
     ) {
         authService.verifyEmail(request);
+        return ResponseEntity.ok(new VerifyEmailResponse("이메일 인증이 완료되었습니다"));
+    }
+
+    /**
+     * 이메일 인증 (GET - 링크 클릭 방식)
+     */
+    @GetMapping("/verify-email")
+    public ResponseEntity<VerifyEmailResponse> verifyEmailByToken(
+            @RequestParam("token") String token
+    ) {
+        authService.verifyEmailByToken(token);
         return ResponseEntity.ok(new VerifyEmailResponse("이메일 인증이 완료되었습니다"));
     }
 
@@ -145,25 +155,25 @@ record CheckNicknameResponse(boolean exists) {
 }
 
 // Request DTOs
-record RefreshRequest(@jakarta.validation.constraints.NotBlank String refreshToken) {
+record RefreshRequest(@NotBlank String refreshToken) {
 }
 
 record ResendVerificationRequest(
-        @jakarta.validation.constraints.NotBlank
-        @jakarta.validation.constraints.Email
+        @NotBlank
+        @Email
         String email
 ) {
 }
 
 record CheckEmailRequest(
-        @jakarta.validation.constraints.NotBlank
-        @jakarta.validation.constraints.Email
+        @NotBlank
+        @Email
         String email
 ) {
 }
 
 record CheckNicknameRequest(
-        @jakarta.validation.constraints.NotBlank
+        @NotBlank
         String nickname
 ) {
 }

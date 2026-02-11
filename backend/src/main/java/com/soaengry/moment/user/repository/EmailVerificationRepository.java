@@ -10,16 +10,20 @@ import java.util.Optional;
 public interface EmailVerificationRepository extends JpaRepository<EmailVerification, Long> {
 
     @Query("SELECT ev FROM EmailVerification ev WHERE ev.email = :email " +
-           "AND ev.verificationCode = :code AND ev.isVerified = false " +
-           "ORDER BY ev.createdAt DESC")
+            "AND ev.verificationCode = :code AND ev.isVerified = false " +
+            "ORDER BY ev.createdAt DESC")
     Optional<EmailVerification> findLatestByEmailAndCode(
-        @Param("email") String email,
-        @Param("code") String code
+            @Param("email") String email,
+            @Param("code") String code
     );
 
     @Query("SELECT ev FROM EmailVerification ev WHERE ev.email = :email " +
-           "AND ev.isVerified = false ORDER BY ev.createdAt DESC")
+            "AND ev.isVerified = false ORDER BY ev.createdAt DESC")
     Optional<EmailVerification> findLatestByEmail(@Param("email") String email);
+
+    @Query("SELECT ev FROM EmailVerification ev WHERE ev.verificationCode = :code " +
+            "AND ev.isVerified = false ORDER BY ev.createdAt DESC")
+    Optional<EmailVerification> findByVerificationCode(@Param("code") String code);
 
     void deleteByEmail(String email);
 }
