@@ -52,6 +52,24 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  cloud:
+    aws:
+      s3:
+        bucket: merry-moment
+      credentials:
+        access-key: ${AWS_ACCESS_KEY:}
+        secret-key: ${AWS_SECRET_KEY:}
+      region:
+        static: ${AWS_REGION}
+      stack:
+        auto: false
+
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 86400000  # 1일 (밀리초)
