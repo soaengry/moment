@@ -75,9 +75,7 @@ const ChangePasswordPage: FC = () => {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h2 className="text-2xl font-bold mb-6" style={{ color: "#88AF64" }}>
-        비밀번호 변경
-      </h2>
+      <h2 className="text-2xl text-primary font-bold mb-6">비밀번호 변경</h2>
 
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100">
         <div className="mb-4 p-3 rounded-lg text-sm bg-yellow-50 text-yellow-700">
@@ -85,10 +83,7 @@ const ChangePasswordPage: FC = () => {
         </div>
 
         {serverError && (
-          <div
-            className="mb-4 p-3 rounded-lg text-sm"
-            style={{ backgroundColor: "#FEF2F2", color: "#DC2626" }}
-          >
+          <div className="mb-4 p-3 rounded-lg text-sm bg-bgDanger text-danger">
             {serverError}
           </div>
         )}
@@ -109,7 +104,7 @@ const ChangePasswordPage: FC = () => {
               {...register("currentPassword")}
             />
             {errors.currentPassword && (
-              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+              <p className="mt-1 text-sm text-danger">
                 {errors.currentPassword.message}
               </p>
             )}
@@ -130,7 +125,7 @@ const ChangePasswordPage: FC = () => {
               {...register("newPassword")}
             />
             {errors.newPassword && (
-              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+              <p className="mt-1 text-sm text-danger">
                 {errors.newPassword.message}
               </p>
             )}
@@ -151,7 +146,7 @@ const ChangePasswordPage: FC = () => {
               {...register("newPasswordConfirm")}
             />
             {errors.newPasswordConfirm && (
-              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+              <p className="mt-1 text-sm text-danger">
                 {errors.newPasswordConfirm.message}
               </p>
             )}
@@ -160,8 +155,7 @@ const ChangePasswordPage: FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 rounded-lg text-white font-medium transition-opacity disabled:opacity-50"
-            style={{ backgroundColor: "#88AF64" }}
+            className="w-full py-3 rounded-lg bg-primary hover:bg-primaryHover text-white font-medium transition-opacity disabled:opacity-50"
           >
             {isSubmitting ? "변경 중..." : "비밀번호 변경"}
           </button>

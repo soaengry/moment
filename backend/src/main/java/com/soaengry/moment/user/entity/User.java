@@ -93,6 +93,14 @@ public class User {
         }
     }
 
+    public void updateProfileWithImageRemoval(String nickname, String profileImageUrl) {
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+        // profileImageUrl을 명시적으로 설정 (null 포함)
+        this.profileImageUrl = profileImageUrl;
+    }
+
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
         incrementTokenVersion();

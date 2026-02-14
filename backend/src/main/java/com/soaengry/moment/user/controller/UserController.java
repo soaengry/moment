@@ -1,16 +1,15 @@
 package com.soaengry.moment.user.controller;
 
+import com.soaengry.moment.global.service.S3Service;
 import com.soaengry.moment.user.dto.response.UserResponse;
 import com.soaengry.moment.user.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final S3Service s3Service;
 
     /**
      * 내 정보 조회
@@ -32,16 +32,42 @@ public class UserController {
     /**
      * 프로필 수정
      */
-    @PatchMapping("/me")
+    @PatchMapping(value = "/me", consumes = {"application/json", "multipart/form-data"})
     public ResponseEntity<UserResponse> updateProfile(
             @AuthenticationPrincipal Long userId,
-            @Valid @RequestBody UpdateProfileRequest request
+            @RequestPart(value = "nickname", required = false) String nickname,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestPart(value = "removeProfileImage", required = false) String removeProfileImage
     ) {
-        UserResponse response = userService.updateProfile(
-                userId,
-                request.nickname(),
-                request.profileImageUrl()
-        );
+        // 현재 사용자 정보 조회
+        UserResponse currentUser = userService.getUserInfo(userId);
+        String currentImageUrl = currentUser.profileImageUrl();
+
+        String newProfileImageUrl = currentImageUrl;
+        boolean shouldRemoveImage = "true".equalsIgnoreCase(removeProfileImage);
+
+        // 1. 프로필 이미지 삭제 요청
+        if (shouldRemoveImage) {
+            if (currentImageUrl != null && !currentImageUrl.isEmpty()) {
+                s3Service.deleteFile(currentImageUrl);
+                log.info("기존 프로필 이미지 삭제 - URL: {}", currentImageUrl);
+            }
+            newProfileImageUrl = null;
+        }
+        // 2. 새 프로필 이미지 업로드
+        else if (profileImage != null && !profileImage.isEmpty()) {
+            // 기존 이미지가 있으면 S3에서 삭제
+            if (currentImageUrl != null && !currentImageUrl.isEmpty()) {
+                s3Service.deleteFile(currentImageUrl);
+                log.info("기존 프로필 이미지 삭제 - URL: {}", currentImageUrl);
+            }
+
+            // 새 이미지 업로드
+            newProfileImageUrl = s3Service.uploadProfileImage(profileImage);
+            log.info("새 프로필 이미지 업로드 완료 - URL: {}", newProfileImageUrl);
+        }
+
+        UserResponse response = userService.updateProfile(userId, nickname, newProfileImageUrl);
         return ResponseEntity.ok(response);
     }
 
@@ -87,9 +113,9 @@ record UpdateProfileRequest(String nickname, String profileImageUrl) {
 }
 
 record ChangePasswordRequest(
-        @NotBlank String currentPassword,
-        @NotBlank
-        @Pattern(
+        @jakarta.validation.constraints.NotBlank String currentPassword,
+        @jakarta.validation.constraints.NotBlank
+        @jakarta.validation.constraints.Pattern(
                 regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[~!@#$%^&*()_+<>?,./-=]).{8,}$",
                 message = "비밀번호는 8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다"
         )
@@ -98,10 +124,10 @@ record ChangePasswordRequest(
 }
 
 record RestoreAccountRequest(
-        @NotBlank
-        @Email
+        @jakarta.validation.constraints.NotBlank
+        @jakarta.validation.constraints.Email
         String email,
-        @NotBlank String password
+        @jakarta.validation.constraints.NotBlank String password
 ) {
 }
 

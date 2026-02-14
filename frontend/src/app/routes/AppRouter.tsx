@@ -14,12 +14,21 @@ import {
 } from "../../domain/user/pages";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
+import Home from "../../global/pages/Home";
 
 const AppRouter: FC = () => {
   return (
     <BrowserRouter>
       <Routes>
         {/* 비로그인 페이지 */}
+        <Route
+          path="/"
+          element={
+            <Layout>
+              <Home />
+            </Layout>
+          }
+        />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -68,7 +77,6 @@ const AppRouter: FC = () => {
         />
 
         {/* 기본 리다이렉트 */}
-        <Route path="/" element={<Navigate to="/my-page" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

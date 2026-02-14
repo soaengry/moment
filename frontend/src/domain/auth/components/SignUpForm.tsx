@@ -125,10 +125,7 @@ const SignUpForm: FC = () => {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
-        <h2
-          className="text-2xl font-bold text-center mb-2"
-          style={{ color: "#88AF64" }}
-        >
+        <h2 className="text-2xl font-bold text-center mb-2 text-primary">
           회원가입
         </h2>
         <p className="text-sm text-gray-500 text-center mb-8">
@@ -136,10 +133,7 @@ const SignUpForm: FC = () => {
         </p>
 
         {serverError && (
-          <div
-            className="mb-4 p-3 rounded-lg text-sm"
-            style={{ backgroundColor: "#FEF2F2", color: "#DC2626" }}
-          >
+          <div className="mb-4 p-3 rounded-lg text-sm bg-white text-danger">
             {serverError}
           </div>
         )}
@@ -156,18 +150,15 @@ const SignUpForm: FC = () => {
               id="email"
               type="email"
               placeholder="example@email.com"
+              tabIndex={-1}
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
               {...register("email", { onBlur: handleEmailBlur })}
             />
             {errors.email && (
-              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
-                {errors.email.message}
-              </p>
+              <p className="mt-1 text-sm text-rose">{errors.email.message}</p>
             )}
             {emailDupError && (
-              <p className="mt-1 text-sm" style={{ color: "#DC2626" }}>
-                {emailDupError}
-              </p>
+              <p className="mt-1 text-sm text-danger">{emailDupError}</p>
             )}
           </div>
 
@@ -186,7 +177,7 @@ const SignUpForm: FC = () => {
               {...register("password")}
             />
             {errors.password && (
-              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+              <p className="mt-1 text-sm text-rose">
                 {errors.password.message}
               </p>
             )}
@@ -207,7 +198,7 @@ const SignUpForm: FC = () => {
               {...register("passwordConfirm")}
             />
             {errors.passwordConfirm && (
-              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+              <p className="mt-1 text-sm text-rose">
                 {errors.passwordConfirm.message}
               </p>
             )}
@@ -228,22 +219,19 @@ const SignUpForm: FC = () => {
               {...register("nickname", { onBlur: handleNicknameBlur })}
             />
             {errors.nickname && (
-              <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+              <p className="mt-1 text-sm text-rose">
                 {errors.nickname.message}
               </p>
             )}
             {nicknameDupError && (
-              <p className="mt-1 text-sm" style={{ color: "#DC2626" }}>
-                {nicknameDupError}
-              </p>
+              <p className="mt-1 text-sm text-danger">{nicknameDupError}</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting || !!emailDupError || !!nicknameDupError}
-            className="w-full py-3 rounded-lg text-white font-medium transition-opacity disabled:opacity-50"
-            style={{ backgroundColor: "#88AF64" }}
+            className="w-full py-3 rounded-lg bg-primary text-white font-medium transition-opacity disabled:opacity-50"
           >
             {isSubmitting ? "가입 중..." : "회원가입"}
           </button>
@@ -253,8 +241,7 @@ const SignUpForm: FC = () => {
           이미 계정이 있으신가요?{" "}
           <Link
             to="/login"
-            className="font-medium hover:underline"
-            style={{ color: "#88AF64" }}
+            className="font-medium text-primary hover:underline"
           >
             로그인
           </Link>
