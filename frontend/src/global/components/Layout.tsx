@@ -10,7 +10,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen flex flex-col bg-bgPrimary">
       <Header />
       <main className="flex-1 flex items-center justify-center pt-16">
-        {children}
+        <div className="w-full min-w-[360px] px-4">{children}</div>
       </main>
     </div>
   );

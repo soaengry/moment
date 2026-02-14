@@ -73,7 +73,7 @@ const LoginForm: FC = () => {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
-        <h2 className="text-2xl font-bold text-center text-primary mb-2">
+        <h2 className="text-2xl font-bold text-center mb-2 text-primary">
           로그인
         </h2>
         <p className="text-sm text-gray-500 text-center mb-8">
@@ -104,11 +104,11 @@ const LoginForm: FC = () => {
               id="email"
               type="email"
               placeholder="example@email.com"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
               {...register("email")}
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-error">{errors.email.message}</p>
+              <p className="mt-1 text-sm text-rose">{errors.email.message}</p>
             )}
           </div>
 
@@ -123,11 +123,11 @@ const LoginForm: FC = () => {
               id="password"
               type="password"
               placeholder="비밀번호를 입력해주세요"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
               {...register("password")}
             />
             {errors.password && (
-              <p className="mt-1 text-sm text-error">
+              <p className="mt-1 text-sm text-rose">
                 {errors.password.message}
               </p>
             )}
@@ -136,7 +136,7 @@ const LoginForm: FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 rounded-lg bg-primary hover:bg-primaryHover text-white font-medium transition-opacity disabled:opacity-50"
+            className="w-full py-3 rounded-lg text-white font-medium bg-primary hover:bg-primaryHover transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "로그인 중..." : "로그인"}
           </button>
@@ -158,7 +158,7 @@ const LoginForm: FC = () => {
         <div className="mt-6 flex items-center justify-between text-sm text-gray-500">
           <Link
             to="/signup"
-            className="font-medium text-primary hover:underline"
+            className="font-medium hover:underline text-primary"
           >
             회원가입
           </Link>

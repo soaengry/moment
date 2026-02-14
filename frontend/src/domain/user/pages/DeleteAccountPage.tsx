@@ -35,7 +35,7 @@ const DeleteAccountPage: FC = () => {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h2 className="text-2xl text-danger font-bold mb-6">회원 탈퇴</h2>
+      <h2 className="text-2xl font-bold mb-6 text-error">회원 탈퇴</h2>
 
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100">
         <div className="mb-6 p-4 rounded-lg bg-red-50 text-sm text-red-700 space-y-2">
@@ -51,7 +51,7 @@ const DeleteAccountPage: FC = () => {
         </div>
 
         {serverError && (
-          <div className="mb-4 p-3 rounded-lg text-sm bg-bgDanger text-danger">
+          <div className="mb-4 p-3 rounded-lg text-sm bg-bgError text-error">
             {serverError}
           </div>
         )}
@@ -72,7 +72,7 @@ const DeleteAccountPage: FC = () => {
           <button
             onClick={handleDelete}
             disabled={!agreed || isSubmitting}
-            className="flex-1 py-3 rounded-lg text-white font-medium transition-opacity disabled:opacity-50 bg-danger hover:bg-dangerHover"
+            className="flex-1 py-3 rounded-lg text-white font-medium transition-opacity disabled:opacity-50 bg-red-500"
           >
             {isSubmitting ? "처리 중..." : "탈퇴하기"}
           </button>

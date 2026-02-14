@@ -70,7 +70,7 @@ const RestoreAccountPage: FC = () => {
           </p>
 
           {serverError && (
-            <div className="mb-4 p-3 rounded-lg text-sm bg-bgDanger text-danger">
+            <div className="mb-4 p-3 rounded-lg text-sm bg-bgError text-error">
               {serverError}
             </div>
           )}
@@ -97,9 +97,7 @@ const RestoreAccountPage: FC = () => {
                 {...register("email")}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-danger">
-                  {errors.email.message}
-                </p>
+                <p className="mt-1 text-sm text-rose">{errors.email.message}</p>
               )}
             </div>
 
@@ -118,7 +116,7 @@ const RestoreAccountPage: FC = () => {
                 {...register("password")}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-danger">
+                <p className="mt-1 text-sm text-rose">
                   {errors.password.message}
                 </p>
               )}
@@ -127,14 +125,14 @@ const RestoreAccountPage: FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-lg bg-primary hover:bg-primaryHover text-white font-medium transition-opacity disabled:opacity-50"
+              className="w-full py-3 rounded-lg text-white font-medium transition-opacity disabled:opacity-50 bg-primary hover:bg-primaryHover"
             >
               {isSubmitting ? "복구 중..." : "계정 복구"}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            <Link to="/login" className="text-primary hover:underline">
+            <Link to="/login" className="hover:underline text-primary">
               로그인으로 돌아가기
             </Link>
           </p>

@@ -140,7 +140,7 @@ const EditProfilePage: FC = () => {
 
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100">
         {serverError && (
-          <div className="mb-4 p-3 rounded-lg text-sm bg-bgDanger text-danger">
+          <div className="mb-4 p-3 rounded-lg text-sm bg-bgError text-error">
             {serverError}
           </div>
         )}
@@ -167,11 +167,7 @@ const EditProfilePage: FC = () => {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-0 left-0 right-0 flex items-center justify-center rounded-b-full text-white text-xs font-medium cursor-pointer"
-                  style={{
-                    height: "20%",
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  }}
+                  className="absolute bottom-0 left-0 right-0 h-[20%] flex items-center justify-center rounded-b-full bg-black/50 text-white text-xs font-medium cursor-pointer"
                 >
                   변경
                 </button>
@@ -197,7 +193,7 @@ const EditProfilePage: FC = () => {
               className="hidden"
             />
 
-            {imageError && <p className="text-xs text-danger">{imageError}</p>}
+            {imageError && <p className="text-xs text-error">{imageError}</p>}
           </div>
 
           {/* 닉네임 */}
@@ -218,12 +214,10 @@ const EditProfilePage: FC = () => {
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
             />
             {nicknameDupError && (
-              <p className="mt-1 text-sm text-danger">{nicknameDupError}</p>
+              <p className="mt-1 text-sm text-error">{nicknameDupError}</p>
             )}
             {isNicknameEmpty && (
-              <p className="mt-1 text-sm text-warning">
-                닉네임을 입력해주세요.
-              </p>
+              <p className="mt-1 text-sm text-rose">닉네임을 입력해주세요.</p>
             )}
           </div>
 
