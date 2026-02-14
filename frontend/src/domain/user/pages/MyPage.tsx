@@ -52,9 +52,7 @@ const MyPage: FC = () => {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h2 className="text-2xl font-bold mb-6" style={{ color: "#88AF64" }}>
-        마이페이지
-      </h2>
+      <h2 className="text-2xl font-bold mb-6 sr-only">마이페이지</h2>
 
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100">
         <div className="flex items-center gap-4 mb-6">
@@ -72,10 +70,7 @@ const MyPage: FC = () => {
         </div>
 
         {verifyMessage && (
-          <div
-            className="mb-4 p-3 rounded-lg text-sm"
-            style={{ backgroundColor: "#F0FFF4", color: "#16A34A" }}
-          >
+          <div className="mb-4 p-3 rounded-lg text-sm bg-bgSuccess text-success">
             {verifyMessage}
           </div>
         )}
@@ -84,13 +79,12 @@ const MyPage: FC = () => {
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span>이메일 인증</span>
             {user.isEmailVerified ? (
-              <span className="text-green-600">✅ 인증됨</span>
+              <span className="text-success-600">인증됨</span>
             ) : (
               <button
                 onClick={handleSendVerification}
                 disabled={isSending}
-                className="px-3 py-1 rounded-md text-xs font-medium text-white disabled:opacity-50"
-                style={{ backgroundColor: "#D4AF37" }}
+                className="px-3 py-1 rounded-md text-xs font-medium text-white disabled:opacity-50 bg-gold"
               >
                 {isSending ? "발송 중..." : "인증 메일 발송"}
               </button>
@@ -109,8 +103,7 @@ const MyPage: FC = () => {
         <div className="space-y-2">
           <button
             onClick={() => navigate("/edit-profile")}
-            className="w-full py-2.5 rounded-lg text-white font-medium"
-            style={{ backgroundColor: "#88AF64" }}
+            className="w-full py-2.5 rounded-lg text-white font-medium bg-primary hover:bg-primary-dark transition-colors"
           >
             프로필 수정
           </button>

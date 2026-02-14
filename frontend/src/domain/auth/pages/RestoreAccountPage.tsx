@@ -59,16 +59,10 @@ const RestoreAccountPage: FC = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: "#FAFFF4" }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-4 bg-bgPrimary">
       <div className="w-full max-w-md mx-auto">
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
-          <h2
-            className="text-2xl font-bold text-center mb-2"
-            style={{ color: "#88AF64" }}
-          >
+          <h2 className="text-2xl font-bold text-center mb-2 text-primary">
             계정 복구
           </h2>
           <p className="text-sm text-gray-500 text-center mb-8">
@@ -76,19 +70,13 @@ const RestoreAccountPage: FC = () => {
           </p>
 
           {serverError && (
-            <div
-              className="mb-4 p-3 rounded-lg text-sm"
-              style={{ backgroundColor: "#FEF2F2", color: "#DC2626" }}
-            >
+            <div className="mb-4 p-3 rounded-lg text-sm bg-bgDanger text-danger">
               {serverError}
             </div>
           )}
 
           {successMessage && (
-            <div
-              className="mb-4 p-3 rounded-lg text-sm"
-              style={{ backgroundColor: "#F0FFF4", color: "#16A34A" }}
-            >
+            <div className="mb-4 p-3 rounded-lg text-sm bg-bgSuccess text-success">
               {successMessage}
             </div>
           )}
@@ -109,7 +97,7 @@ const RestoreAccountPage: FC = () => {
                 {...register("email")}
               />
               {errors.email && (
-                <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+                <p className="mt-1 text-sm text-danger">
                   {errors.email.message}
                 </p>
               )}
@@ -130,7 +118,7 @@ const RestoreAccountPage: FC = () => {
                 {...register("password")}
               />
               {errors.password && (
-                <p className="mt-1 text-sm" style={{ color: "#E6A5A5" }}>
+                <p className="mt-1 text-sm text-danger">
                   {errors.password.message}
                 </p>
               )}
@@ -139,19 +127,14 @@ const RestoreAccountPage: FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-lg text-white font-medium transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: "#88AF64" }}
+              className="w-full py-3 rounded-lg bg-primary hover:bg-primaryHover text-white font-medium transition-opacity disabled:opacity-50"
             >
               {isSubmitting ? "복구 중..." : "계정 복구"}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            <Link
-              to="/login"
-              className="hover:underline"
-              style={{ color: "#88AF64" }}
-            >
+            <Link to="/login" className="text-primary hover:underline">
               로그인으로 돌아가기
             </Link>
           </p>

@@ -47,9 +47,10 @@ public class UserService {
             }
         }
 
-        user.updateProfile(nickname, profileImageUrl);
+        // 프로필 업데이트 (이미지 URL이 null이면 이미지 삭제)
+        user.updateProfileWithImageRemoval(nickname, profileImageUrl);
 
-        log.info("프로필 수정 완료 - 사용자 ID: {}", userId);
+        log.info("프로필 수정 완료 - 사용자 ID: {}, 이미지 URL: {}", userId, profileImageUrl);
 
         return UserResponse.from(user);
     }

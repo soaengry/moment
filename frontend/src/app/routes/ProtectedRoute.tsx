@@ -13,14 +13,8 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#FAFFF4" }}
-      >
-        <div
-          className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: "#88AF64", borderTopColor: "transparent" }}
-        />
+      <div className="min-h-screen flex items-center justify-center bg-bgPrimary">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

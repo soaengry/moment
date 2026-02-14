@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --header-height: 4rem;
+}
+
 body {
   margin: 0;
   font-family:
