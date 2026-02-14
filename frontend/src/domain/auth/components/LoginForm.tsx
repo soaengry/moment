@@ -8,6 +8,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { AUTH_VALIDATION } from "../auth.constants";
 import { tokenStorage } from "../auth.utils";
 import { isAxiosError } from "axios";
+import SocialLoginButtons from "./SocialLoginButtons";
 
 const loginSchema = z.object({
   email: z
@@ -71,8 +72,8 @@ const LoginForm: FC = () => {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-primary-100">
-        <h2 className="text-2xl font-bold text-center mb-2 text-primary">
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
+        <h2 className="text-2xl font-bold text-center text-primary mb-2">
           로그인
         </h2>
         <p className="text-sm text-gray-500 text-center mb-8">
@@ -80,16 +81,13 @@ const LoginForm: FC = () => {
         </p>
 
         {stateMessage && (
-          <div
-            className="mb-4 p-3 rounded-lg text-sm"
-            style={{ backgroundColor: "#F0FFF4", color: "#16A34A" }}
-          >
+          <div className="mb-4 p-3 rounded-lg text-sm bg-bgSuccess text-success">
             {stateMessage}
           </div>
         )}
 
         {serverError && (
-          <div className="mb-4 p-3 rounded-lg text-sm bg-bgDanger text-danger">
+          <div className="mb-4 p-3 rounded-lg text-sm bg-bgError text-error">
             {serverError}
           </div>
         )}
@@ -110,7 +108,7 @@ const LoginForm: FC = () => {
               {...register("email")}
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-rose">{errors.email.message}</p>
+              <p className="mt-1 text-sm text-error">{errors.email.message}</p>
             )}
           </div>
 
@@ -129,7 +127,7 @@ const LoginForm: FC = () => {
               {...register("password")}
             />
             {errors.password && (
-              <p className="mt-1 text-sm text-rose">
+              <p className="mt-1 text-sm text-error">
                 {errors.password.message}
               </p>
             )}
@@ -138,16 +136,29 @@ const LoginForm: FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 rounded-lg text-white font-medium transition-opacity disabled:opacity-50 bg-primary hover:bg-primaryDark"
+            className="w-full py-3 rounded-lg bg-primary hover:bg-primaryHover text-white font-medium transition-opacity disabled:opacity-50"
           >
             {isSubmitting ? "로그인 중..." : "로그인"}
           </button>
         </form>
 
+        {/* 구분선 */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white text-gray-400">또는</span>
+          </div>
+        </div>
+
+        {/* 소셜 로그인 */}
+        <SocialLoginButtons />
+
         <div className="mt-6 flex items-center justify-between text-sm text-gray-500">
           <Link
             to="/signup"
-            className="font-medium hover:underline text-primary"
+            className="font-medium text-primary hover:underline"
           >
             회원가입
           </Link>
