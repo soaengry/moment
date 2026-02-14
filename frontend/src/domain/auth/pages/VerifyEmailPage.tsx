@@ -49,7 +49,7 @@ const VerifyEmailPage: FC = () => {
 
           {status === "success" && (
             <>
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-primary">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-primary hover:bg-primaryHover">
                 <span className="text-white text-2xl">✓</span>
               </div>
               <h2 className="text-xl font-bold mb-2 text-primary">인증 완료</h2>
@@ -69,7 +69,7 @@ const VerifyEmailPage: FC = () => {
               <p className="text-sm text-gray-500 mb-6">{message}</p>
               <Link
                 to="/login"
-                className="inline-block px-6 py-2.5 rounded-lg bg-primary text-white font-medium hover:bg-primaryHover transition-colors"
+                className="inline-block px-6 py-2.5 rounded-lg text-white font-medium bg-primary hover:bg-primaryHover"
               >
                 로그인으로 이동
               </Link>

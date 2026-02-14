@@ -133,7 +133,7 @@ const SignUpForm: FC = () => {
         </p>
 
         {serverError && (
-          <div className="mb-4 p-3 rounded-lg text-sm bg-white text-danger">
+          <div className="mb-4 p-3 rounded-lg text-sm bg-bgError text-error">
             {serverError}
           </div>
         )}
@@ -150,15 +150,14 @@ const SignUpForm: FC = () => {
               id="email"
               type="email"
               placeholder="example@email.com"
-              tabIndex={-1}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
               {...register("email", { onBlur: handleEmailBlur })}
             />
             {errors.email && (
               <p className="mt-1 text-sm text-rose">{errors.email.message}</p>
             )}
             {emailDupError && (
-              <p className="mt-1 text-sm text-danger">{emailDupError}</p>
+              <p className="mt-1 text-sm text-error">{emailDupError}</p>
             )}
           </div>
 
@@ -173,7 +172,7 @@ const SignUpForm: FC = () => {
               id="password"
               type="password"
               placeholder="영문, 숫자, 특수문자 포함 8자 이상"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
               {...register("password")}
             />
             {errors.password && (
@@ -194,7 +193,7 @@ const SignUpForm: FC = () => {
               id="passwordConfirm"
               type="password"
               placeholder="비밀번호를 다시 입력해주세요"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
               {...register("passwordConfirm")}
             />
             {errors.passwordConfirm && (
@@ -215,7 +214,7 @@ const SignUpForm: FC = () => {
               id="nickname"
               type="text"
               placeholder="닉네임 (2-50자)"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
               {...register("nickname", { onBlur: handleNicknameBlur })}
             />
             {errors.nickname && (
@@ -224,14 +223,14 @@ const SignUpForm: FC = () => {
               </p>
             )}
             {nicknameDupError && (
-              <p className="mt-1 text-sm text-danger">{nicknameDupError}</p>
+              <p className="mt-1 text-sm text-error">{nicknameDupError}</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting || !!emailDupError || !!nicknameDupError}
-            className="w-full py-3 rounded-lg bg-primary text-white font-medium transition-opacity disabled:opacity-50"
+            className="w-full py-3 rounded-lg text-white font-medium bg-primary hover:bg-primaryHover transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "가입 중..." : "회원가입"}
           </button>
@@ -241,7 +240,7 @@ const SignUpForm: FC = () => {
           이미 계정이 있으신가요?{" "}
           <Link
             to="/login"
-            className="font-medium text-primary hover:underline"
+            className="font-medium hover:underline text-primary"
           >
             로그인
           </Link>

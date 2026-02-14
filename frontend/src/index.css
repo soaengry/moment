@@ -13,8 +13,3 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-input:focus {
-  ring-color: #88af64;
-  border-color: #88af64;
-}

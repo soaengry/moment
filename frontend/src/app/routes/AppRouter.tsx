@@ -15,7 +15,7 @@ import {
 } from "../../domain/user/pages";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
-import Home from "../../global/pages/Home";
+import { HomePage } from "../../global/pages";
 
 const AppRouter: FC = () => {
   return (
@@ -26,7 +26,7 @@ const AppRouter: FC = () => {
           path="/"
           element={
             <Layout>
-              <Home />
+              <HomePage />
             </Layout>
           }
         />
@@ -37,6 +37,7 @@ const AppRouter: FC = () => {
         <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
 
         {/* 로그인 필요 페이지 */}
+
         <Route
           path="/my-page"
           element={
