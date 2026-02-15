@@ -1,6 +1,6 @@
 package com.soaengry.moment.user.service;
 
-import com.soaengry.moment.global.exception.BusinessException;
+import com.soaengry.moment.global.exception.CustomException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import com.soaengry.moment.global.security.JwtProvider;
 import com.soaengry.moment.user.dto.request.LoginRequest;
@@ -48,12 +48,12 @@ public class AuthService {
     public SignupResponse signup(SignupRequest request) {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(request.email())) {
-            throw new BusinessException(ErrorCode.DUPLICATE_001);
+            throw new CustomException(ErrorCode.DUPLICATE_001);
         }
 
         // 닉네임 중복 체크
         if (userRepository.existsByNickname(request.nickname())) {
-            throw new BusinessException(ErrorCode.DUPLICATE_002);
+            throw new CustomException(ErrorCode.DUPLICATE_002);
         }
 
         // 사용자 생성
@@ -92,16 +92,16 @@ public class AuthService {
         // 인증 정보 조회
         EmailVerification verification = emailVerificationRepository
                 .findLatestByEmailAndCode(request.email(), request.verificationCode())
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_007));
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_007));
 
         // 잠금 상태 확인
         if (verification.isLockedNow()) {
-            throw new BusinessException(ErrorCode.AUTH_006);
+            throw new CustomException(ErrorCode.AUTH_006);
         }
 
         // 만료 확인
         if (verification.isExpired()) {
-            throw new BusinessException(ErrorCode.AUTH_002, "인증 코드가 만료되었습니다");
+            throw new CustomException(ErrorCode.AUTH_002, "인증 코드가 만료되었습니다");
         }
 
         // 인증 처리
@@ -109,7 +109,7 @@ public class AuthService {
 
         // 사용자 이메일 인증 상태 업데이트
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001));
         user.verifyEmail();
 
         log.info("이메일 인증 완료 - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
@@ -123,16 +123,16 @@ public class AuthService {
         // 토큰으로 인증 정보 조회
         EmailVerification verification = emailVerificationRepository
                 .findByVerificationCode(token)
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_007, "유효하지 않은 인증 링크입니다"));
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_007, "유효하지 않은 인증 링크입니다"));
 
         // 이미 인증된 경우
         if (verification.getIsVerified()) {
-            throw new BusinessException(ErrorCode.AUTH_001, "이미 인증이 완료되었습니다");
+            throw new CustomException(ErrorCode.AUTH_001, "이미 인증이 완료되었습니다");
         }
 
         // 만료 확인
         if (verification.isExpired()) {
-            throw new BusinessException(ErrorCode.AUTH_002, "인증 링크가 만료되었습니다");
+            throw new CustomException(ErrorCode.AUTH_002, "인증 링크가 만료되었습니다");
         }
 
         // 인증 처리
@@ -140,7 +140,7 @@ public class AuthService {
 
         // 사용자 이메일 인증 상태 업데이트
         User user = userRepository.findByEmail(verification.getEmail())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001));
         user.verifyEmail();
 
         log.info("이메일 인증 완료 (토큰 방식) - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
@@ -153,16 +153,16 @@ public class AuthService {
     public TokenResponse login(LoginRequest request) {
         // 사용자 조회
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_001));
 
         // 탈퇴한 사용자 체크
         if (user.isDeleted()) {
-            throw new BusinessException(ErrorCode.AUTH_005);
+            throw new CustomException(ErrorCode.AUTH_005);
         }
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new BusinessException(ErrorCode.AUTH_001);
+            throw new CustomException(ErrorCode.AUTH_001);
         }
 
         // Device ID 생성
@@ -200,17 +200,17 @@ public class AuthService {
 
         // Redis에서 토큰 검증
         if (!refreshTokenRepository.existsByToken(userId, deviceId, refreshToken)) {
-            throw new BusinessException(ErrorCode.AUTH_002);
+            throw new CustomException(ErrorCode.AUTH_002);
         }
 
         // 사용자 조회 및 token version 검증
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001));
 
         if (!user.getTokenVersion().equals(tokenVersion)) {
             // 보안 위협 감지 - 모든 토큰 무효화
             refreshTokenRepository.deleteAllByUserId(userId);
-            throw new BusinessException(ErrorCode.AUTH_008);
+            throw new CustomException(ErrorCode.AUTH_008);
         }
 
         // Refresh Token Rotation (기존 토큰 삭제)
@@ -251,7 +251,7 @@ public class AuthService {
 
         // Token Version 증가
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001));
         user.incrementTokenVersion();
 
         log.info("모든 디바이스 로그아웃 완료 - 사용자 ID: {}", userId);

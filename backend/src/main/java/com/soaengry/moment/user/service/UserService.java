@@ -1,6 +1,6 @@
 package com.soaengry.moment.user.service;
 
-import com.soaengry.moment.global.exception.BusinessException;
+import com.soaengry.moment.global.exception.CustomException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import com.soaengry.moment.user.dto.response.UserResponse;
 import com.soaengry.moment.user.entity.User;
@@ -27,7 +27,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001));
 
         return UserResponse.from(user);
     }
@@ -38,12 +38,12 @@ public class UserService {
     @Transactional
     public UserResponse updateProfile(Long userId, String nickname, String profileImageUrl) {
         User user = userRepository.findByIdWithOptimisticLock(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001));
 
         // 닉네임 중복 체크
         if (nickname != null && !nickname.equals(user.getNickname())) {
             if (userRepository.existsByNickname(nickname)) {
-                throw new BusinessException(ErrorCode.DUPLICATE_002);
+                throw new CustomException(ErrorCode.DUPLICATE_002);
             }
         }
 
@@ -61,16 +61,16 @@ public class UserService {
     @Transactional
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001));
 
         // 소셜 로그인 사용자 체크
         if (user.isSocialLogin()) {
-            throw new BusinessException(ErrorCode.AUTH_001, "소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다");
+            throw new CustomException(ErrorCode.AUTH_001, "소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다");
         }
 
         // 현재 비밀번호 확인
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new BusinessException(ErrorCode.AUTH_001);
+            throw new CustomException(ErrorCode.AUTH_001);
         }
 
         // 비밀번호 변경 및 토큰 버전 증가
@@ -89,7 +89,7 @@ public class UserService {
     @Transactional
     public void deleteAccount(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001));
 
         // Soft Delete
         user.softDelete();
@@ -108,11 +108,11 @@ public class UserService {
         User user = userRepository.findDeletedUserByEmailAfter(
                 email,
                 java.time.LocalDateTime.now().minusDays(30)
-        ).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_001, "복구 가능한 계정이 없습니다"));
+        ).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_001, "복구 가능한 계정이 없습니다"));
 
         // 비밀번호 확인
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new BusinessException(ErrorCode.AUTH_001);
+            throw new CustomException(ErrorCode.AUTH_001);
         }
 
         // 계정 복구
