@@ -3,15 +3,15 @@ package com.soaengry.moment.global.exception;
 import lombok.Getter;
 
 @Getter
-public class BusinessException extends RuntimeException {
+public class CustomException extends RuntimeException {
     private final ErrorCode errorCode;
 
-    public BusinessException(ErrorCode errorCode) {
+    public CustomException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
 
-    public BusinessException(ErrorCode errorCode, String message) {
+    public CustomException(ErrorCode errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
     }

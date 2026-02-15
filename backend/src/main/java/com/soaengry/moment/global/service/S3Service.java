@@ -1,6 +1,6 @@
 package com.soaengry.moment.global.service;
 
-import com.soaengry.moment.global.exception.BusinessException;
+import com.soaengry.moment.global.exception.CustomException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +60,7 @@ public class S3Service {
 
         } catch (IOException e) {
             log.error("S3 업로드 실패", e);
-            throw new BusinessException(ErrorCode.FILE_001, "파일 업로드에 실패했습니다");
+            throw new CustomException(ErrorCode.FILE_001, "파일 업로드에 실패했습니다");
         }
     }
 
@@ -91,18 +91,18 @@ public class S3Service {
      */
     private void validateImageFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException(ErrorCode.FILE_002, "파일이 비어있습니다");
+            throw new CustomException(ErrorCode.FILE_002, "파일이 비어있습니다");
         }
 
         // 파일 크기 검증
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BusinessException(ErrorCode.FILE_003, "파일 크기는 10MB를 초과할 수 없습니다");
+            throw new CustomException(ErrorCode.FILE_003, "파일 크기는 10MB를 초과할 수 없습니다");
         }
 
         // 파일 타입 검증
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
-            throw new BusinessException(ErrorCode.FILE_004,
+            throw new CustomException(ErrorCode.FILE_004,
                     "지원하지 않는 파일 형식입니다. (jpg, png, webp만 가능)");
         }
     }

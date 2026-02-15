@@ -1,6 +1,6 @@
 package com.soaengry.moment.user.service;
 
-import com.soaengry.moment.global.exception.BusinessException;
+import com.soaengry.moment.global.exception.CustomException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import com.soaengry.moment.user.dto.request.SignupRequest;
 import com.soaengry.moment.user.dto.response.SignupResponse;
@@ -123,7 +123,7 @@ class UserServiceTest {
                 "테스터1",  // 이미 사용 중인 닉네임
                 null
         ))
-                .isInstanceOf(BusinessException.class)
+                .isInstanceOf(CustomException.class)
                 .hasMessage(ErrorCode.DUPLICATE_002.getMessage());
 
         System.out.println("✅ 닉네임 중복 테스트 통과");
@@ -172,7 +172,7 @@ class UserServiceTest {
                 "WrongPassword123!@",
                 "NewPassword123!@"
         ))
-                .isInstanceOf(BusinessException.class)
+                .isInstanceOf(CustomException.class)
                 .hasMessage(ErrorCode.AUTH_001.getMessage());
 
         System.out.println("✅ 잘못된 현재 비밀번호 테스트 통과");

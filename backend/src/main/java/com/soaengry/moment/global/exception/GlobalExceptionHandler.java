@@ -19,8 +19,8 @@ public class GlobalExceptionHandler {
     /**
      * BusinessException 처리
      */
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(CustomException e) {
         log.warn("Business Exception: {}", e.getMessage());
 
         HttpStatus status = determineHttpStatus(e.getErrorCode());
