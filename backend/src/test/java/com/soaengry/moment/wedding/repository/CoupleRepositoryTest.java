@@ -1,7 +1,6 @@
-package com.soaengry.moment.wedding;
+package com.soaengry.moment.wedding.repository;
 
 import com.soaengry.moment.wedding.entity.Couple;
-import com.soaengry.moment.wedding.repository.CoupleRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
