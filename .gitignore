@@ -69,6 +69,3 @@ dist-ssr
 # Test
 coverage
 .nyc_output
-
-CLAUDE.md
-SKILL.md
