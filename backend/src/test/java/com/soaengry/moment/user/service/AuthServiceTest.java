@@ -1,17 +1,18 @@
 package com.soaengry.moment.user.service;
 
-import com.soaengry.moment.global.exception.CustomException;
-import com.soaengry.moment.global.exception.ErrorCode;
+import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
+import com.soaengry.moment.domain.user.dto.request.LoginRequest;
+import com.soaengry.moment.domain.user.dto.request.SignupRequest;
+import com.soaengry.moment.domain.user.dto.request.VerifyEmailRequest;
+import com.soaengry.moment.domain.user.dto.response.SignupResponse;
+import com.soaengry.moment.domain.user.dto.response.TokenResponse;
+import com.soaengry.moment.domain.user.entity.User;
+import com.soaengry.moment.domain.user.exception.UserErrorCode;
+import com.soaengry.moment.domain.user.exception.UserException;
+import com.soaengry.moment.domain.user.repository.RefreshTokenRepository;
+import com.soaengry.moment.domain.user.repository.UserRepository;
+import com.soaengry.moment.domain.user.service.AuthService;
 import com.soaengry.moment.global.security.JwtProvider;
-import com.soaengry.moment.user.dto.request.LoginRequest;
-import com.soaengry.moment.user.dto.request.SignupRequest;
-import com.soaengry.moment.user.dto.request.VerifyEmailRequest;
-import com.soaengry.moment.user.dto.response.SignupResponse;
-import com.soaengry.moment.user.dto.response.TokenResponse;
-import com.soaengry.moment.user.entity.User;
-import com.soaengry.moment.user.repository.EmailVerificationRepository;
-import com.soaengry.moment.user.repository.RefreshTokenRepository;
-import com.soaengry.moment.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -103,8 +104,8 @@ class AuthServiceTest {
 
         // when & then
         assertThatThrownBy(() -> authService.signup(request2))
-                .isInstanceOf(CustomException.class)
-                .hasMessage(ErrorCode.DUPLICATE_001.getMessage());
+                .isInstanceOf(UserException.class)
+                .hasMessage(UserErrorCode.DUPLICATE_EMAIL.getMessage());
 
         System.out.println("✅ 이메일 중복 테스트 통과");
     }
@@ -204,8 +205,8 @@ class AuthServiceTest {
 
         // when & then
         assertThatThrownBy(() -> authService.login(loginRequest))
-                .isInstanceOf(CustomException.class)
-                .hasMessage(ErrorCode.AUTH_001.getMessage());
+                .isInstanceOf(UserException.class)
+                .hasMessage(UserErrorCode.AUTH_INVALID_CREDENTIALS.getMessage());
 
         System.out.println("✅ 잘못된 비밀번호 테스트 통과");
     }

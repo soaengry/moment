@@ -1,5 +1,6 @@
 package com.soaengry.moment.user.service;
 
+import com.soaengry.moment.domain.email.service.EmailService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

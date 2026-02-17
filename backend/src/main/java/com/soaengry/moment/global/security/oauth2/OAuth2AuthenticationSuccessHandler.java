@@ -1,9 +1,9 @@
 package com.soaengry.moment.global.security.oauth2;
 
+import com.soaengry.moment.domain.user.entity.User;
+import com.soaengry.moment.domain.user.repository.RefreshTokenRepository;
+import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.global.security.JwtProvider;
-import com.soaengry.moment.user.entity.User;
-import com.soaengry.moment.user.repository.RefreshTokenRepository;
-import com.soaengry.moment.user.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

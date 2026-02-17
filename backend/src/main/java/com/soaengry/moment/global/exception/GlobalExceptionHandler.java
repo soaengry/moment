@@ -1,5 +1,8 @@
 package com.soaengry.moment.global.exception;
 
+import com.soaengry.moment.domain.email.exception.EmailException;
+import com.soaengry.moment.domain.user.exception.UserException;
+import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +20,64 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     /**
-     * BusinessException 처리
+     * WeddingException 처리
      */
-    @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(CustomException e) {
-        log.warn("Business Exception: {}", e.getMessage());
+    @ExceptionHandler(WeddingException.class)
+    public ResponseEntity<ErrorResponse> handleWeddingException(WeddingException e) {
+        log.warn("Wedding Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
-        HttpStatus status = determineHttpStatus(e.getErrorCode());
+        HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+        ErrorResponse response = ErrorResponse.of(
+                e.getErrorCode().name(),
+                e.getMessage(),
+                status.value()
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    /**
+     * UserException 처리
+     */
+    @ExceptionHandler(UserException.class)
+    public ResponseEntity<ErrorResponse> handleUserException(UserException e) {
+        log.warn("User Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+
+        HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+        ErrorResponse response = ErrorResponse.of(
+                e.getErrorCode().name(),
+                e.getMessage(),
+                status.value()
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    /**
+     * FileException 처리
+     */
+    @ExceptionHandler(FileException.class)
+    public ResponseEntity<ErrorResponse> handleFileException(FileException e) {
+        log.warn("File Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ErrorResponse response = ErrorResponse.of(
+                e.getErrorCode().name(),
+                e.getMessage(),
+                status.value()
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    /**
+     * EmailException 처리
+     */
+    @ExceptionHandler(EmailException.class)
+    public ResponseEntity<ErrorResponse> handleEmailException(EmailException e) {
+        log.error("Email Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ErrorResponse response = ErrorResponse.of(
                 e.getErrorCode().name(),
                 e.getMessage(),
@@ -72,21 +126,21 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * ErrorCode에 따른 HTTP 상태 코드 결정
+     * ErrorCode 이름에 따른 HTTP 상태 코드 결정
      */
-    private HttpStatus determineHttpStatus(ErrorCode errorCode) {
-        String code = errorCode.name();
-
+    private HttpStatus determineHttpStatusFromCode(String code) {
         if (code.startsWith("AUTH")) {
             return HttpStatus.UNAUTHORIZED;
         } else if (code.startsWith("DUPLICATE")) {
             return HttpStatus.CONFLICT;
-        } else if (code.startsWith("NOT_FOUND")) {
+        } else if (code.endsWith("NOT_FOUND")) {
             return HttpStatus.NOT_FOUND;
         } else if (code.startsWith("VALIDATION")) {
             return HttpStatus.BAD_REQUEST;
+        } else if (code.endsWith("LIMIT_EXCEEDED")) {
+            return HttpStatus.BAD_REQUEST;
         } else {
-            return HttpStatus.INTERNAL_SERVER_ERROR;
+            return HttpStatus.BAD_REQUEST;
         }
     }
 }
