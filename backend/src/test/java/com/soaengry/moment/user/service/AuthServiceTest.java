@@ -1,6 +1,6 @@
 package com.soaengry.moment.user.service;
 
-import com.soaengry.moment.global.exception.BusinessException;
+import com.soaengry.moment.global.exception.CustomException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import com.soaengry.moment.global.security.JwtProvider;
 import com.soaengry.moment.user.dto.request.LoginRequest;
@@ -103,7 +103,7 @@ class AuthServiceTest {
 
         // when & then
         assertThatThrownBy(() -> authService.signup(request2))
-                .isInstanceOf(BusinessException.class)
+                .isInstanceOf(CustomException.class)
                 .hasMessage(ErrorCode.DUPLICATE_001.getMessage());
 
         System.out.println("✅ 이메일 중복 테스트 통과");
@@ -204,7 +204,7 @@ class AuthServiceTest {
 
         // when & then
         assertThatThrownBy(() -> authService.login(loginRequest))
-                .isInstanceOf(BusinessException.class)
+                .isInstanceOf(CustomException.class)
                 .hasMessage(ErrorCode.AUTH_001.getMessage());
 
         System.out.println("✅ 잘못된 비밀번호 테스트 통과");
