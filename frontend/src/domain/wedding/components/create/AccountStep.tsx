@@ -22,6 +22,7 @@ const SIDE_OPTIONS: { value: AccountSide; label: string }[] = [
 
 const emptyAccount = (orderIndex: number): AccountRequest => ({
   bankName: "",
+  bankCode: "",
   accountNumber: "",
   accountHolder: "",
   orderIndex,
@@ -214,16 +215,27 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>예금주</label>
+                    <label className={labelClass}>은행코드</label>
                     <input
-                      value={account.accountHolder}
+                      value={account.bankCode}
                       onChange={(e) =>
-                        updateAccount(gi, ai, "accountHolder", e.target.value)
+                        updateAccount(gi, ai, "bankCode", e.target.value)
                       }
-                      placeholder="홍길동"
+                      placeholder="004"
                       className={inputClass}
                     />
                   </div>
+                </div>
+                <div>
+                  <label className={labelClass}>예금주</label>
+                  <input
+                    value={account.accountHolder}
+                    onChange={(e) =>
+                      updateAccount(gi, ai, "accountHolder", e.target.value)
+                    }
+                    placeholder="홍길동"
+                    className={inputClass}
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>계좌번호</label>

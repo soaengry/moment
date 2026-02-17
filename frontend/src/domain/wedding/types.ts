@@ -155,7 +155,7 @@ export interface AccountGroupRequest {
 
 export interface AccountRequest {
   bankName: string;
-  bankCode?: string;
+  bankCode: string;
   accountNumber: string;
   accountHolder: string;
   kakaoPayUrl?: string;
