@@ -16,6 +16,7 @@ import {
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
 import { HomePage } from "../../global/pages";
+import { WeddingInfoPage } from "../../domain/wedding/pages";
 
 const AppRouter: FC = () => {
   return (
@@ -35,6 +36,7 @@ const AppRouter: FC = () => {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/restore-account" element={<RestoreAccountPage />} />
         <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
+        <Route path="/wedding/:weddingId" element={<WeddingInfoPage />} />
 
         {/* 로그인 필요 페이지 */}
 
