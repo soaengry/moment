@@ -120,8 +120,6 @@ export interface WeddingRequest {
   venueName: string;
   venueAddress: string;
   venueDetail?: string;
-  venueLat?: number;
-  venueLng?: number;
   venuePhone?: string;
   mapImageUrl?: string;
   dressCode?: string;

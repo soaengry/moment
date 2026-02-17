@@ -7,6 +7,7 @@ import com.soaengry.moment.global.security.oauth2.OAuth2AuthenticationSuccessHan
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -49,6 +50,10 @@ public class SecurityConfig {
                                 "/login/oauth2/**",
                                 "/oauth2/**"
                         ).permitAll()
+                        // Wedding CRUD는 ADMIN만 접근 가능
+                        .requestMatchers(HttpMethod.POST, "/api/weddings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/weddings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/**").hasRole("ADMIN")
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

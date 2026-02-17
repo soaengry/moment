@@ -15,12 +15,14 @@ import {
 } from "../../domain/user/pages";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
+import BottomNav from "../../global/components/BottomNav";
 import { HomePage } from "../../global/pages";
 import { WeddingInfoPage, WeddingCreatePage } from "../../domain/wedding/pages";
 
 const AppRouter: FC = () => {
   return (
     <BrowserRouter>
+      <BottomNav />
       <Routes>
         {/* 비로그인 페이지 */}
         <Route
