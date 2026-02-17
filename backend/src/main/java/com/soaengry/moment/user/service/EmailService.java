@@ -1,6 +1,6 @@
 package com.soaengry.moment.user.service;
 
-import com.soaengry.moment.global.exception.BusinessException;
+import com.soaengry.moment.global.exception.CustomException;
 import com.soaengry.moment.global.exception.ErrorCode;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -77,7 +77,7 @@ public class EmailService {
             log.info("이메일 전송 완료: {}", to);
         } catch (MessagingException e) {
             log.error("이메일 전송 실패: {}", to, e);
-            throw new BusinessException(ErrorCode.EMAIL_001);
+            throw new CustomException(ErrorCode.EMAIL_001);
         }
     }
 

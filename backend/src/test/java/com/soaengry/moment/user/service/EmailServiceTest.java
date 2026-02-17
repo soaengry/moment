@@ -2,9 +2,9 @@ package com.soaengry.moment.user.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,10 +16,10 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("test")
 class EmailServiceTest {
 
-    @Autowired
+    @InjectMocks
     private EmailService emailService;
 
-    @MockBean
+    @Mock
     private JavaMailSender mailSender;
 
     @Test
