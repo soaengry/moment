@@ -112,6 +112,71 @@ export interface AnnouncementResponse {
   updatedAt: string;
 }
 
+// ─── Request ───
+
+export interface WeddingRequest {
+  title: string;
+  weddingDate: string;
+  venueName: string;
+  venueAddress: string;
+  venueDetail?: string;
+  venueLat?: number;
+  venueLng?: number;
+  venuePhone?: string;
+  mapImageUrl?: string;
+  dressCode?: string;
+  notice?: string;
+  parkingInfo?: string;
+  mealInfo?: string;
+}
+
+export interface CoupleRequest {
+  role: CoupleRole;
+  name: string;
+  fatherName?: string;
+  motherName?: string;
+  isFatherAlive?: boolean;
+  isMotherAlive?: boolean;
+  contact?: string;
+  profileImageUrl?: string;
+  introduction?: string;
+}
+
+export interface ScheduleRequest {
+  time: string;
+  title: string;
+  description?: string;
+  orderIndex: number;
+}
+
+export interface AccountGroupRequest {
+  side: AccountSide;
+  groupName: string;
+  orderIndex: number;
+}
+
+export interface AccountRequest {
+  bankName: string;
+  bankCode?: string;
+  accountNumber: string;
+  accountHolder: string;
+  kakaoPayUrl?: string;
+  orderIndex: number;
+}
+
+export interface TransportationRequest {
+  type: TransportType;
+  title: string;
+  description?: string;
+  orderIndex: number;
+}
+
+export interface AnnouncementRequest {
+  title: string;
+  content: string;
+  isPinned: boolean;
+}
+
 // ─── Aggregated ───
 
 export interface WeddingInfoResponse {
