@@ -15,11 +15,14 @@ import {
 } from "../../domain/user/pages";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
+import BottomNav from "../../global/components/BottomNav";
 import { HomePage } from "../../global/pages";
+import { WeddingInfoPage, WeddingCreatePage } from "../../domain/wedding/pages";
 
 const AppRouter: FC = () => {
   return (
     <BrowserRouter>
+      <BottomNav />
       <Routes>
         {/* 비로그인 페이지 */}
         <Route
@@ -35,9 +38,18 @@ const AppRouter: FC = () => {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/restore-account" element={<RestoreAccountPage />} />
         <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
+        <Route path="/wedding/:weddingId" element={<WeddingInfoPage />} />
 
         {/* 로그인 필요 페이지 */}
 
+        <Route
+          path="/wedding/create"
+          element={
+            <ProtectedRoute>
+              <WeddingCreatePage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/my-page"
           element={

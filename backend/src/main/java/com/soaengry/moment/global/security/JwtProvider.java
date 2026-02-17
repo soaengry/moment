@@ -85,6 +85,11 @@ public class JwtProvider {
         return claims.get("token_version", Integer.class);
     }
 
+    public String getRoleFromToken(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("role", String.class);
+    }
+
     public String getDeviceIdFromToken(String token) {
         Claims claims = parseToken(token);
         return claims.get("device_id", String.class);

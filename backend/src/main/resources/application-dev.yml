@@ -131,6 +131,9 @@ app:
   oauth2:
     redirect-uri: ${OAUTH2_REDIRECT_URI}
 
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY}
+
 logging:
   level:
     com.soaengry.moment: DEBUG

@@ -6,6 +6,7 @@ import com.soaengry.moment.domain.wedding.entity.*;
 import com.soaengry.moment.domain.wedding.exception.WeddingErrorCode;
 import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import com.soaengry.moment.domain.wedding.repository.*;
+import com.soaengry.moment.global.service.KakaoGeocodingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +27,20 @@ public class WeddingService {
     private final TransportationRepository transportationRepository;
     private final AccommodationRepository accommodationRepository;
     private final AnnouncementRepository announcementRepository;
+    private final KakaoGeocodingService kakaoGeocodingService;
+
+    private KakaoGeocodingService.Coordinate resolveCoordinate(String address) {
+        KakaoGeocodingService.Coordinate coord = kakaoGeocodingService.geocode(address);
+        if (coord == null) {
+            throw new WeddingException(WeddingErrorCode.GEOCODING_FAILED);
+        }
+        return coord;
+    }
 
     @Transactional
     public WeddingResponse createWedding(WeddingRequest request) {
-        Wedding wedding = request.toEntity();
+        KakaoGeocodingService.Coordinate coord = resolveCoordinate(request.venueAddress());
+        Wedding wedding = request.toEntity(coord.lat(), coord.lng());
         Wedding saved = weddingRepository.save(wedding);
         return WeddingResponse.from(saved);
     }
@@ -45,14 +56,16 @@ public class WeddingService {
         Wedding wedding = weddingRepository.findById(weddingId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
 
+        KakaoGeocodingService.Coordinate coord = resolveCoordinate(request.venueAddress());
+
         wedding.update(
                 request.title(),
                 request.weddingDate(),
                 request.venueName(),
                 request.venueAddress(),
                 request.venueDetail(),
-                request.venueLat(),
-                request.venueLng(),
+                coord.lat(),
+                coord.lng(),
                 request.venuePhone(),
                 request.mapImageUrl(),
                 request.dressCode(),
