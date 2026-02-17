@@ -1,12 +1,13 @@
 package com.soaengry.moment.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.soaengry.moment.user.dto.request.SignupRequest;
-import com.soaengry.moment.user.dto.request.VerifyEmailRequest;
-import com.soaengry.moment.user.dto.response.SignupResponse;
-import com.soaengry.moment.user.repository.EmailVerificationRepository;
-import com.soaengry.moment.user.repository.UserRepository;
-import com.soaengry.moment.user.service.AuthService;
+import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
+import com.soaengry.moment.domain.user.controller.*;
+import com.soaengry.moment.domain.user.dto.request.SignupRequest;
+import com.soaengry.moment.domain.user.dto.request.VerifyEmailRequest;
+import com.soaengry.moment.domain.user.dto.response.SignupResponse;
+import com.soaengry.moment.domain.user.repository.UserRepository;
+import com.soaengry.moment.domain.user.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

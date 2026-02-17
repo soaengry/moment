@@ -1,7 +1,7 @@
 package com.soaengry.moment.global.security;
 
+import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.global.config.JwtProperties;
-import com.soaengry.moment.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
