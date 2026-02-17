@@ -14,8 +14,6 @@ interface FormValues {
   venueName: string;
   venueAddress: string;
   venueDetail: string;
-  venueLat: string;
-  venueLng: string;
   venuePhone: string;
   mapImageUrl: string;
 }
@@ -41,8 +39,6 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
       venueName: initialData?.venueName ?? "",
       venueAddress: initialData?.venueAddress ?? "",
       venueDetail: initialData?.venueDetail ?? "",
-      venueLat: initialData?.venueLat?.toString() ?? "",
-      venueLng: initialData?.venueLng?.toString() ?? "",
       venuePhone: initialData?.venuePhone ?? "",
       mapImageUrl: initialData?.mapImageUrl ?? "",
     },
@@ -59,8 +55,6 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
       venueName: values.venueName,
       venueAddress: values.venueAddress,
       venueDetail: values.venueDetail || undefined,
-      venueLat: values.venueLat ? Number(values.venueLat) : undefined,
-      venueLng: values.venueLng ? Number(values.venueLng) : undefined,
       venuePhone: values.venuePhone || undefined,
       mapImageUrl: values.mapImageUrl || undefined,
     };
@@ -145,25 +139,6 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
             placeholder="3층 그랜드볼룸"
             className={inputClass}
           />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelClass}>위도</label>
-            <input
-              {...register("venueLat")}
-              placeholder="37.5665"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>경도</label>
-            <input
-              {...register("venueLng")}
-              placeholder="126.9780"
-              className={inputClass}
-            />
-          </div>
         </div>
 
         <div>
