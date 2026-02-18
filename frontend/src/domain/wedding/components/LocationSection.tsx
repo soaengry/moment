@@ -7,22 +7,6 @@ interface Props {
   wedding: WeddingResponse;
 }
 
-declare global {
-  interface Window {
-    kakao: {
-      maps: {
-        load: (callback: () => void) => void;
-        Map: new (
-          container: HTMLElement,
-          options: { center: unknown; level: number },
-        ) => unknown;
-        LatLng: new (lat: number, lng: number) => unknown;
-        Marker: new (options: { map: unknown; position: unknown }) => unknown;
-      };
-    };
-  }
-}
-
 const loadKakaoMapSdk = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (window.kakao?.maps) {
