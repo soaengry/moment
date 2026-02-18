@@ -17,12 +17,6 @@ public record PostResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public record AuthorInfo(
-            Long id,
-            String nickname,
-            String profileImageUrl
-    ) {}
-
     public static PostResponse from(Post post, boolean isLiked, boolean isBookmarked) {
         return new PostResponse(
                 post.getId(),
@@ -36,7 +30,16 @@ public record PostResponse(
                 post.getLikeCount(),
                 post.getCommentCount(),
                 isLiked,
-                isBookmarked
+                isBookmarked,
+                post.getCreatedAt(),
+                post.getUpdatedAt()
         );
+    }
+
+    public record AuthorInfo(
+            Long id,
+            String nickname,
+            String profileImageUrl
+    ) {
     }
 }
