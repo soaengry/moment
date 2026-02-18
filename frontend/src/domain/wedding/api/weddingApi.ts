@@ -35,6 +35,18 @@ export const weddingApi = {
     return data;
   },
 
+  updateWedding: async (weddingId: number, request: WeddingRequest): Promise<WeddingResponse> => {
+    const { data } = await axiosInstance.put<WeddingResponse>(
+      WEDDING_API.DETAIL(weddingId),
+      request,
+    );
+    return data;
+  },
+
+  deleteWedding: async (weddingId: number): Promise<void> => {
+    await axiosInstance.delete(WEDDING_API.DETAIL(weddingId));
+  },
+
   // Couple
   createCouple: async (
     weddingId: number,
@@ -92,6 +104,41 @@ export const weddingApi = {
       request,
     );
     return data;
+  },
+
+  // Update/Delete for sub-resources
+  updateCouple: async (coupleId: number, request: CoupleRequest): Promise<CoupleResponse> => {
+    const { data } = await axiosInstance.put<CoupleResponse>(`/api/weddings/couples/${coupleId}`, request);
+    return data;
+  },
+
+  deleteCouple: async (coupleId: number): Promise<void> => {
+    await axiosInstance.delete(`/api/weddings/couples/${coupleId}`);
+  },
+
+  updateSchedule: async (scheduleId: number, request: ScheduleRequest): Promise<ScheduleResponse> => {
+    const { data } = await axiosInstance.put<ScheduleResponse>(`/api/weddings/schedules/${scheduleId}`, request);
+    return data;
+  },
+
+  deleteSchedule: async (scheduleId: number): Promise<void> => {
+    await axiosInstance.delete(`/api/weddings/schedules/${scheduleId}`);
+  },
+
+  deleteAccountGroup: async (groupId: number): Promise<void> => {
+    await axiosInstance.delete(`/api/weddings/account-groups/${groupId}`);
+  },
+
+  deleteAccount: async (accountId: number): Promise<void> => {
+    await axiosInstance.delete(`/api/weddings/accounts/${accountId}`);
+  },
+
+  deleteTransportation: async (transportationId: number): Promise<void> => {
+    await axiosInstance.delete(`/api/weddings/transportation/${transportationId}`);
+  },
+
+  deleteAnnouncement: async (announcementId: number): Promise<void> => {
+    await axiosInstance.delete(`/api/weddings/announcements/${announcementId}`);
   },
 
   // Announcement

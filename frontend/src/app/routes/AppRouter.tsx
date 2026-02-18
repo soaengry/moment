@@ -17,7 +17,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
 import BottomNav from "../../global/components/BottomNav";
 import { HomePage } from "../../global/pages";
-import { WeddingInfoPage, WeddingCreatePage } from "../../domain/wedding/pages";
+import { WeddingInfoPage, WeddingCreatePage, WeddingEditPage } from "../../domain/wedding/pages";
 
 const AppRouter: FC = () => {
   return (
@@ -47,6 +47,14 @@ const AppRouter: FC = () => {
           element={
             <ProtectedRoute>
               <WeddingCreatePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wedding/:weddingId/edit"
+          element={
+            <ProtectedRoute>
+              <WeddingEditPage />
             </ProtectedRoute>
           }
         />
