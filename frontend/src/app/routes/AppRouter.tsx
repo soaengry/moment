@@ -18,6 +18,8 @@ import Layout from "../../global/components/Layout";
 import BottomNav from "../../global/components/BottomNav";
 import { HomePage } from "../../global/pages";
 import { WeddingInfoPage, WeddingCreatePage, WeddingEditPage } from "../../domain/wedding/pages";
+import { FeedPage } from "../../domain/feed/pages";
+import { ChatPage, ChatRoomPage } from "../../domain/chat/pages";
 
 const AppRouter: FC = () => {
   return (
@@ -55,6 +57,30 @@ const AppRouter: FC = () => {
           element={
             <ProtectedRoute>
               <WeddingEditPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/feed"
+          element={
+            <ProtectedRoute>
+              <FeedPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wedding/:weddingId/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wedding/:weddingId/chat/:roomId"
+          element={
+            <ProtectedRoute>
+              <ChatRoomPage />
             </ProtectedRoute>
           }
         />

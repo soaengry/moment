@@ -13,6 +13,7 @@ import {
   AccountSection,
   AnnouncementSection,
 } from "../components";
+import GuestbookSection from "../../guestbook/components/GuestbookSection";
 
 const WeddingInfoPage: FC = () => {
   const { weddingId } = useParams<{ weddingId: string }>();
@@ -98,6 +99,16 @@ const WeddingInfoPage: FC = () => {
 
         {/* 계좌번호 */}
         <AccountSection accountGroups={accountGroups} />
+
+        {/* 구분선 */}
+        <div className="flex items-center justify-center gap-3 py-4">
+          <div className="w-16 h-px bg-primary/10" />
+          <div className="w-1 h-1 rounded-full bg-primary/20" />
+          <div className="w-16 h-px bg-primary/10" />
+        </div>
+
+        {/* 방명록 */}
+        <GuestbookSection weddingId={Number(weddingId)} />
 
         {/* 하단 푸터 */}
         <footer className="py-10 text-center">
