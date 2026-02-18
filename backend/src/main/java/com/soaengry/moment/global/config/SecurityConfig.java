@@ -47,6 +47,7 @@ public class SecurityConfig {
                                 "/api/auth/check-nickname",
                                 "/api/users/restore",
                                 "/api/weddings/*/info",
+                                "/api/banks/**",
                                 "/login/oauth2/**",
                                 "/oauth2/**"
                         ).permitAll()
