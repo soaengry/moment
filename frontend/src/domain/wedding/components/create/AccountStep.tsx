@@ -1,5 +1,6 @@
-import { type FC, useState } from "react";
+import { type FC, useState, useRef } from "react";
 import type { AccountRequest, AccountSide } from "../../types";
+import axiosInstance from "../../../../global/api/axiosInstance";
 
 export interface AccountGroupFormData {
   side: AccountSide;
@@ -39,6 +40,8 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
   const [groups, setGroups] = useState<AccountGroupFormData[]>(
     initialData.length > 0 ? initialData : [],
   );
+  const [detectingMap, setDetectingMap] = useState<Record<string, boolean>>({});
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const addGroup = () => {
     if (groups.length >= 3) return;
@@ -108,12 +111,64 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     );
   };
 
+  const detectBank = (groupIndex: number, accountIndex: number, accountNumber: string) => {
+    const key = `${groupIndex}-${accountIndex}`;
+    const cleaned = accountNumber.replace(/[^0-9]/g, "");
+
+    // 이전 타이머 취소
+    if (debounceTimers.current[key]) {
+      clearTimeout(debounceTimers.current[key]);
+    }
+
+    // 3자리 미만이면 은행 초기화
+    if (cleaned.length < 3) {
+      updateAccount(groupIndex, accountIndex, "bankName", "");
+      updateAccount(groupIndex, accountIndex, "bankCode", "");
+      return;
+    }
+
+    setDetectingMap((prev) => ({ ...prev, [key]: true }));
+
+    debounceTimers.current[key] = setTimeout(async () => {
+      try {
+        const { data } = await axiosInstance.get<{ bankCode: string; bankName: string }>(
+          `/api/banks/detect?accountNumber=${encodeURIComponent(accountNumber)}`,
+        );
+        setGroups((prev) =>
+          prev.map((g, gi) => {
+            if (gi !== groupIndex) return g;
+            return {
+              ...g,
+              accounts: g.accounts.map((a, ai) =>
+                ai === accountIndex
+                  ? { ...a, bankName: data.bankName, bankCode: data.bankCode }
+                  : a,
+              ),
+            };
+          }),
+        );
+      } catch {
+        // 감지 실패 시 무시
+      } finally {
+        setDetectingMap((prev) => ({ ...prev, [key]: false }));
+      }
+    }, 400);
+  };
+
+  const handleAccountNumberChange = (
+    groupIndex: number,
+    accountIndex: number,
+    value: string,
+  ) => {
+    updateAccount(groupIndex, accountIndex, "accountNumber", value);
+    detectBank(groupIndex, accountIndex, value);
+  };
+
   const handleSubmit = () => {
-    // 유효한 그룹만 (최소 1개의 유효한 계좌가 있는)
     const valid = groups
       .filter((g) =>
         g.accounts.some(
-          (a) => a.bankName.trim() && a.accountNumber.trim(),
+          (a) => a.bankCode.trim() && a.accountNumber.trim(),
         ),
       )
       .map((g, i) => ({
@@ -121,7 +176,7 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
         orderIndex: i,
         groupName: g.groupName || SIDE_OPTIONS.find((s) => s.value === g.side)?.label || "",
         accounts: g.accounts
-          .filter((a) => a.bankName.trim() && a.accountNumber.trim())
+          .filter((a) => a.bankCode.trim() && a.accountNumber.trim())
           .map((a, ai) => ({ ...a, orderIndex: ai })),
       }));
     onSubmit(valid);
@@ -187,80 +242,104 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
             </div>
 
             {/* 계좌 목록 */}
-            {group.accounts.map((account, ai) => (
-              <div
-                key={ai}
-                className="p-3 rounded-lg bg-white border border-gray-100 space-y-2 relative"
-              >
-                {group.accounts.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeAccount(gi, ai)}
-                    className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full text-gray-300 hover:text-gray-500 text-xs"
-                  >
-                    ✕
-                  </button>
-                )}
+            {group.accounts.map((account, ai) => {
+              const detectKey = `${gi}-${ai}`;
+              const isDetecting = detectingMap[detectKey] ?? false;
 
-                <div className="grid grid-cols-2 gap-2">
+              return (
+                <div
+                  key={ai}
+                  className="p-3 rounded-lg bg-white border border-gray-100 space-y-2 relative"
+                >
+                  {group.accounts.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeAccount(gi, ai)}
+                      className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full text-gray-300 hover:text-gray-500 text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+
                   <div>
-                    <label className={labelClass}>은행명</label>
+                    <label className={labelClass}>계좌번호</label>
                     <input
-                      value={account.bankName}
+                      value={account.accountNumber}
                       onChange={(e) =>
-                        updateAccount(gi, ai, "bankName", e.target.value)
+                        handleAccountNumberChange(gi, ai, e.target.value)
                       }
-                      placeholder="○○은행"
+                      placeholder="계좌번호를 입력하면 은행이 자동 감지됩니다"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  {/* 은행 감지 결과 */}
+                  <div className="flex items-center gap-2 min-h-[32px]">
+                    {isDetecting ? (
+                      <span className="text-xs text-gray-400">은행 감지 중...</span>
+                    ) : account.bankName ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                        {account.bankName}
+                        <span className="text-primary/60">({account.bankCode})</span>
+                      </span>
+                    ) : account.accountNumber.replace(/[^0-9]/g, "").length >= 3 ? (
+                      <span className="text-xs text-error">은행을 감지할 수 없습니다. 직접 입력해주세요.</span>
+                    ) : null}
+                  </div>
+
+                  {/* 은행 자동감지 실패 시 수동 입력 */}
+                  {!account.bankName && account.accountNumber.replace(/[^0-9]/g, "").length >= 3 && !isDetecting && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className={labelClass}>은행명</label>
+                        <input
+                          value={account.bankName}
+                          onChange={(e) =>
+                            updateAccount(gi, ai, "bankName", e.target.value)
+                          }
+                          placeholder="○○은행"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>은행코드</label>
+                        <input
+                          value={account.bankCode}
+                          onChange={(e) =>
+                            updateAccount(gi, ai, "bankCode", e.target.value)
+                          }
+                          placeholder="004"
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className={labelClass}>예금주</label>
+                    <input
+                      value={account.accountHolder}
+                      onChange={(e) =>
+                        updateAccount(gi, ai, "accountHolder", e.target.value)
+                      }
+                      placeholder="홍길동"
                       className={inputClass}
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>은행코드</label>
+                    <label className={labelClass}>카카오페이 송금 URL</label>
                     <input
-                      value={account.bankCode}
+                      value={account.kakaoPayUrl ?? ""}
                       onChange={(e) =>
-                        updateAccount(gi, ai, "bankCode", e.target.value)
+                        updateAccount(gi, ai, "kakaoPayUrl", e.target.value)
                       }
-                      placeholder="004"
+                      placeholder="https://qr.kakaopay.com/..."
                       className={inputClass}
                     />
                   </div>
                 </div>
-                <div>
-                  <label className={labelClass}>예금주</label>
-                  <input
-                    value={account.accountHolder}
-                    onChange={(e) =>
-                      updateAccount(gi, ai, "accountHolder", e.target.value)
-                    }
-                    placeholder="홍길동"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>계좌번호</label>
-                  <input
-                    value={account.accountNumber}
-                    onChange={(e) =>
-                      updateAccount(gi, ai, "accountNumber", e.target.value)
-                    }
-                    placeholder="123-456-789012"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>카카오페이 송금 URL</label>
-                  <input
-                    value={account.kakaoPayUrl ?? ""}
-                    onChange={(e) =>
-                      updateAccount(gi, ai, "kakaoPayUrl", e.target.value)
-                    }
-                    placeholder="https://qr.kakaopay.com/..."
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {group.accounts.length < 2 && (
               <button
