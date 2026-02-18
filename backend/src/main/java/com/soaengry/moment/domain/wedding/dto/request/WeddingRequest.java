@@ -10,8 +10,6 @@ public record WeddingRequest(
         String venueName,
         String venueAddress,
         String venueDetail,
-        Double venueLat,
-        Double venueLng,
         String venuePhone,
         String mapImageUrl,
         String dressCode,
@@ -19,7 +17,7 @@ public record WeddingRequest(
         String parkingInfo,
         String mealInfo
 ) {
-    public Wedding toEntity() {
+    public Wedding toEntity(Double venueLat, Double venueLng) {
         return Wedding.create(
                 title,
                 weddingDate,

@@ -33,7 +33,10 @@ public enum WeddingErrorCode {
     ACCOMMODATION_NOT_FOUND("숙박 정보를 찾을 수 없습니다"),
 
     // Announcement
-    ANNOUNCEMENT_NOT_FOUND("공지사항을 찾을 수 없습니다");
+    ANNOUNCEMENT_NOT_FOUND("공지사항을 찾을 수 없습니다"),
+
+    // Geocoding
+    GEOCODING_FAILED("주소를 좌표로 변환할 수 없습니다. 올바른 주소를 입력해주세요");
 
     private final String message;
 }
