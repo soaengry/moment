@@ -1,9 +1,16 @@
-import { type FC, useState } from "react";
+import { type FC, useState, useRef } from "react";
+import { IoAdd, IoClose } from "react-icons/io5";
 import type { CoupleRequest, CoupleRole } from "../../types";
+
+export interface LandingPhoto {
+  file: File;
+  preview: string;
+}
 
 interface Props {
   initialData: CoupleRequest[];
-  onSubmit: (couples: CoupleRequest[]) => void;
+  initialPhotos?: LandingPhoto[];
+  onSubmit: (couples: CoupleRequest[], photos: LandingPhoto[]) => void;
   onBack: () => void;
 }
 
@@ -18,14 +25,47 @@ const emptyCoupleForm = (role: CoupleRole): CoupleRequest => ({
   introduction: "",
 });
 
-const CoupleStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
+const CoupleStep: FC<Props> = ({ initialData, initialPhotos, onSubmit, onBack }) => {
   const [groom, setGroom] = useState<CoupleRequest>(
     initialData.find((c) => c.role === "GROOM") ?? emptyCoupleForm("GROOM"),
   );
   const [bride, setBride] = useState<CoupleRequest>(
     initialData.find((c) => c.role === "BRIDE") ?? emptyCoupleForm("BRIDE"),
   );
+  const [photos, setPhotos] = useState<LandingPhoto[]>(initialPhotos ?? []);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddPhoto = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const remaining = 4 - photos.length;
+    const newFiles = Array.from(files).slice(0, remaining);
+
+    const newPhotos: LandingPhoto[] = newFiles.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    setPhotos((prev) => [...prev, ...newPhotos]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setPhotos((prev) => {
+      const removed = prev[index];
+      URL.revokeObjectURL(removed.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const handleSubmit = () => {
     const newErrors: Record<string, string> = {};
@@ -38,7 +78,7 @@ const CoupleStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     }
 
     const couples: CoupleRequest[] = [groom, bride];
-    onSubmit(couples);
+    onSubmit(couples, photos);
   };
 
   const inputClass =
@@ -134,6 +174,65 @@ const CoupleStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     <div className="space-y-4">
       {renderPersonForm("신랑 정보", groom, setGroom, "groomName")}
       {renderPersonForm("신부 정보", bride, setBride, "brideName")}
+
+      {/* Landing Photos */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-primary">랜딩 사진</h3>
+          <span className="text-xs text-gray-400">{photos.length}/4장</span>
+        </div>
+        <p className="text-xs text-gray-400">
+          초대장 상단에 표시될 사진을 선택해주세요 (최소 1장, 최대 4장)
+        </p>
+
+        {/* Photo grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {photos.map((photo, index) => (
+            <div
+              key={index}
+              className="relative aspect-[3/4] rounded-xl overflow-hidden border border-gray-200 bg-gray-50"
+            >
+              <img
+                src={photo.preview}
+                alt={`랜딩 사진 ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemovePhoto(index)}
+                className="absolute top-2 right-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+              >
+                <IoClose size={16} className="text-white" />
+              </button>
+              <div className="absolute bottom-2 left-2 bg-black/40 text-white text-[10px] px-2 py-0.5 rounded-full">
+                {index + 1}
+              </div>
+            </div>
+          ))}
+
+          {/* Add button */}
+          {photos.length < 4 && (
+            <button
+              type="button"
+              onClick={handleAddPhoto}
+              className="aspect-[3/4] rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-primary hover:text-primary transition-colors"
+            >
+              <IoAdd size={28} />
+              <span className="text-xs font-medium">사진 추가</span>
+            </button>
+          )}
+        </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
 
       <div className="flex gap-3">
         <button
