@@ -4,6 +4,7 @@ import { ToastContainer } from "react-toastify";
 import { weddingApi } from "../api/weddingApi";
 import type { WeddingInfoResponse } from "../types";
 import {
+  LandingSection,
   CoupleSection,
   DateVenueSection,
   LocationSection,
@@ -26,7 +27,6 @@ const WeddingInfoPage: FC = () => {
         setIsLoading(false);
         return;
       }
-
       try {
         const info = await weddingApi.getWeddingInfo(Number(weddingId));
         setData(info);
@@ -36,13 +36,12 @@ const WeddingInfoPage: FC = () => {
         setIsLoading(false);
       }
     };
-
     fetchWeddingInfo();
   }, [weddingId]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-bgPrimary flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -50,29 +49,36 @@ const WeddingInfoPage: FC = () => {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-bgPrimary flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 text-lg mb-2">
-            {error ?? "초대장을 찾을 수 없습니다"}
-          </p>
-          <p className="text-gray-400 text-sm">
-            주소를 다시 확인해주세요
-          </p>
+          <p className="text-gray-500 text-lg mb-2">{error ?? "초대장을 찾을 수 없습니다"}</p>
+          <p className="text-gray-400 text-sm">주소를 다시 확인해주세요</p>
         </div>
       </div>
     );
   }
 
-  const { wedding, couples, schedules, accountGroups, transportation, announcements } = data;
+  const { wedding, couples, schedules, accountGroups, gallery, transportation, announcements } = data;
+  const groom = couples.find((c) => c.role === "GROOM");
+  const bride = couples.find((c) => c.role === "BRIDE");
 
   return (
-    <div className="min-h-screen bg-bgPrimary">
-      <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-        {/* 타이틀 */}
-        <div className="text-center pt-4 pb-2">
-          <h1 className="text-2xl font-bold text-gray-800">
-            {wedding.title}
-          </h1>
+    <div className="min-h-screen bg-[#faf9f6]">
+      <div className="max-w-lg mx-auto">
+        {/* 랜딩 슬라이더 */}
+        <LandingSection
+          gallery={gallery}
+          title={wedding.title}
+          weddingDate={wedding.weddingDate}
+          groomName={groom?.name}
+          brideName={bride?.name}
+        />
+
+        {/* 구분선 */}
+        <div className="flex items-center justify-center gap-3 py-8">
+          <div className="w-16 h-px bg-primary/10" />
+          <div className="w-1 h-1 rounded-full bg-primary/20" />
+          <div className="w-16 h-px bg-primary/10" />
         </div>
 
         {/* 신랑신부 소개 */}
@@ -87,44 +93,21 @@ const WeddingInfoPage: FC = () => {
         {/* 식순 */}
         <ScheduleSection schedules={schedules} />
 
-        {/* 드레스 코드 및 유의사항 */}
-        <DressCodeSection wedding={wedding} />
-
-        {/* 교통 안내 */}
-        {transportation.length > 0 && (
-          <section className="bg-white rounded-2xl shadow-lg p-6 border border-green-100">
-            <h3 className="text-center text-sm text-gray-400 tracking-widest mb-6">
-              TRANSPORTATION
-            </h3>
-            <div className="space-y-3">
-              {[...transportation]
-                .sort((a, b) => a.orderIndex - b.orderIndex)
-                .map((t) => (
-                  <div key={t.id} className="p-4 rounded-xl bg-bgPrimary">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-primary px-2 py-0.5 rounded bg-primary/10">
-                        {t.type}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-700">
-                        {t.title}
-                      </span>
-                    </div>
-                    {t.description && (
-                      <p className="text-sm text-gray-500 whitespace-pre-line">
-                        {t.description}
-                      </p>
-                    )}
-                  </div>
-                ))}
-            </div>
-          </section>
-        )}
+        {/* 정보 (드레스코드, 유의사항, 교통 등) */}
+        <DressCodeSection wedding={wedding} transportation={transportation} />
 
         {/* 계좌번호 */}
         <AccountSection accountGroups={accountGroups} />
 
-        {/* 하단 여백 (FAB 버튼 공간) */}
-        {announcements.length > 0 && <div className="h-16" />}
+        {/* 하단 푸터 */}
+        <footer className="py-10 text-center">
+          <p className="text-[10px] tracking-[0.3em] text-gray-300 uppercase">
+            Powered by Moment
+          </p>
+        </footer>
+
+        {/* 공지사항 FAB 공간 */}
+        {announcements.length > 0 && <div className="h-20" />}
       </div>
 
       {/* 공지사항 FAB + 모달 */}
