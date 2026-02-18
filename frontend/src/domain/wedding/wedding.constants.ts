@@ -8,4 +8,5 @@ export const WEDDING_API = {
   ACCOUNTS: (groupId: number) => `/api/weddings/account-groups/${groupId}/accounts`,
   TRANSPORTATION: (weddingId: number) => `/api/weddings/${weddingId}/transportation`,
   ANNOUNCEMENTS: (weddingId: number) => `/api/weddings/${weddingId}/announcements`,
+  GALLERIES: (weddingId: number) => `/api/weddings/${weddingId}/galleries`,
 } as const;

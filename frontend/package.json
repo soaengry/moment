@@ -15,6 +15,7 @@
     "@types/sockjs-client": "^1.5.4",
     "axios": "^1.13.5",
     "react": "^19.2.0",
+    "react-daum-postcode": "^3.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
     "react-icons": "^5.5.0",

@@ -1,5 +1,6 @@
-import { type FC } from "react";
+import { type FC, useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
+import DaumPostcodeEmbed from "react-daum-postcode";
 import type { WeddingRequest } from "../../types";
 
 interface Props {
@@ -15,8 +16,36 @@ interface FormValues {
   venueAddress: string;
   venueDetail: string;
   venuePhone: string;
-  mapImageUrl: string;
 }
+
+declare global {
+  interface Window {
+    kakao: {
+      maps: {
+        load: (callback: () => void) => void;
+        LatLng: new (lat: number, lng: number) => unknown;
+        Map: new (container: HTMLElement, options: { center: unknown; level: number }) => {
+          setCenter: (latlng: unknown) => void;
+        };
+        Marker: new (options: { map: unknown; position: unknown }) => {
+          setMap: (map: unknown | null) => void;
+          setPosition: (position: unknown) => void;
+        };
+        services: {
+          Geocoder: new () => {
+            addressSearch: (
+              address: string,
+              callback: (result: { x: string; y: string }[], status: string) => void,
+            ) => void;
+          };
+          Status: { OK: string };
+        };
+      };
+    };
+  }
+}
+
+const KAKAO_MAP_KEY = import.meta.env.VITE_KAKAO_JS_KEY ?? "";
 
 const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
   const dateFromISO = initialData?.weddingDate
@@ -26,6 +55,8 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -40,9 +71,71 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
       venueAddress: initialData?.venueAddress ?? "",
       venueDetail: initialData?.venueDetail ?? "",
       venuePhone: initialData?.venuePhone ?? "",
-      mapImageUrl: initialData?.mapImageUrl ?? "",
     },
   });
+
+  const [showPostcode, setShowPostcode] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<ReturnType<typeof window.kakao.maps.Map> | null>(null);
+  const markerRef = useRef<ReturnType<typeof window.kakao.maps.Marker> | null>(null);
+
+  const venueAddress = watch("venueAddress");
+
+  // Load Kakao Maps SDK
+  useEffect(() => {
+    if (!KAKAO_MAP_KEY) return;
+    if (window.kakao?.maps) {
+      window.kakao.maps.load(() => setMapLoaded(true));
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&libraries=services&autoload=false`;
+    script.onload = () => {
+      window.kakao.maps.load(() => setMapLoaded(true));
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  // Initialize or update map when address changes
+  useEffect(() => {
+    if (!mapLoaded || !venueAddress || !mapContainerRef.current) return;
+
+    const geocoder = new window.kakao.maps.services.Geocoder();
+    geocoder.addressSearch(venueAddress, (result, status) => {
+      if (status !== window.kakao.maps.services.Status.OK || result.length === 0) return;
+
+      const coords = new window.kakao.maps.LatLng(
+        parseFloat(result[0].y),
+        parseFloat(result[0].x),
+      );
+
+      if (!mapRef.current && mapContainerRef.current) {
+        mapRef.current = new window.kakao.maps.Map(mapContainerRef.current, {
+          center: coords,
+          level: 3,
+        });
+        markerRef.current = new window.kakao.maps.Marker({
+          map: mapRef.current,
+          position: coords,
+        });
+      } else if (mapRef.current && markerRef.current) {
+        mapRef.current.setCenter(coords);
+        markerRef.current.setPosition(coords);
+      }
+    });
+  }, [mapLoaded, venueAddress]);
+
+  const handlePostcodeComplete = (data: {
+    address: string;
+    roadAddress: string;
+    jibunAddress: string;
+    zonecode: string;
+  }) => {
+    const address = data.roadAddress || data.address;
+    setValue("venueAddress", address, { shouldValidate: true });
+    setShowPostcode(false);
+  };
 
   const onFormSubmit = (values: FormValues) => {
     const weddingDate = new Date(
@@ -56,7 +149,6 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
       venueAddress: values.venueAddress,
       venueDetail: values.venueDetail || undefined,
       venuePhone: values.venuePhone || undefined,
-      mapImageUrl: values.mapImageUrl || undefined,
     };
     onSubmit(request);
   };
@@ -120,17 +212,49 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
 
         <div>
           <label className={labelClass}>예식장 주소 *</label>
-          <input
-            {...register("venueAddress", {
-              required: "주소를 입력해주세요",
-            })}
-            placeholder="서울시 강남구 ○○로 123"
-            className={inputClass}
-          />
+          <div className="flex gap-2">
+            <input
+              {...register("venueAddress", {
+                required: "주소를 입력해주세요",
+              })}
+              readOnly
+              placeholder="주소 검색 버튼을 클릭해주세요"
+              className={`${inputClass} bg-gray-50 cursor-pointer`}
+              onClick={() => setShowPostcode(true)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPostcode(!showPostcode)}
+              className="px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium whitespace-nowrap hover:bg-primaryHover transition-colors"
+            >
+              주소 검색
+            </button>
+          </div>
           {errors.venueAddress && (
             <p className={errorClass}>{errors.venueAddress.message}</p>
           )}
         </div>
+
+        {/* Daum Postcode Popup */}
+        {showPostcode && (
+          <div className="rounded-xl overflow-hidden border border-gray-200">
+            <DaumPostcodeEmbed
+              onComplete={handlePostcodeComplete}
+              style={{ height: 400 }}
+            />
+          </div>
+        )}
+
+        {/* Kakao Map Preview */}
+        {venueAddress && (
+          <div>
+            <label className={labelClass}>지도 미리보기</label>
+            <div
+              ref={mapContainerRef}
+              className="w-full h-48 rounded-xl overflow-hidden border border-gray-200 bg-gray-100"
+            />
+          </div>
+        )}
 
         <div>
           <label className={labelClass}>상세 위치</label>
@@ -146,15 +270,6 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
           <input
             {...register("venuePhone")}
             placeholder="02-1234-5678"
-            className={inputClass}
-          />
-        </div>
-
-        <div>
-          <label className={labelClass}>약도 이미지 URL</label>
-          <input
-            {...register("mapImageUrl")}
-            placeholder="https://..."
             className={inputClass}
           />
         </div>

@@ -16,6 +16,7 @@ import type {
   TransportationResponse,
   AnnouncementRequest,
   AnnouncementResponse,
+  GalleryResponse,
 } from "../types";
 
 export const weddingApi = {
@@ -151,5 +152,29 @@ export const weddingApi = {
       request,
     );
     return data;
+  },
+
+  // Gallery
+  createGallery: async (
+    weddingId: number,
+    request: { imageUrl: string; thumbnailUrl?: string; caption?: string; orderIndex: number },
+  ): Promise<GalleryResponse> => {
+    const { data } = await axiosInstance.post<GalleryResponse>(
+      WEDDING_API.GALLERIES(weddingId),
+      request,
+    );
+    return data;
+  },
+
+  // File Upload
+  uploadFile: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await axiosInstance.post<{ url: string }>(
+      "/api/files/upload",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data.url;
   },
 };
