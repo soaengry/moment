@@ -7,6 +7,7 @@ import com.soaengry.moment.global.security.oauth2.OAuth2AuthenticationSuccessHan
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -45,9 +46,24 @@ public class SecurityConfig {
                                 "/api/auth/check-email",
                                 "/api/auth/check-nickname",
                                 "/api/users/restore",
+                                "/api/weddings/*/info",
+                                "/api/banks/**",
+                                "/ws/**",
                                 "/login/oauth2/**",
                                 "/oauth2/**"
                         ).permitAll()
+                        // 방명록: GET은 공개, POST/PUT/DELETE는 인증 필요 (서비스에서 처리)
+                        .requestMatchers(HttpMethod.GET, "/api/weddings/*/guestbook/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/weddings/*/guestbook/**").permitAll()
+                        // 채팅방 목록/메시지 조회는 인증 필요 (authenticated)
+                        .requestMatchers(HttpMethod.GET, "/api/weddings/*/chat/**").authenticated()
+                        // 피드 조회는 인증 필요
+                        .requestMatchers(HttpMethod.GET, "/api/feed/**").authenticated()
+                        // Wedding CRUD는 ADMIN만 접근 가능
+                        .requestMatchers(HttpMethod.POST, "/api/weddings/*/chat/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/weddings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/weddings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/**").hasRole("ADMIN")
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
