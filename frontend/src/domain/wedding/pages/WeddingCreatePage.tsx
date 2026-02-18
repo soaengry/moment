@@ -12,7 +12,7 @@ import type {
   AnnouncementRequest,
 } from "../types";
 import BasicInfoStep from "../components/create/BasicInfoStep";
-import CoupleStep from "../components/create/CoupleStep";
+import CoupleStep, { type LandingPhoto } from "../components/create/CoupleStep";
 import ScheduleStep from "../components/create/ScheduleStep";
 import AccountStep, {
   type AccountGroupFormData,
@@ -26,6 +26,7 @@ const STEPS = ["기본 정보", "신랑신부", "식순", "계좌 정보", "추�
 export interface WeddingFormState {
   basic: WeddingRequest | null;
   couples: CoupleRequest[];
+  landingPhotos: LandingPhoto[];
   schedules: ScheduleRequest[];
   accountGroups: AccountGroupFormData[];
   transportation: TransportationRequest[];
@@ -39,6 +40,7 @@ export interface WeddingFormState {
 const initialState: WeddingFormState = {
   basic: null,
   couples: [],
+  landingPhotos: [],
   schedules: [],
   accountGroups: [],
   transportation: [],
@@ -63,8 +65,8 @@ const WeddingCreatePage: FC = () => {
     handleNext();
   };
 
-  const handleCoupleSubmit = (couples: CoupleRequest[]) => {
-    setFormState((prev) => ({ ...prev, couples }));
+  const handleCoupleSubmit = (couples: CoupleRequest[], photos: LandingPhoto[]) => {
+    setFormState((prev) => ({ ...prev, couples, landingPhotos: photos }));
     handleNext();
   };
 
@@ -130,12 +132,22 @@ const WeddingCreatePage: FC = () => {
         }
       }
 
-      // 5. 교통
+      // 5. 랜딩 사진 → S3 업로드 → 갤러리 생성
+      for (let i = 0; i < state.landingPhotos.length; i++) {
+        const photo = state.landingPhotos[i];
+        const imageUrl = await weddingApi.uploadFile(photo.file);
+        await weddingApi.createGallery(weddingId, {
+          imageUrl,
+          orderIndex: i,
+        });
+      }
+
+      // 6. 교통
       for (const transport of state.transportation) {
         await weddingApi.createTransportation(weddingId, transport);
       }
 
-      // 6. 공지사항
+      // 7. 공지사항
       for (const announcement of state.announcements) {
         await weddingApi.createAnnouncement(weddingId, announcement);
       }
@@ -198,6 +210,7 @@ const WeddingCreatePage: FC = () => {
         {step === 1 && (
           <CoupleStep
             initialData={formState.couples}
+            initialPhotos={formState.landingPhotos}
             onSubmit={handleCoupleSubmit}
             onBack={handlePrev}
           />
