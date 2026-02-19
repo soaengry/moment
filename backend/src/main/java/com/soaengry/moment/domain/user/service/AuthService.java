@@ -4,8 +4,8 @@ import com.soaengry.moment.domain.email.entity.EmailVerification;
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
 import com.soaengry.moment.domain.email.service.EmailService;
 import com.soaengry.moment.domain.user.dto.request.LoginRequest;
+import com.soaengry.moment.domain.user.dto.request.ResendVerificationRequest;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
-import com.soaengry.moment.domain.user.dto.request.VerifyEmailRequest;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.dto.response.TokenResponse;
 import com.soaengry.moment.domain.user.entity.User;
@@ -63,13 +63,7 @@ public class AuthService {
         user = userRepository.save(user);
 
         // 이메일 인증 토큰 생성 (UUID 사용)
-        String verificationToken = UUID.randomUUID().toString();
-        EmailVerification verification = EmailVerification.builder()
-                .email(user.getEmail())
-                .verificationCode(verificationToken)  // 긴 토큰 저장
-                .expiresAt(LocalDateTime.now().plusHours(24))  // 24시간 유효
-                .build();
-        emailVerificationRepository.save(verification);
+        String verificationToken = generateVerificationToken(user.getEmail());
 
         // 이메일 발송 (토큰 링크)
         emailService.sendVerificationEmail(user.getEmail(), verificationToken);
@@ -86,35 +80,47 @@ public class AuthService {
     }
 
     /**
+     * 이메일 재발송 (토큰 링크)
+     */
+    public void resendVerificationEmail(ResendVerificationRequest request) {
+
+        // 이메일 인증 토큰 생성 (UUID 사용)
+        String verificationToken = generateVerificationToken(request.email());
+
+        // 이메일 발송 (토큰 링크)
+        emailService.sendVerificationEmail(request.email(), verificationToken);
+    }
+
+    /**
      * 이메일 인증 (코드 입력 방식)
      */
-    @Transactional
-    public void verifyEmail(VerifyEmailRequest request) {
-        // 인증 정보 조회
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmailAndCode(request.email(), request.verificationCode())
-                .orElseThrow(() -> new UserException(UserErrorCode.AUTH_VERIFICATION_CODE_MISMATCH));
-
-        // 잠금 상태 확인
-        if (verification.isLockedNow()) {
-            throw new UserException(UserErrorCode.AUTH_VERIFICATION_ATTEMPTS_EXCEEDED);
-        }
-
-        // 만료 확인
-        if (verification.isExpired()) {
-            throw new UserException(UserErrorCode.AUTH_TOKEN_EXPIRED, "인증 코드가 만료되었습니다");
-        }
-
-        // 인증 처리
-        verification.verify();
-
-        // 사용자 이메일 인증 상태 업데이트
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-        user.verifyEmail();
-
-        log.info("이메일 인증 완료 - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
-    }
+//    @Transactional
+//    public void verifyEmail(VerifyEmailRequest request) {
+//        // 인증 정보 조회
+//        EmailVerification verification = emailVerificationRepository
+//                .findLatestByEmailAndCode(request.email(), request.verificationCode())
+//                .orElseThrow(() -> new UserException(UserErrorCode.AUTH_VERIFICATION_CODE_MISMATCH));
+//
+//        // 잠금 상태 확인
+//        if (verification.isLockedNow()) {
+//            throw new UserException(UserErrorCode.AUTH_VERIFICATION_ATTEMPTS_EXCEEDED);
+//        }
+//
+//        // 만료 확인
+//        if (verification.isExpired()) {
+//            throw new UserException(UserErrorCode.AUTH_TOKEN_EXPIRED, "인증 코드가 만료되었습니다");
+//        }
+//
+//        // 인증 처리
+//        verification.verify();
+//
+//        // 사용자 이메일 인증 상태 업데이트
+//        User user = userRepository.findByEmail(request.email())
+//                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+//        user.verifyEmail();
+//
+//        log.info("이메일 인증 완료 - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+//    }
 
     /**
      * 이메일 인증 (토큰 링크 클릭 방식)
@@ -268,5 +274,21 @@ public class AuthService {
             refreshTokenRepository.deleteOldestToken(userId);
             log.info("디바이스 제한 초과 - 가장 오래된 토큰 삭제");
         }
+    }
+
+    /**
+     * 이메일 인증 토큰 발행
+     */
+    private String generateVerificationToken(String email) {
+        String verificationToken = UUID.randomUUID().toString();
+
+        EmailVerification verification = EmailVerification.builder()
+                .email(email)
+                .verificationCode(verificationToken)  // 긴 토큰 저장
+                .expiresAt(LocalDateTime.now().plusHours(24))  // 24시간 유효
+                .build();
+        emailVerificationRepository.save(verification);
+
+        return verificationToken;
     }
 }

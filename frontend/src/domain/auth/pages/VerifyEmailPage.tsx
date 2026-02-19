@@ -24,7 +24,7 @@ const VerifyEmailPage: FC = () => {
         const response = await authApi.verifyEmail(token);
         setStatus("success");
         setMessage(response.message || "이메일 인증이 완료되었습니다.");
-        setTimeout(() => navigate("/login"), 3000);
+        setTimeout(() => window.close(), 1000);
       } catch {
         setStatus("error");
         setMessage(
