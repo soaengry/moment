@@ -40,7 +40,7 @@ public class GuestbookController {
             @PathVariable Long weddingId,
             @PathVariable Long entryId,
             @Valid @RequestBody GuestbookRequest request) {
-        GuestbookResponse response = guestbookService.updateEntry(entryId, request);
+        GuestbookResponse response = guestbookService.updateEntry(weddingId, entryId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -49,7 +49,7 @@ public class GuestbookController {
             @PathVariable Long weddingId,
             @PathVariable Long entryId,
             @RequestParam(required = false) String password) {
-        guestbookService.deleteEntry(entryId, password);
+        guestbookService.deleteEntry(weddingId, entryId, password);
         return ResponseEntity.noContent().build();
     }
 }
