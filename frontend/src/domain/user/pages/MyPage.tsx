@@ -107,12 +107,14 @@ const MyPage: FC = () => {
           >
             프로필 수정
           </button>
-          <button
-            onClick={() => navigate("/change-password")}
-            className="w-full py-2.5 rounded-lg border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
-          >
-            비밀번호 변경
-          </button>
+          {user.authProvider === "LOCAL" && (
+            <button
+              onClick={() => navigate("/change-password")}
+              className="w-full py-2.5 rounded-lg border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+            >
+              비밀번호 변경
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="w-full py-2.5 rounded-lg border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"

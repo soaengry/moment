@@ -1,5 +1,6 @@
 package com.soaengry.moment.domain.user.entity;
 
+import com.soaengry.moment.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,13 +52,7 @@ public class User {
     private Integer tokenVersion = 0;
 
     @Version
-    private Long version;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private Long version = 0L;
 
     @Column
     private LocalDateTime deletedAt;
@@ -74,26 +69,9 @@ public class User {
         this.providerId = providerId;
         this.isEmailVerified = isEmailVerified != null ? isEmailVerified : false;
         this.tokenVersion = 0;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    // 비즈니스 메서드
     public void updateProfile(String nickname, String profileImageUrl) {
-        if (nickname != null) {
-            this.nickname = nickname;
-        }
-        if (profileImageUrl != null) {
-            this.profileImageUrl = profileImageUrl;
-        }
-    }
-
-    public void updateProfileWithImageRemoval(String nickname, String profileImageUrl) {
         if (nickname != null) {
             this.nickname = nickname;
         }
