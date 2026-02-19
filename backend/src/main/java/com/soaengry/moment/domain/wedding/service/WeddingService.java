@@ -8,6 +8,8 @@ import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import com.soaengry.moment.domain.wedding.repository.*;
 import com.soaengry.moment.global.service.KakaoGeocodingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,9 +94,20 @@ public class WeddingService {
             throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
         }
 
-        Couple couple = request.toEntity(weddingId);
+        Long userId = getCurrentUserId();
+        Couple couple = request.toEntity(weddingId, userId);
         Couple saved = coupleRepository.save(couple);
         return CoupleResponse.from(saved);
+    }
+
+    private Long getCurrentUserId() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Long userId) {
+                return userId;
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     public List<CoupleResponse> getCouplesByWedding(Long weddingId) {

@@ -14,6 +14,7 @@ import {
   AnnouncementSection,
 } from "../components";
 import GuestbookSection from "../../guestbook/components/GuestbookSection";
+import { tokenStorage, parseJwt } from "../../auth/auth.utils";
 
 const WeddingInfoPage: FC = () => {
   const { weddingId } = useParams<{ weddingId: string }>();
@@ -63,6 +64,12 @@ const WeddingInfoPage: FC = () => {
   const groom = couples.find((c) => c.role === "GROOM");
   const bride = couples.find((c) => c.role === "BRIDE");
 
+  // 현재 로그인한 사용자 ID (JWT sub)
+  const token = tokenStorage.getAccessToken();
+  const currentUserId = token ? Number(parseJwt(token)?.sub) || null : null;
+  // 호스트: 이 웨딩의 커플로 등록된 사용자들의 ID
+  const hostUserIds = couples.map((c) => c.userId).filter((id): id is number => id !== null);
+
   return (
     <div className="min-h-screen bg-[#faf9f6]">
       <div className="max-w-lg mx-auto">
@@ -108,7 +115,11 @@ const WeddingInfoPage: FC = () => {
         </div>
 
         {/* 방명록 */}
-        <GuestbookSection weddingId={Number(weddingId)} />
+        <GuestbookSection
+          weddingId={Number(weddingId)}
+          currentUserId={currentUserId}
+          hostUserIds={hostUserIds}
+        />
 
         {/* 하단 푸터 */}
         <footer className="py-10 text-center">
