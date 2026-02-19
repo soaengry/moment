@@ -13,9 +13,10 @@ public record CoupleRequest(
         String profileImageUrl,
         String introduction
 ) {
-    public Couple toEntity(Long weddingId) {
+    public Couple toEntity(Long weddingId, Long userId) {
         return Couple.create(
                 weddingId,
+                userId,
                 role,
                 name,
                 fatherName,

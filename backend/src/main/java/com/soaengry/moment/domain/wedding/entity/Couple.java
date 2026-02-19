@@ -18,6 +18,8 @@ public class Couple {
     @Column(nullable = false)
     private Long weddingId;
 
+    private Long userId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CoupleRole role;
@@ -42,9 +44,10 @@ public class Couple {
     @Column(columnDefinition = "TEXT")
     private String introduction;
 
-    private Couple(Long weddingId, CoupleRole role, String name, String fatherName, String motherName,
+    private Couple(Long weddingId, Long userId, CoupleRole role, String name, String fatherName, String motherName,
                    Boolean isFatherAlive, Boolean isMotherAlive, String contact, String profileImageUrl, String introduction) {
         this.weddingId = weddingId;
+        this.userId = userId;
         this.role = role;
         this.name = name;
         this.fatherName = fatherName;
@@ -56,9 +59,9 @@ public class Couple {
         this.introduction = introduction;
     }
 
-    public static Couple create(Long weddingId, CoupleRole role, String name, String fatherName, String motherName,
+    public static Couple create(Long weddingId, Long userId, CoupleRole role, String name, String fatherName, String motherName,
                                 Boolean isFatherAlive, Boolean isMotherAlive, String contact, String profileImageUrl, String introduction) {
-        return new Couple(weddingId, role, name, fatherName, motherName, isFatherAlive, isMotherAlive,
+        return new Couple(weddingId, userId, role, name, fatherName, motherName, isFatherAlive, isMotherAlive,
                 contact, profileImageUrl, introduction);
     }
 
