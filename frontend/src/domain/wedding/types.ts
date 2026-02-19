@@ -28,6 +28,7 @@ export interface WeddingResponse {
 export interface CoupleResponse {
   id: number;
   weddingId: number;
+  userId: number | null;
   role: CoupleRole;
   name: string;
   fatherName: string | null;

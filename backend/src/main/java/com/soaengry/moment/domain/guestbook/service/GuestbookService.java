@@ -11,6 +11,7 @@ import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.wedding.entity.Wedding;
 import com.soaengry.moment.domain.wedding.exception.WeddingErrorCode;
 import com.soaengry.moment.domain.wedding.exception.WeddingException;
+import com.soaengry.moment.domain.wedding.repository.CoupleRepository;
 import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ public class GuestbookService {
 
     private final GuestbookEntryRepository guestbookEntryRepository;
     private final WeddingRepository weddingRepository;
+    private final CoupleRepository coupleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -49,11 +51,11 @@ public class GuestbookService {
 
     public Page<GuestbookResponse> getEntries(Long weddingId, Pageable pageable) {
         Long currentUserId = getCurrentUserId();
-        boolean isAdmin = isCurrentUserAdmin();
+        boolean canSeeSecret = isCurrentUserAdmin() || isCurrentUserHostOfWedding(weddingId, currentUserId);
 
         return guestbookEntryRepository.findByWeddingIdOrderByCreatedAtDesc(weddingId, pageable)
                 .map(entry -> {
-                    if (entry.getIsSecret() && !isAdmin
+                    if (entry.getIsSecret() && !canSeeSecret
                             && (currentUserId == null || !currentUserId.equals(
                             entry.getUser() != null ? entry.getUser().getId() : null))) {
                         return GuestbookResponse.secretFrom(entry);
@@ -63,38 +65,75 @@ public class GuestbookService {
     }
 
     @Transactional
-    public GuestbookResponse updateEntry(Long entryId, GuestbookRequest request) {
+    public GuestbookResponse updateEntry(Long weddingId, Long entryId, GuestbookRequest request) {
         GuestbookEntry entry = guestbookEntryRepository.findById(entryId)
                 .orElseThrow(() -> new GuestbookException(GuestbookErrorCode.GUESTBOOK_ENTRY_NOT_FOUND));
 
-        validateAccess(entry, request.password());
+        validateUpdateAccess(entry, weddingId);
         entry.update(request.content(), request.isSecret());
 
         return GuestbookResponse.from(entry);
     }
 
     @Transactional
-    public void deleteEntry(Long entryId, String password) {
+    public void deleteEntry(Long weddingId, Long entryId, String password) {
         GuestbookEntry entry = guestbookEntryRepository.findById(entryId)
                 .orElseThrow(() -> new GuestbookException(GuestbookErrorCode.GUESTBOOK_ENTRY_NOT_FOUND));
 
-        validateAccess(entry, password);
+        validateDeleteAccess(entry, weddingId, password);
         guestbookEntryRepository.delete(entry);
     }
 
-    private void validateAccess(GuestbookEntry entry, String password) {
+    // 수정: 본인만 가능 (호스트/ADMIN 불가)
+    private void validateUpdateAccess(GuestbookEntry entry, Long weddingId) {
         if (isCurrentUserAdmin()) return;
 
         Long currentUserId = getCurrentUserId();
-        if (entry.getUser() != null && currentUserId != null && currentUserId.equals(entry.getUser().getId())) {
-            return;
-        }
-
-        if (entry.getPassword() != null && password != null && passwordEncoder.matches(password, entry.getPassword())) {
+        if (entry.getUser() != null && currentUserId != null
+                && currentUserId.equals(entry.getUser().getId())) {
             return;
         }
 
         throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);
+    }
+
+    // 삭제: 호스트 및 ADMIN은 비밀번호 없이, 본인은 비밀번호 필요
+    private void validateDeleteAccess(GuestbookEntry entry, Long weddingId, String password) {
+        if (isCurrentUserAdmin()) return;
+
+        Long currentUserId = getCurrentUserId();
+
+        // 호스트(해당 웨딩의 커플)는 비밀번호 없이 삭제 가능
+        if (currentUserId != null && isCurrentUserHostOfWedding(weddingId, currentUserId)) {
+            return;
+        }
+
+        // 본인 작성 글은 비밀번호로 삭제
+        if (entry.getUser() != null && currentUserId != null
+                && currentUserId.equals(entry.getUser().getId())) {
+            if (entry.getPassword() != null && password != null
+                    && passwordEncoder.matches(password, entry.getPassword())) {
+                return;
+            }
+            // 비밀번호 없이 등록된 본인 글은 비밀번호 없이 삭제 가능
+            if (entry.getPassword() == null) {
+                return;
+            }
+            throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        // 그 외: 비밀번호가 맞으면 삭제 가능
+        if (entry.getPassword() != null && password != null
+                && passwordEncoder.matches(password, entry.getPassword())) {
+            return;
+        }
+
+        throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);
+    }
+
+    private boolean isCurrentUserHostOfWedding(Long weddingId, Long userId) {
+        if (userId == null) return false;
+        return coupleRepository.existsByWeddingIdAndUserId(weddingId, userId);
     }
 
     private User getCurrentUser() {
