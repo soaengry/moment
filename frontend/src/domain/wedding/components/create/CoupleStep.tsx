@@ -17,6 +17,7 @@ interface Props {
 const emptyCoupleForm = (role: CoupleRole): CoupleRequest => ({
   role,
   name: "",
+  email: "",
   fatherName: "",
   motherName: "",
   isFatherAlive: true,
@@ -25,7 +26,12 @@ const emptyCoupleForm = (role: CoupleRole): CoupleRequest => ({
   introduction: "",
 });
 
-const CoupleStep: FC<Props> = ({ initialData, initialPhotos, onSubmit, onBack }) => {
+const CoupleStep: FC<Props> = ({
+  initialData,
+  initialPhotos,
+  onSubmit,
+  onBack,
+}) => {
   const [groom, setGroom] = useState<CoupleRequest>(
     initialData.find((c) => c.role === "GROOM") ?? emptyCoupleForm("GROOM"),
   );
@@ -71,6 +77,10 @@ const CoupleStep: FC<Props> = ({ initialData, initialPhotos, onSubmit, onBack })
     const newErrors: Record<string, string> = {};
     if (!groom.name.trim()) newErrors.groomName = "신랑 이름을 입력해주세요";
     if (!bride.name.trim()) newErrors.brideName = "신부 이름을 입력해주세요";
+    if (!groom.email.trim())
+      newErrors.groomEmail = "신랑 이메일을 입력해주세요";
+    if (!bride.email.trim())
+      newErrors.brideEmail = "신부 이메일을 입력해주세요";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -145,6 +155,18 @@ const CoupleStep: FC<Props> = ({ initialData, initialPhotos, onSubmit, onBack })
             故人
           </label>
         </div>
+      </div>
+      <div>
+        <label className={labelClass}>이메일 *</label>
+        <input
+          value={data.email ?? ""}
+          onChange={(e) => setData({ ...data, email: e.target.value })}
+          placeholder="example@email.com"
+          className={inputClass}
+        />
+        {errors[`${nameKey}Email`] && (
+          <p className={errorClass}>{errors[`${nameKey}Email`]}</p>
+        )}
       </div>
 
       <div>

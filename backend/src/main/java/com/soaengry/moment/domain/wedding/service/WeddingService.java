@@ -8,8 +8,6 @@ import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import com.soaengry.moment.domain.wedding.repository.*;
 import com.soaengry.moment.global.service.KakaoGeocodingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,21 +58,19 @@ public class WeddingService {
 
         KakaoGeocodingService.Coordinate coord = resolveCoordinate(request.venueAddress());
 
-        wedding.update(
-                request.title(),
-                request.weddingDate(),
+        wedding.updateTitle(request.title());
+        wedding.updateWeddingDate(request.weddingDate());
+        wedding.updateVenue(
                 request.venueName(),
                 request.venueAddress(),
                 request.venueDetail(),
                 coord.lat(),
                 coord.lng(),
-                request.venuePhone(),
-                request.mapImageUrl(),
-                request.dressCode(),
-                request.notice(),
-                request.parkingInfo(),
-                request.mealInfo()
-        );
+                request.venuePhone());
+        wedding.updateDressCode(request.dressCode());
+        wedding.updateNotice(request.notice());
+        wedding.updateParkingInfo(request.parkingInfo());
+        wedding.updateMealInfo(request.mealInfo());
 
         return WeddingResponse.from(wedding);
     }
@@ -87,6 +83,14 @@ public class WeddingService {
         weddingRepository.deleteById(weddingId);
     }
 
+    /**
+     * 초대장 ID 중복 체크
+     */
+    @Transactional(readOnly = true)
+    public boolean checkInvitationIdExists(String invitationId) {
+        return weddingRepository.existsByInvitationId(invitationId);
+    }
+
     // Couple CRUD
     @Transactional
     public CoupleResponse createCouple(Long weddingId, CoupleRequest request) {
@@ -94,20 +98,12 @@ public class WeddingService {
             throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
         }
 
-        Long userId = getCurrentUserId();
-        Couple couple = request.toEntity(weddingId, userId);
+        Wedding wedding = weddingRepository.findById(weddingId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
+
+        Couple couple = request.toEntity(wedding);
         Couple saved = coupleRepository.save(couple);
         return CoupleResponse.from(saved);
-    }
-
-    private Long getCurrentUserId() {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.getPrincipal() instanceof Long userId) {
-                return userId;
-            }
-        } catch (Exception ignored) {}
-        return null;
     }
 
     public List<CoupleResponse> getCouplesByWedding(Long weddingId) {
@@ -122,16 +118,12 @@ public class WeddingService {
         Couple couple = coupleRepository.findById(coupleId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.COUPLE_NOT_FOUND));
 
-        couple.update(
-                request.name(),
-                request.fatherName(),
-                request.motherName(),
-                request.isFatherAlive(),
-                request.isMotherAlive(),
-                request.contact(),
-                request.profileImageUrl(),
-                request.introduction()
-        );
+        couple.updateName(request.name());
+        couple.updateFather(request.fatherName(), request.isFatherAlive());
+        couple.updateMother(request.motherName(), request.isMotherAlive());
+        couple.updateContact(request.contact());
+        couple.updateProfileImageUrl(request.profileImageUrl());
+        couple.updateIntroduction(request.introduction());
 
         return CoupleResponse.from(couple);
     }
@@ -449,12 +441,14 @@ public class WeddingService {
     }
 
     // 전체 정보 조회
-    public WeddingInfoResponse getWeddingInfo(Long weddingId) {
-        WeddingResponse wedding = getWedding(weddingId);
-        List<CoupleResponse> couples = getCouplesByWedding(weddingId);
-        List<ScheduleResponse> schedules = getSchedulesByWedding(weddingId);
+    public WeddingInfoResponse getWeddingInfo(String invitationId) {
+        Wedding entity = weddingRepository.findByInvitationId(invitationId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
+        WeddingResponse wedding = WeddingResponse.from(entity);
+        List<CoupleResponse> couples = getCouplesByWedding(wedding.id());
+        List<ScheduleResponse> schedules = getSchedulesByWedding(wedding.id());
 
-        List<AccountGroupResponse> accountGroups = getAccountGroupsByWedding(weddingId);
+        List<AccountGroupResponse> accountGroups = getAccountGroupsByWedding(wedding.id());
         List<AccountGroupWithAccountsResponse> accountGroupsWithAccounts = accountGroups.stream()
                 .map(group -> {
                     List<AccountResponse> accounts = getAccountsByGroup(group.id());
@@ -462,10 +456,10 @@ public class WeddingService {
                 })
                 .collect(Collectors.toList());
 
-        List<GalleryResponse> gallery = getGalleriesByWedding(weddingId);
-        List<TransportationResponse> transportation = getTransportationsByWedding(weddingId);
-        List<AccommodationResponse> accommodation = getAccommodationsByWedding(weddingId);
-        List<AnnouncementResponse> announcements = getAnnouncementsByWedding(weddingId);
+        List<GalleryResponse> gallery = getGalleriesByWedding(wedding.id());
+        List<TransportationResponse> transportation = getTransportationsByWedding(wedding.id());
+        List<AccommodationResponse> accommodation = getAccommodationsByWedding(wedding.id());
+        List<AnnouncementResponse> announcements = getAnnouncementsByWedding(wedding.id());
 
         return WeddingInfoResponse.of(
                 wedding,

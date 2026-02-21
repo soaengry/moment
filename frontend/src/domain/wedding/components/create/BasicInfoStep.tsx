@@ -1,22 +1,42 @@
 import { type FC, useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import DaumPostcodeEmbed from "react-daum-postcode";
 import type { WeddingRequest } from "../../types";
+import { WEDDING_VALIDATION } from "../../wedding.constants";
+import { weddingApi } from "../../api/weddingApi";
 
 interface Props {
   initialData: WeddingRequest | null;
   onSubmit: (data: WeddingRequest) => void;
 }
 
-interface FormValues {
-  title: string;
-  weddingDate: string;
-  weddingTime: string;
-  venueName: string;
-  venueAddress: string;
-  venueDetail: string;
-  venuePhone: string;
-}
+const weddingSchema = z.object({
+  title: z.string().min(1, "제목을 입력해주세요."),
+  invitationId: z
+    .string()
+    .min(
+      WEDDING_VALIDATION.INVITATION_MIN_LENGTH,
+      `초대장 ID는 최소 ${WEDDING_VALIDATION.INVITATION_MIN_LENGTH}자 이상이어야 합니다.`,
+    )
+    .max(
+      WEDDING_VALIDATION.INVITATION_MAX_LENGTH,
+      `초대장 ID는 최대 ${WEDDING_VALIDATION.INVITATION_MAX_LENGTH}자 이하여야 합니다.`,
+    )
+    .regex(
+      WEDDING_VALIDATION.INVITATION_PATTERN,
+      "영문 소문자, 숫자, '-'만 사용할 수 있습니다.",
+    ),
+  weddingDate: z.string().min(1, "날짜를 입력해주세요."),
+  weddingTime: z.string().min(1, "시간을 입력해주세요."),
+  venueName: z.string().min(1, "예식장 이름을 입력해주세요."),
+  venueAddress: z.string().min(1, "주소를 입력해주세요."),
+  venueDetail: z.string().optional(),
+  venuePhone: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof weddingSchema>;
 
 const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
   const dateFromISO = initialData?.weddingDate
@@ -27,16 +47,15 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
+    resolver: zodResolver(weddingSchema),
     defaultValues: {
       title: initialData?.title ?? "",
-      weddingDate: dateFromISO
-        ? dateFromISO.toISOString().slice(0, 10)
-        : "",
-      weddingTime: dateFromISO
-        ? dateFromISO.toTimeString().slice(0, 5)
-        : "",
+      invitationId: initialData?.invitationId ?? "",
+      weddingDate: dateFromISO ? dateFromISO.toISOString().slice(0, 10) : "",
+      weddingTime: dateFromISO ? dateFromISO.toTimeString().slice(0, 5) : "",
       venueName: initialData?.venueName ?? "",
       venueAddress: initialData?.venueAddress ?? "",
       venueDetail: initialData?.venueDetail ?? "",
@@ -45,6 +64,27 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
   });
 
   const [showPostcode, setShowPostcode] = useState(false);
+  const [invitationIdDupError, setInvitationIdDupError] = useState<
+    string | null
+  >(null);
+
+  const handleInvitationIdBlur = async () => {
+    const invitationId = getValues("invitationId");
+    if (
+      !invitationId ||
+      invitationId.length < WEDDING_VALIDATION.INVITATION_MIN_LENGTH
+    )
+      return;
+
+    try {
+      const { exists } = await weddingApi.checkInvitationId(invitationId);
+      setInvitationIdDupError(
+        exists ? "이미 사용 중인 초대장 ID입니다." : null,
+      );
+    } catch {
+      // 중복 체크 실패 시 무시
+    }
+  };
 
   const handlePostcodeComplete = (data: {
     address: string;
@@ -58,12 +98,15 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
   };
 
   const onFormSubmit = (values: FormValues) => {
+    if (invitationIdDupError) return; // 중복이면 제출 막기
+
     const weddingDate = new Date(
       `${values.weddingDate}T${values.weddingTime || "00:00"}`,
     ).toISOString();
 
     const request: WeddingRequest = {
       title: values.title,
+      invitationId: values.invitationId,
       weddingDate,
       venueName: values.venueName,
       venueAddress: values.venueAddress,
@@ -90,7 +133,21 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
           />
           {errors.title && <p className={errorClass}>{errors.title.message}</p>}
         </div>
-
+        <div>
+          <label className={labelClass}>초대장 아이디 *</label>
+          <input
+            {...register("invitationId", { required: "아이디를 입력해주세요" })}
+            onBlur={handleInvitationIdBlur}
+            placeholder="영문 소문자, 숫자, - 만 사용 가능"
+            className={inputClass}
+          />
+          {errors.invitationId && (
+            <p className={errorClass}>{errors.invitationId.message}</p>
+          )}
+          {invitationIdDupError && (
+            <p className={errorClass}>{invitationIdDupError}</p>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>예식 날짜 *</label>
@@ -121,7 +178,9 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
         <div>
           <label className={labelClass}>예식장 이름 *</label>
           <input
-            {...register("venueName", { required: "예식장 이름을 입력해주세요" })}
+            {...register("venueName", {
+              required: "예식장 이름을 입력해주세요",
+            })}
             placeholder="○○호텔 그랜드홀"
             className={inputClass}
           />

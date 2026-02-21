@@ -22,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -51,7 +53,7 @@ public class GuestbookService {
 
     public Page<GuestbookResponse> getEntries(Long weddingId, Pageable pageable) {
         Long currentUserId = getCurrentUserId();
-        boolean canSeeSecret = isCurrentUserAdmin() || isCurrentUserHostOfWedding(weddingId, currentUserId);
+        boolean canSeeSecret = isCurrentUserAdmin() || isCurrentUserHostOfWedding(weddingId);
 
         return guestbookEntryRepository.findByWeddingIdOrderByCreatedAtDesc(weddingId, pageable)
                 .map(entry -> {
@@ -104,7 +106,7 @@ public class GuestbookService {
         Long currentUserId = getCurrentUserId();
 
         // 호스트(해당 웨딩의 커플)는 비밀번호 없이 삭제 가능
-        if (currentUserId != null && isCurrentUserHostOfWedding(weddingId, currentUserId)) {
+        if (currentUserId != null && isCurrentUserHostOfWedding(weddingId)) {
             return;
         }
 
@@ -115,10 +117,7 @@ public class GuestbookService {
                     && passwordEncoder.matches(password, entry.getPassword())) {
                 return;
             }
-            // 비밀번호 없이 등록된 본인 글은 비밀번호 없이 삭제 가능
-            if (entry.getPassword() == null) {
-                return;
-            }
+
             throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);
         }
 
@@ -131,9 +130,10 @@ public class GuestbookService {
         throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);
     }
 
-    private boolean isCurrentUserHostOfWedding(Long weddingId, Long userId) {
-        if (userId == null) return false;
-        return coupleRepository.existsByWeddingIdAndUserId(weddingId, userId);
+    private boolean isCurrentUserHostOfWedding(Long weddingId) {
+        String email = Objects.requireNonNull(getCurrentUser()).getEmail();
+        if (email == null) return false;
+        return coupleRepository.existsByWeddingIdAndEmail(weddingId, email);
     }
 
     private User getCurrentUser() {
@@ -142,7 +142,8 @@ public class GuestbookService {
             if (auth != null && auth.getPrincipal() instanceof Long userId) {
                 return userRepository.findById(userId).orElse(null);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
@@ -152,7 +153,8 @@ public class GuestbookService {
             if (auth != null && auth.getPrincipal() instanceof Long userId) {
                 return userId;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
@@ -163,7 +165,8 @@ public class GuestbookService {
                 return auth.getAuthorities().stream()
                         .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return false;
     }
 }

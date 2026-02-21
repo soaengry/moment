@@ -14,13 +14,10 @@ public record WeddingResponse(
         Double venueLat,
         Double venueLng,
         String venuePhone,
-        String mapImageUrl,
         String dressCode,
         String notice,
         String parkingInfo,
-        String mealInfo,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        String mealInfo
 ) {
     public static WeddingResponse from(Wedding wedding) {
         return new WeddingResponse(
@@ -33,13 +30,10 @@ public record WeddingResponse(
                 wedding.getVenueLat(),
                 wedding.getVenueLng(),
                 wedding.getVenuePhone(),
-                wedding.getMapImageUrl(),
                 wedding.getDressCode(),
                 wedding.getNotice(),
                 wedding.getParkingInfo(),
-                wedding.getMealInfo(),
-                wedding.getCreatedAt(),
-                wedding.getUpdatedAt()
+                wedding.getMealInfo()
         );
     }
 }
