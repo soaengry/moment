@@ -37,25 +37,37 @@ export interface WeddingFormState {
 
 const WeddingEditPage: FC = () => {
   const navigate = useNavigate();
-  const { weddingId } = useParams<{ weddingId: string }>();
+  const { invitationId } = useParams<{ invitationId: string }>();
   const [step, setStep] = useState(0);
   const [formState, setFormState] = useState<WeddingFormState | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [originalData, setOriginalData] = useState<WeddingInfoResponse | null>(null);
+  const [originalData, setOriginalData] = useState<WeddingInfoResponse | null>(
+    null,
+  );
+
+  const id = originalData?.wedding.id;
 
   useEffect(() => {
     const load = async () => {
-      if (!weddingId) return;
+      if (!invitationId) return;
       try {
-        const info = await weddingApi.getWeddingInfo(Number(weddingId));
+        const info = await weddingApi.getWeddingInfo(invitationId);
         setOriginalData(info);
 
-        const { wedding, couples, schedules, accountGroups, transportation, announcements } = info;
+        const {
+          wedding,
+          couples,
+          schedules,
+          accountGroups,
+          transportation,
+          announcements,
+        } = info;
 
         // 기존 데이터 → 폼 상태로 변환
         const basic: WeddingRequest = {
           title: wedding.title,
+          invitationId: wedding.invitationId,
           weddingDate: wedding.weddingDate,
           venueName: wedding.venueName,
           venueAddress: wedding.venueAddress,
@@ -67,6 +79,7 @@ const WeddingEditPage: FC = () => {
         const coupleRequests: CoupleRequest[] = couples.map((c) => ({
           role: c.role,
           name: c.name,
+          email: c.email,
           fatherName: c.fatherName ?? undefined,
           motherName: c.motherName ?? undefined,
           isFatherAlive: c.isFatherAlive,
@@ -112,11 +125,13 @@ const WeddingEditPage: FC = () => {
             orderIndex: t.orderIndex,
           }));
 
-        const announcementRequests: AnnouncementRequest[] = announcements.map((a) => ({
-          title: a.title,
-          content: a.content,
-          isPinned: a.isPinned,
-        }));
+        const announcementRequests: AnnouncementRequest[] = announcements.map(
+          (a) => ({
+            title: a.title,
+            content: a.content,
+            isPinned: a.isPinned,
+          }),
+        );
 
         setFormState({
           basic,
@@ -137,7 +152,7 @@ const WeddingEditPage: FC = () => {
       }
     };
     load();
-  }, [weddingId]);
+  }, [invitationId]);
 
   if (isLoading || !formState) {
     return (
@@ -146,8 +161,6 @@ const WeddingEditPage: FC = () => {
       </div>
     );
   }
-
-  const id = Number(weddingId);
 
   const handleNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const handlePrev = () => setStep((s) => Math.max(s - 1, 0));
@@ -187,7 +200,7 @@ const WeddingEditPage: FC = () => {
   };
 
   const submitAll = async (state: WeddingFormState) => {
-    if (!state.basic || !originalData) return;
+    if (!state.basic || !originalData || !id) return;
     setIsSubmitting(true);
 
     try {
@@ -270,7 +283,9 @@ const WeddingEditPage: FC = () => {
           {STEPS.map((label, i) => (
             <div key={label} className="flex items-center gap-1">
               <button
-                onClick={() => { if (i < step) setStep(i); }}
+                onClick={() => {
+                  if (i < step) setStep(i);
+                }}
                 disabled={i > step}
                 className={`w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center transition-colors ${
                   i === step
@@ -283,7 +298,9 @@ const WeddingEditPage: FC = () => {
                 {i + 1}
               </button>
               {i < STEPS.length - 1 && (
-                <div className={`w-6 h-0.5 ${i < step ? "bg-primary/30" : "bg-gray-200"}`} />
+                <div
+                  className={`w-6 h-0.5 ${i < step ? "bg-primary/30" : "bg-gray-200"}`}
+                />
               )}
             </div>
           ))}
@@ -292,16 +309,31 @@ const WeddingEditPage: FC = () => {
 
         {/* 스텝 폼 */}
         {step === 0 && (
-          <BasicInfoStep initialData={formState.basic} onSubmit={handleBasicSubmit} />
+          <BasicInfoStep
+            initialData={formState.basic}
+            onSubmit={handleBasicSubmit}
+          />
         )}
         {step === 1 && (
-          <CoupleStep initialData={formState.couples} onSubmit={handleCoupleSubmit} onBack={handlePrev} />
+          <CoupleStep
+            initialData={formState.couples}
+            onSubmit={handleCoupleSubmit}
+            onBack={handlePrev}
+          />
         )}
         {step === 2 && (
-          <ScheduleStep initialData={formState.schedules} onSubmit={handleScheduleSubmit} onBack={handlePrev} />
+          <ScheduleStep
+            initialData={formState.schedules}
+            onSubmit={handleScheduleSubmit}
+            onBack={handlePrev}
+          />
         )}
         {step === 3 && (
-          <AccountStep initialData={formState.accountGroups} onSubmit={handleAccountSubmit} onBack={handlePrev} />
+          <AccountStep
+            initialData={formState.accountGroups}
+            onSubmit={handleAccountSubmit}
+            onBack={handlePrev}
+          />
         )}
         {step === 4 && (
           <ExtraInfoStep

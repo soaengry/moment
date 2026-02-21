@@ -32,6 +32,7 @@ export interface CoupleResponse {
   userId: number | null;
   role: CoupleRole;
   name: string;
+  email: string;
   fatherName: string | null;
   motherName: string | null;
   isFatherAlive: boolean;
