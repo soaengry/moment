@@ -49,14 +49,12 @@ class WeddingServiceTest {
         // given
         WeddingRequest request = new WeddingRequest(
                 "김철수 ❤️ 이영희 결혼식",
+                "suhee",
                 LocalDateTime.of(2024, 6, 15, 14, 0),
                 "그랜드컨벤션센터",
                 "서울시 강남구 테헤란로 123",
                 "3층 그랜드홀",
-                37.5012345,
-                127.0398765,
                 "02-1234-5678",
-                "https://example.com/map.jpg",
                 "편안한 캐주얼 복장",
                 "주차는 건물 지하 2층에서 가능합니다.",
                 "건물 지하 2-3층 무료 주차 가능 (3시간)",
@@ -76,10 +74,17 @@ class WeddingServiceTest {
     @DisplayName("Wedding 조회 테스트")
     void getWedding() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "제목", LocalDateTime.now(), "장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         // when
         WeddingResponse response = weddingService.getWedding(wedding.getId());
@@ -93,17 +98,25 @@ class WeddingServiceTest {
     @DisplayName("Wedding 업데이트 테스트")
     void updateWedding() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "원제목", LocalDateTime.now(), "원장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         WeddingRequest updateRequest = new WeddingRequest(
                 "변경된 제목",
+                "ddd",
                 LocalDateTime.of(2024, 7, 20, 15, 0),
                 "변경된 장소",
                 "변경된 주소",
-                null, 37.6, 127.1, null, null, null, null, null, null
+                null, "010-1234-1234", "dress code", null, null, null
         );
 
         // when
@@ -118,10 +131,17 @@ class WeddingServiceTest {
     @DisplayName("Wedding 삭제 테스트")
     void deleteWedding() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "제목", LocalDateTime.now(), "장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         // when
         weddingService.deleteWedding(wedding.getId());
@@ -143,10 +163,17 @@ class WeddingServiceTest {
     @DisplayName("Couple 생성 테스트")
     void createCouple() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "제목", LocalDateTime.now(), "장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         CoupleRequest request = new CoupleRequest(
                 Couple.CoupleRole.GROOM,
@@ -165,7 +192,7 @@ class WeddingServiceTest {
 
         // then
         assertThat(response.id()).isNotNull();
-        assertThat(response.weddingId()).isEqualTo(wedding.getId());
+        assertThat(response.wedding()).isEqualTo(wedding);
         assertThat(response.name()).isEqualTo("김철수");
         assertThat(response.role()).isEqualTo(Couple.CoupleRole.GROOM);
     }
@@ -174,10 +201,17 @@ class WeddingServiceTest {
     @DisplayName("Wedding의 Couple 목록 조회 테스트")
     void getCouplesByWedding() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "제목", LocalDateTime.now(), "장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         weddingService.createCouple(wedding.getId(), new CoupleRequest(
                 Couple.CoupleRole.GROOM, "김철수", "김아버지", "박어머니",
@@ -202,10 +236,17 @@ class WeddingServiceTest {
     @DisplayName("Schedule 생성 테스트")
     void createSchedule() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "제목", LocalDateTime.now(), "장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         ScheduleRequest request = new ScheduleRequest(
                 LocalTime.of(14, 0),
@@ -227,10 +268,17 @@ class WeddingServiceTest {
     @DisplayName("AccountGroup 생성 시 최대 3개 제한 테스트")
     void createAccountGroupLimitExceeded() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "제목", LocalDateTime.now(), "장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         accountGroupRepository.save(AccountGroup.create(wedding.getId(), AccountGroup.Side.GROOM, "신랑측", 1));
         accountGroupRepository.save(AccountGroup.create(wedding.getId(), AccountGroup.Side.BRIDE, "신부측", 2));
@@ -250,10 +298,17 @@ class WeddingServiceTest {
     @DisplayName("Account 생성 시 최대 2개 제한 테스트")
     void createAccountLimitExceeded() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "제목", LocalDateTime.now(), "장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         AccountGroup group = accountGroupRepository.save(
                 AccountGroup.create(wedding.getId(), AccountGroup.Side.GROOM, "신랑측", 1)
@@ -276,10 +331,17 @@ class WeddingServiceTest {
     @DisplayName("전체 Wedding 정보 조회 테스트")
     void getWeddingInfo() {
         // given
-        Wedding wedding = weddingRepository.save(Wedding.create(
-                "제목", LocalDateTime.now(), "장소", "주소", null,
-                37.5, 127.0, null, null, null, null, null, null
-        ));
+        Wedding wedding = weddingRepository.save(
+                Wedding.builder()
+                        .title("제목")
+                        .invitationId("invitation-id")
+                        .weddingDate(LocalDateTime.now())
+                        .venueAddress("주소")
+                        .venueName("장소")
+                        .venueLat(37.5)
+                        .venueLng(127.0)
+                        .build()
+        );
 
         weddingService.createCouple(wedding.getId(), new CoupleRequest(
                 Couple.CoupleRole.GROOM, "김철수", "김아버지", "박어머니",
@@ -299,7 +361,7 @@ class WeddingServiceTest {
         );
 
         // when
-        WeddingInfoResponse response = weddingService.getWeddingInfo(wedding.getId());
+        WeddingInfoResponse response = weddingService.getWeddingInfo(wedding.getInvitationId());
 
         // then
         assertThat(response.wedding().id()).isEqualTo(wedding.getId());

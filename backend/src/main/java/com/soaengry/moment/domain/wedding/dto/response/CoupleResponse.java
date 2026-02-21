@@ -5,7 +5,7 @@ import com.soaengry.moment.domain.wedding.entity.Couple;
 public record CoupleResponse(
         Long id,
         Long weddingId,
-        Long userId,
+        String email,
         Couple.CoupleRole role,
         String name,
         String fatherName,
@@ -19,8 +19,8 @@ public record CoupleResponse(
     public static CoupleResponse from(Couple couple) {
         return new CoupleResponse(
                 couple.getId(),
-                couple.getWeddingId(),
-                couple.getUserId(),
+                couple.getWedding().getId(),
+                couple.getEmail(),
                 couple.getRole(),
                 couple.getName(),
                 couple.getFatherName(),

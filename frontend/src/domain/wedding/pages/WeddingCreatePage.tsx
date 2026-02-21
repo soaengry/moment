@@ -6,8 +6,6 @@ import type {
   WeddingRequest,
   CoupleRequest,
   ScheduleRequest,
-  AccountGroupRequest,
-  AccountRequest,
   TransportationRequest,
   AnnouncementRequest,
 } from "../types";
@@ -65,7 +63,10 @@ const WeddingCreatePage: FC = () => {
     handleNext();
   };
 
-  const handleCoupleSubmit = (couples: CoupleRequest[], photos: LandingPhoto[]) => {
+  const handleCoupleSubmit = (
+    couples: CoupleRequest[],
+    photos: LandingPhoto[],
+  ) => {
     setFormState((prev) => ({ ...prev, couples, landingPhotos: photos }));
     handleNext();
   };
@@ -108,6 +109,7 @@ const WeddingCreatePage: FC = () => {
         mealInfo: state.mealInfo || undefined,
       };
       const wedding = await weddingApi.createWedding(weddingRequest);
+      const invitationId = wedding.invitationId;
       const weddingId = wedding.id;
 
       // 2. 신랑/신부
@@ -153,7 +155,7 @@ const WeddingCreatePage: FC = () => {
       }
 
       toast.success("초대장이 생성되었습니다!");
-      setTimeout(() => navigate(`/wedding/${weddingId}`), 1500);
+      setTimeout(() => navigate(`/wedding/${invitationId}`), 1500);
     } catch {
       toast.error("초대장 생성에 실패했습니다. 다시 시도해주세요.");
     } finally {
@@ -196,9 +198,7 @@ const WeddingCreatePage: FC = () => {
             </div>
           ))}
         </div>
-        <p className="text-center text-sm text-gray-500 mb-6">
-          {STEPS[step]}
-        </p>
+        <p className="text-center text-sm text-gray-500 mb-6">{STEPS[step]}</p>
 
         {/* 스텝 폼 */}
         {step === 0 && (

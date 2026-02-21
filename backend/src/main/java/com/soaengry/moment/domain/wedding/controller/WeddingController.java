@@ -3,6 +3,8 @@ package com.soaengry.moment.domain.wedding.controller;
 import com.soaengry.moment.domain.wedding.dto.request.*;
 import com.soaengry.moment.domain.wedding.dto.response.*;
 import com.soaengry.moment.domain.wedding.service.WeddingService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,11 +47,19 @@ public class WeddingController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/check-invitation")
+    public ResponseEntity<CheckInvitationResponse> checkNickname(
+            @Valid @RequestBody CheckInvitationRequest request
+    ) {
+        boolean exists = weddingService.checkInvitationIdExists(request.invitationId());
+        return ResponseEntity.ok(new CheckInvitationResponse(exists));
+    }
+
     // ==================== 전체 정보 조회 ====================
 
-    @GetMapping("/{weddingId}/info")
-    public ResponseEntity<WeddingInfoResponse> getWeddingInfo(@PathVariable Long weddingId) {
-        WeddingInfoResponse response = weddingService.getWeddingInfo(weddingId);
+    @GetMapping("/{invitationId}/info")
+    public ResponseEntity<WeddingInfoResponse> getWeddingInfo(@PathVariable String invitationId) {
+        WeddingInfoResponse response = weddingService.getWeddingInfo(invitationId);
         return ResponseEntity.ok(response);
     }
 
@@ -292,4 +302,15 @@ public class WeddingController {
         weddingService.deleteAnnouncement(announcementId);
         return ResponseEntity.noContent().build();
     }
+}
+
+
+record CheckInvitationResponse(boolean exists) {
+}
+
+
+record CheckInvitationRequest(
+        @NotBlank
+        String invitationId
+) {
 }
