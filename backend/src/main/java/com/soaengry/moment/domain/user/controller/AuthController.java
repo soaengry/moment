@@ -1,8 +1,8 @@
 package com.soaengry.moment.domain.user.controller;
 
 import com.soaengry.moment.domain.user.dto.request.LoginRequest;
+import com.soaengry.moment.domain.user.dto.request.ResendVerificationRequest;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
-import com.soaengry.moment.domain.user.dto.request.VerifyEmailRequest;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.dto.response.TokenResponse;
 import com.soaengry.moment.domain.user.service.AuthService;
@@ -37,13 +37,13 @@ public class AuthController {
     /**
      * 이메일 인증 (POST - 코드 입력 방식)
      */
-    @PostMapping("/verify-email")
-    public ResponseEntity<VerifyEmailResponse> verifyEmail(
-            @Valid @RequestBody VerifyEmailRequest request
-    ) {
-        authService.verifyEmail(request);
-        return ResponseEntity.ok(new VerifyEmailResponse("이메일 인증이 완료되었습니다"));
-    }
+//    @PostMapping("/verify-email")
+//    public ResponseEntity<VerifyEmailResponse> verifyEmail(
+//            @Valid @RequestBody VerifyEmailRequest request
+//    ) {
+//        authService.verifyEmail(request);
+//        return ResponseEntity.ok(new VerifyEmailResponse("이메일 인증이 완료되었습니다"));
+//    }
 
     /**
      * 이메일 인증 (GET - 링크 클릭 방식)
@@ -63,7 +63,7 @@ public class AuthController {
     public ResponseEntity<ResendVerificationResponse> resendVerification(
             @Valid @RequestBody ResendVerificationRequest request
     ) {
-        // TODO: EmailService 구현 후 추가
+        authService.resendVerificationEmail(request);
         return ResponseEntity.ok(new ResendVerificationResponse("인증 코드를 재발송했습니다"));
     }
 
@@ -156,13 +156,6 @@ record CheckNicknameResponse(boolean exists) {
 
 // Request DTOs
 record RefreshRequest(@NotBlank String refreshToken) {
-}
-
-record ResendVerificationRequest(
-        @NotBlank
-        @Email
-        String email
-) {
 }
 
 record CheckEmailRequest(

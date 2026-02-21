@@ -1,10 +1,12 @@
 package com.soaengry.moment.domain.wedding.dto.request;
 
 import com.soaengry.moment.domain.wedding.entity.Couple;
+import com.soaengry.moment.domain.wedding.entity.Wedding;
 
 public record CoupleRequest(
         Couple.CoupleRole role,
         String name,
+        String email,
         String fatherName,
         String motherName,
         Boolean isFatherAlive,
@@ -13,18 +15,19 @@ public record CoupleRequest(
         String profileImageUrl,
         String introduction
 ) {
-    public Couple toEntity(Long weddingId) {
-        return Couple.create(
-                weddingId,
-                role,
-                name,
-                fatherName,
-                motherName,
-                isFatherAlive,
-                isMotherAlive,
-                contact,
-                profileImageUrl,
-                introduction
-        );
+    public Couple toEntity(Wedding wedding) {
+        return Couple.builder()
+                .wedding(wedding)
+                .role(role)
+                .name(name)
+                .email(email)
+                .fatherName(fatherName)
+                .motherName(motherName)
+                .isFatherAlive(isFatherAlive)
+                .isMotherAlive(isMotherAlive)
+                .contact(contact)
+                .profileImageUrl(profileImageUrl)
+                .introduction(introduction)
+                .build();
     }
 }

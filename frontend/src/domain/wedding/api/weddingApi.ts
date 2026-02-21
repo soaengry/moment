@@ -16,13 +16,17 @@ import type {
   TransportationResponse,
   AnnouncementRequest,
   AnnouncementResponse,
+  GalleryResponse,
+  CheckResponse,
 } from "../types";
 
 export const weddingApi = {
   // Wedding
-  getWeddingInfo: async (weddingId: number): Promise<WeddingInfoResponse> => {
+  getWeddingInfo: async (
+    invitationId: string,
+  ): Promise<WeddingInfoResponse> => {
     const { data } = await axiosInstance.get<WeddingInfoResponse>(
-      WEDDING_API.INFO(weddingId),
+      WEDDING_API.INFO(invitationId),
     );
     return data;
   },
@@ -35,7 +39,10 @@ export const weddingApi = {
     return data;
   },
 
-  updateWedding: async (weddingId: number, request: WeddingRequest): Promise<WeddingResponse> => {
+  updateWedding: async (
+    weddingId: number,
+    request: WeddingRequest,
+  ): Promise<WeddingResponse> => {
     const { data } = await axiosInstance.put<WeddingResponse>(
       WEDDING_API.DETAIL(weddingId),
       request,
@@ -47,6 +54,15 @@ export const weddingApi = {
     await axiosInstance.delete(WEDDING_API.DETAIL(weddingId));
   },
 
+  checkInvitationId: async (invitationId: string): Promise<CheckResponse> => {
+    const { data } = await axiosInstance.post<CheckResponse>(
+      WEDDING_API.CHECK_INVITATION,
+      { invitationId },
+    );
+    return data;
+  },
+
+  // ─── User
   // Couple
   createCouple: async (
     weddingId: number,
@@ -107,8 +123,14 @@ export const weddingApi = {
   },
 
   // Update/Delete for sub-resources
-  updateCouple: async (coupleId: number, request: CoupleRequest): Promise<CoupleResponse> => {
-    const { data } = await axiosInstance.put<CoupleResponse>(`/api/weddings/couples/${coupleId}`, request);
+  updateCouple: async (
+    coupleId: number,
+    request: CoupleRequest,
+  ): Promise<CoupleResponse> => {
+    const { data } = await axiosInstance.put<CoupleResponse>(
+      `/api/weddings/couples/${coupleId}`,
+      request,
+    );
     return data;
   },
 
@@ -116,8 +138,14 @@ export const weddingApi = {
     await axiosInstance.delete(`/api/weddings/couples/${coupleId}`);
   },
 
-  updateSchedule: async (scheduleId: number, request: ScheduleRequest): Promise<ScheduleResponse> => {
-    const { data } = await axiosInstance.put<ScheduleResponse>(`/api/weddings/schedules/${scheduleId}`, request);
+  updateSchedule: async (
+    scheduleId: number,
+    request: ScheduleRequest,
+  ): Promise<ScheduleResponse> => {
+    const { data } = await axiosInstance.put<ScheduleResponse>(
+      `/api/weddings/schedules/${scheduleId}`,
+      request,
+    );
     return data;
   },
 
@@ -134,7 +162,9 @@ export const weddingApi = {
   },
 
   deleteTransportation: async (transportationId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/weddings/transportation/${transportationId}`);
+    await axiosInstance.delete(
+      `/api/weddings/transportation/${transportationId}`,
+    );
   },
 
   deleteAnnouncement: async (announcementId: number): Promise<void> => {
@@ -151,5 +181,34 @@ export const weddingApi = {
       request,
     );
     return data;
+  },
+
+  // Gallery
+  createGallery: async (
+    weddingId: number,
+    request: {
+      imageUrl: string;
+      thumbnailUrl?: string;
+      caption?: string;
+      orderIndex: number;
+    },
+  ): Promise<GalleryResponse> => {
+    const { data } = await axiosInstance.post<GalleryResponse>(
+      WEDDING_API.GALLERIES(weddingId),
+      request,
+    );
+    return data;
+  },
+
+  // File Upload
+  uploadFile: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await axiosInstance.post<{ url: string }>(
+      "/api/files/upload",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data.url;
   },
 };
