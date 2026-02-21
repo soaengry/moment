@@ -17,7 +17,13 @@ import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
 import BottomNav from "../../global/components/BottomNav";
 import { HomePage } from "../../global/pages";
-import { WeddingInfoPage, WeddingCreatePage } from "../../domain/wedding/pages";
+import {
+  WeddingInfoPage,
+  WeddingCreatePage,
+  WeddingEditPage,
+} from "../../domain/wedding/pages";
+import { FeedPage } from "../../domain/feed/pages";
+import { ChatPage, ChatRoomPage } from "../../domain/chat/pages";
 
 const AppRouter: FC = () => {
   return (
@@ -38,7 +44,7 @@ const AppRouter: FC = () => {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/restore-account" element={<RestoreAccountPage />} />
         <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
-        <Route path="/wedding/:weddingId" element={<WeddingInfoPage />} />
+        <Route path="/wedding/:invitationId" element={<WeddingInfoPage />} />
 
         {/* 로그인 필요 페이지 */}
 
@@ -47,6 +53,38 @@ const AppRouter: FC = () => {
           element={
             <ProtectedRoute>
               <WeddingCreatePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wedding/:weddingId/edit"
+          element={
+            <ProtectedRoute>
+              <WeddingEditPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/feed"
+          element={
+            <ProtectedRoute>
+              <FeedPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wedding/:weddingId/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wedding/:weddingId/chat/:roomId"
+          element={
+            <ProtectedRoute>
+              <ChatRoomPage />
             </ProtectedRoute>
           }
         />

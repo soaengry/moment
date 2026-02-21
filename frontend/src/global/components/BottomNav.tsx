@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { IoHomeOutline, IoHome } from "react-icons/io5";
 import { IoPersonOutline, IoPerson } from "react-icons/io5";
 import { IoAddCircleOutline, IoAddCircle } from "react-icons/io5";
+import { IoNewspaperOutline, IoNewspaper } from "react-icons/io5";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
 
 interface NavItem {
@@ -19,6 +20,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "홈",
     icon: IoHomeOutline,
     activeIcon: IoHome,
+  },
+  {
+    path: "/feed",
+    label: "피드",
+    icon: IoNewspaperOutline,
+    activeIcon: IoNewspaper,
   },
   {
     path: "/wedding/create",
@@ -97,6 +104,11 @@ const BottomNav: FC = () => {
 
   // wedding info 페이지에서도 숨김
   if (/^\/wedding\/\d+$/.test(location.pathname)) {
+    return null;
+  }
+
+  // 채팅방 내부에서도 숨김
+  if (/\/chat\/\d+$/.test(location.pathname)) {
     return null;
   }
 
