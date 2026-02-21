@@ -23,7 +23,7 @@ public class EmailVerification {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, length = 6)
+    @Column(nullable = false, length = 255)
     private String verificationCode;
 
     @Column(nullable = false)

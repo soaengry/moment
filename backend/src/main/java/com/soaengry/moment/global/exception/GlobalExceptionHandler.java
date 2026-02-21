@@ -1,6 +1,9 @@
 package com.soaengry.moment.global.exception;
 
+import com.soaengry.moment.domain.chat.exception.ChatException;
 import com.soaengry.moment.domain.email.exception.EmailException;
+import com.soaengry.moment.domain.feed.exception.FeedException;
+import com.soaengry.moment.domain.guestbook.exception.GuestbookException;
 import com.soaengry.moment.domain.user.exception.UserException;
 import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +91,57 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * GuestbookException 처리
+     */
+    @ExceptionHandler(GuestbookException.class)
+    public ResponseEntity<ErrorResponse> handleGuestbookException(GuestbookException e) {
+        log.warn("Guestbook Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+
+        HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+        ErrorResponse response = ErrorResponse.of(
+                e.getErrorCode().name(),
+                e.getMessage(),
+                status.value()
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    /**
+     * FeedException 처리
+     */
+    @ExceptionHandler(FeedException.class)
+    public ResponseEntity<ErrorResponse> handleFeedException(FeedException e) {
+        log.warn("Feed Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+
+        HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+        ErrorResponse response = ErrorResponse.of(
+                e.getErrorCode().name(),
+                e.getMessage(),
+                status.value()
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    /**
+     * ChatException 처리
+     */
+    @ExceptionHandler(ChatException.class)
+    public ResponseEntity<ErrorResponse> handleChatException(ChatException e) {
+        log.warn("Chat Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+
+        HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+        ErrorResponse response = ErrorResponse.of(
+                e.getErrorCode().name(),
+                e.getMessage(),
+                status.value()
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    /**
      * Validation 예외 처리
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -129,8 +183,10 @@ public class GlobalExceptionHandler {
      * ErrorCode 이름에 따른 HTTP 상태 코드 결정
      */
     private HttpStatus determineHttpStatusFromCode(String code) {
-        if (code.startsWith("AUTH")) {
+        if (code.startsWith("AUTH") || code.equals("UNAUTHORIZED_ACCESS")) {
             return HttpStatus.UNAUTHORIZED;
+        } else if (code.equals("INVALID_PASSWORD")) {
+            return HttpStatus.FORBIDDEN;
         } else if (code.startsWith("DUPLICATE")) {
             return HttpStatus.CONFLICT;
         } else if (code.endsWith("NOT_FOUND")) {

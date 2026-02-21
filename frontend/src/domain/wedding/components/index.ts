@@ -1,3 +1,4 @@
+export { default as LandingSection } from "./LandingSection";
 export { default as CoupleSection } from "./CoupleSection";
 export { default as DateVenueSection } from "./DateVenueSection";
 export { default as LocationSection } from "./LocationSection";

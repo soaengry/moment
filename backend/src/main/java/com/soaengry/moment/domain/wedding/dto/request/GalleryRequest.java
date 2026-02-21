@@ -12,7 +12,7 @@ public record GalleryRequest(
         return Gallery.create(
                 weddingId,
                 imageUrl,
-                thumbnailUrl,
+                thumbnailUrl != null ? thumbnailUrl : imageUrl,
                 caption,
                 orderIndex
         );
