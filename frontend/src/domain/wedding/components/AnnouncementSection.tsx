@@ -35,17 +35,17 @@ const AnnouncementSection: FC<Props> = ({ announcements }) => {
         </svg>
       </button>
 
-      {/* 모달 */}
+      {/* 중앙 모달 */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="w-full max-w-lg bg-white rounded-t-2xl max-h-[70vh] flex flex-col animate-slide-up"
+            className="w-full max-w-sm bg-white rounded-2xl max-h-[80vh] flex flex-col shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-800">공지사항</h3>
               <button
                 onClick={() => setIsOpen(false)}

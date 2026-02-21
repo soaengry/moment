@@ -14,22 +14,24 @@ import {
   AnnouncementSection,
 } from "../components";
 import GuestbookSection from "../../guestbook/components/GuestbookSection";
+import { tokenStorage, parseJwt } from "../../auth/auth.utils";
 
 const WeddingInfoPage: FC = () => {
-  const { weddingId } = useParams<{ weddingId: string }>();
+  const { invitationId } = useParams<{ invitationId: string }>();
   const [data, setData] = useState<WeddingInfoResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchWeddingInfo = async () => {
-      if (!weddingId) {
+      if (!invitationId) {
         setError("잘못된 접근입니다");
         setIsLoading(false);
         return;
       }
       try {
-        const info = await weddingApi.getWeddingInfo(Number(weddingId));
+        const info = await weddingApi.getWeddingInfo(invitationId);
+        console.log("Wedding Info:", info);
         setData(info);
       } catch {
         setError("초대장을 찾을 수 없습니다");
@@ -38,7 +40,7 @@ const WeddingInfoPage: FC = () => {
       }
     };
     fetchWeddingInfo();
-  }, [weddingId]);
+  }, [invitationId]);
 
   if (isLoading) {
     return (
@@ -52,16 +54,34 @@ const WeddingInfoPage: FC = () => {
     return (
       <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 text-lg mb-2">{error ?? "초대장을 찾을 수 없습니다"}</p>
+          <p className="text-gray-500 text-lg mb-2">
+            {error ?? "초대장을 찾을 수 없습니다"}
+          </p>
           <p className="text-gray-400 text-sm">주소를 다시 확인해주세요</p>
         </div>
       </div>
     );
   }
 
-  const { wedding, couples, schedules, accountGroups, gallery, transportation, announcements } = data;
+  const {
+    wedding,
+    couples,
+    schedules,
+    accountGroups,
+    gallery,
+    transportation,
+    announcements,
+  } = data;
   const groom = couples.find((c) => c.role === "GROOM");
   const bride = couples.find((c) => c.role === "BRIDE");
+
+  // 현재 로그인한 사용자 ID (JWT sub)
+  const token = tokenStorage.getAccessToken();
+  const currentUserId = token ? Number(parseJwt(token)?.sub) || null : null;
+  // 호스트: 이 웨딩의 커플로 등록된 사용자들의 ID
+  const hostUserIds = couples
+    .map((c) => c.userId)
+    .filter((id): id is number => id !== null);
 
   return (
     <div className="min-h-screen bg-[#faf9f6]">
@@ -108,7 +128,11 @@ const WeddingInfoPage: FC = () => {
         </div>
 
         {/* 방명록 */}
-        <GuestbookSection weddingId={Number(weddingId)} />
+        <GuestbookSection
+          weddingId={Number(wedding.id)}
+          currentUserId={currentUserId}
+          hostUserIds={hostUserIds}
+        />
 
         {/* 하단 푸터 */}
         <footer className="py-10 text-center">

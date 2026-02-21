@@ -9,6 +9,7 @@ export type TransportType = "SUBWAY" | "BUS" | "SHUTTLE";
 export interface WeddingResponse {
   id: number;
   title: string;
+  invitationId: string;
   weddingDate: string;
   venueName: string;
   venueAddress: string;
@@ -28,6 +29,7 @@ export interface WeddingResponse {
 export interface CoupleResponse {
   id: number;
   weddingId: number;
+  userId: number | null;
   role: CoupleRole;
   name: string;
   fatherName: string | null;
@@ -112,10 +114,15 @@ export interface AnnouncementResponse {
   updatedAt: string;
 }
 
+export interface CheckResponse {
+  exists: boolean;
+}
+
 // ─── Request ───
 
 export interface WeddingRequest {
   title: string;
+  invitationId: string;
   weddingDate: string;
   venueName: string;
   venueAddress: string;
@@ -131,6 +138,7 @@ export interface WeddingRequest {
 export interface CoupleRequest {
   role: CoupleRole;
   name: string;
+  email: string;
   fatherName?: string;
   motherName?: string;
   isFatherAlive?: boolean;
