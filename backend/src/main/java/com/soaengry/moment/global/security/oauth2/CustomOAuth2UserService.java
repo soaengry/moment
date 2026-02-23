@@ -66,12 +66,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .isEmailVerified(true)  // 소셜 로그인은 이메일 인증 완료로 간주
                 .build();
 
-        userRepository.save(newUser);
+        User savedUser = userRepository.save(newUser);
 
         log.info("신규 소셜 로그인 사용자 등록 - Provider: {}, Email: {}, Nickname: {}",
                 provider, userInfo.getEmail(), nickname);
 
-        return newUser;
+        return savedUser;
     }
 
     /**
