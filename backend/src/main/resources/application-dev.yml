@@ -107,7 +107,7 @@ spring:
   cloud:
     aws:
       s3:
-        bucket: merry-moment
+        bucket: ${AWS_BUCKET}
       credentials:
         access-key: ${AWS_ACCESS_KEY:}
         secret-key: ${AWS_SECRET_KEY:}
