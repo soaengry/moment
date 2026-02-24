@@ -5,7 +5,6 @@ import com.soaengry.moment.domain.feed.dto.request.PostRequest;
 import com.soaengry.moment.domain.feed.dto.response.CommentResponse;
 import com.soaengry.moment.domain.feed.dto.response.PostResponse;
 import com.soaengry.moment.domain.feed.service.FeedService;
-import com.soaengry.moment.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,128 +27,128 @@ public class FeedController {
     // ==================== Post ====================
 
     @PostMapping("/posts")
-    public ResponseEntity<ApiResponse<PostResponse>> createPost(
+    public ResponseEntity<PostResponse> createPost(
             Authentication authentication,
             @Valid @RequestBody PostRequest request) {
         Long userId = (Long) authentication.getPrincipal();
         PostResponse response = feedService.createPost(userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/posts")
-    public ResponseEntity<ApiResponse<Page<PostResponse>>> getFeed(
+    public ResponseEntity<Page<PostResponse>> getFeed(
             Authentication authentication,
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
         Page<PostResponse> responses = feedService.getFeed(userId, pageable);
-        return ResponseEntity.ok(ApiResponse.success(responses));
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/posts/{postId}")
-    public ResponseEntity<ApiResponse<PostResponse>> getPost(
+    public ResponseEntity<PostResponse> getPost(
             Authentication authentication,
             @PathVariable Long postId) {
         Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
         PostResponse response = feedService.getPost(postId, userId);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/users/{targetUserId}/posts")
-    public ResponseEntity<ApiResponse<Page<PostResponse>>> getUserPosts(
+    public ResponseEntity<Page<PostResponse>> getUserPosts(
             Authentication authentication,
             @PathVariable Long targetUserId,
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
         Page<PostResponse> responses = feedService.getUserPosts(userId, targetUserId, pageable);
-        return ResponseEntity.ok(ApiResponse.success(responses));
+        return ResponseEntity.ok(responses);
     }
 
     @PutMapping("/posts/{postId}")
-    public ResponseEntity<ApiResponse<PostResponse>> updatePost(
+    public ResponseEntity<PostResponse> updatePost(
             Authentication authentication,
             @PathVariable Long postId,
             @Valid @RequestBody PostRequest request) {
         Long userId = (Long) authentication.getPrincipal();
         PostResponse response = feedService.updatePost(userId, postId, request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/posts/{postId}")
-    public ResponseEntity<ApiResponse<Void>> deletePost(
+    public ResponseEntity<Void> deletePost(
             Authentication authentication,
             @PathVariable Long postId) {
         Long userId = (Long) authentication.getPrincipal();
         feedService.deletePost(userId, postId);
-        return ResponseEntity.ok(ApiResponse.success());
+        return ResponseEntity.noContent().build();
     }
 
     // ==================== Like ====================
 
     @PostMapping("/posts/{postId}/like")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> toggleLike(
+    public ResponseEntity<Map<String, Boolean>> toggleLike(
             Authentication authentication,
             @PathVariable Long postId) {
         Long userId = (Long) authentication.getPrincipal();
         boolean liked = feedService.toggleLike(userId, postId);
-        return ResponseEntity.ok(ApiResponse.success(Map.of("liked", liked)));
+        return ResponseEntity.ok(Map.of("liked", liked));
     }
 
     // ==================== Bookmark ====================
 
     @PostMapping("/posts/{postId}/bookmark")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> toggleBookmark(
+    public ResponseEntity<Map<String, Boolean>> toggleBookmark(
             Authentication authentication,
             @PathVariable Long postId) {
         Long userId = (Long) authentication.getPrincipal();
         boolean bookmarked = feedService.toggleBookmark(userId, postId);
-        return ResponseEntity.ok(ApiResponse.success(Map.of("bookmarked", bookmarked)));
+        return ResponseEntity.ok(Map.of("bookmarked", bookmarked));
     }
 
     @GetMapping("/bookmarks")
-    public ResponseEntity<ApiResponse<Page<PostResponse>>> getBookmarkedPosts(
+    public ResponseEntity<Page<PostResponse>> getBookmarkedPosts(
             Authentication authentication,
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = (Long) authentication.getPrincipal();
         Page<PostResponse> responses = feedService.getBookmarkedPosts(userId, pageable);
-        return ResponseEntity.ok(ApiResponse.success(responses));
+        return ResponseEntity.ok(responses);
     }
 
     // ==================== Comment ====================
 
     @PostMapping("/posts/{postId}/comments")
-    public ResponseEntity<ApiResponse<CommentResponse>> createComment(
+    public ResponseEntity<CommentResponse> createComment(
             Authentication authentication,
             @PathVariable Long postId,
             @Valid @RequestBody CommentRequest request) {
         Long userId = (Long) authentication.getPrincipal();
         CommentResponse response = feedService.createComment(userId, postId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/posts/{postId}/comments")
-    public ResponseEntity<ApiResponse<Page<CommentResponse>>> getComments(
+    public ResponseEntity<Page<CommentResponse>> getComments(
             @PathVariable Long postId,
             @PageableDefault(size = 30) Pageable pageable) {
         Page<CommentResponse> responses = feedService.getComments(postId, pageable);
-        return ResponseEntity.ok(ApiResponse.success(responses));
+        return ResponseEntity.ok(responses);
     }
 
     @PutMapping("/comments/{commentId}")
-    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
+    public ResponseEntity<CommentResponse> updateComment(
             Authentication authentication,
             @PathVariable Long commentId,
             @Valid @RequestBody CommentRequest request) {
         Long userId = (Long) authentication.getPrincipal();
         CommentResponse response = feedService.updateComment(userId, commentId, request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<ApiResponse<Void>> deleteComment(
+    public ResponseEntity<Void> deleteComment(
             Authentication authentication,
             @PathVariable Long commentId) {
         Long userId = (Long) authentication.getPrincipal();
         feedService.deleteComment(userId, commentId);
-        return ResponseEntity.ok(ApiResponse.success());
+        return ResponseEntity.noContent().build();
     }
 }

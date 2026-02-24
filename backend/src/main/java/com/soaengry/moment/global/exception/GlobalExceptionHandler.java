@@ -6,6 +6,7 @@ import com.soaengry.moment.domain.feed.exception.FeedException;
 import com.soaengry.moment.domain.guestbook.exception.GuestbookException;
 import com.soaengry.moment.domain.user.exception.UserException;
 import com.soaengry.moment.domain.wedding.exception.WeddingException;
+import com.soaengry.moment.global.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,126 +26,96 @@ public class GlobalExceptionHandler {
      * WeddingException 처리
      */
     @ExceptionHandler(WeddingException.class)
-    public ResponseEntity<ErrorResponse> handleWeddingException(WeddingException e) {
+    public ResponseEntity<ApiResponse<?>> handleWeddingException(WeddingException e) {
         log.warn("Wedding Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
         HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
-        ErrorResponse response = ErrorResponse.of(
-                e.getErrorCode().name(),
-                e.getMessage(),
-                status.value()
-        );
+        ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
 
-        return ResponseEntity.status(status).body(response);
+        return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
     }
 
     /**
      * UserException 처리
      */
     @ExceptionHandler(UserException.class)
-    public ResponseEntity<ErrorResponse> handleUserException(UserException e) {
+    public ResponseEntity<ApiResponse<?>> handleUserException(UserException e) {
         log.warn("User Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
         HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
-        ErrorResponse response = ErrorResponse.of(
-                e.getErrorCode().name(),
-                e.getMessage(),
-                status.value()
-        );
+        ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
 
-        return ResponseEntity.status(status).body(response);
+        return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
     }
 
     /**
      * FileException 처리
      */
     @ExceptionHandler(FileException.class)
-    public ResponseEntity<ErrorResponse> handleFileException(FileException e) {
-        log.warn("File Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+    public ResponseEntity<ApiResponse<?>> handleFileException(FileException e) {
+        log.warn("File Exception: {} - {}", e.getErrorCode().getCode(), e.getMessage());
 
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        ErrorResponse response = ErrorResponse.of(
-                e.getErrorCode().name(),
-                e.getMessage(),
-                status.value()
-        );
-
-        return ResponseEntity.status(status).body(response);
+        ErrorCode errorCode = e.getErrorCode();
+        return ResponseEntity.status(errorCode.getHttpStatus()).body(ApiResponse.error(errorCode));
     }
 
     /**
      * EmailException 처리
      */
     @ExceptionHandler(EmailException.class)
-    public ResponseEntity<ErrorResponse> handleEmailException(EmailException e) {
+    public ResponseEntity<ApiResponse<?>> handleEmailException(EmailException e) {
         log.error("Email Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        ErrorResponse response = ErrorResponse.of(
-                e.getErrorCode().name(),
-                e.getMessage(),
-                status.value()
-        );
+        ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
 
-        return ResponseEntity.status(status).body(response);
+        return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
     }
 
     /**
      * GuestbookException 처리
      */
     @ExceptionHandler(GuestbookException.class)
-    public ResponseEntity<ErrorResponse> handleGuestbookException(GuestbookException e) {
+    public ResponseEntity<ApiResponse<?>> handleGuestbookException(GuestbookException e) {
         log.warn("Guestbook Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
         HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
-        ErrorResponse response = ErrorResponse.of(
-                e.getErrorCode().name(),
-                e.getMessage(),
-                status.value()
-        );
+        ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
 
-        return ResponseEntity.status(status).body(response);
+        return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
     }
 
     /**
      * FeedException 처리
      */
     @ExceptionHandler(FeedException.class)
-    public ResponseEntity<ErrorResponse> handleFeedException(FeedException e) {
+    public ResponseEntity<ApiResponse<?>> handleFeedException(FeedException e) {
         log.warn("Feed Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
         HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
-        ErrorResponse response = ErrorResponse.of(
-                e.getErrorCode().name(),
-                e.getMessage(),
-                status.value()
-        );
+        ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
 
-        return ResponseEntity.status(status).body(response);
+        return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
     }
 
     /**
      * ChatException 처리
      */
     @ExceptionHandler(ChatException.class)
-    public ResponseEntity<ErrorResponse> handleChatException(ChatException e) {
+    public ResponseEntity<ApiResponse<?>> handleChatException(ChatException e) {
         log.warn("Chat Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
         HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
-        ErrorResponse response = ErrorResponse.of(
-                e.getErrorCode().name(),
-                e.getMessage(),
-                status.value()
-        );
+        ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
 
-        return ResponseEntity.status(status).body(response);
+        return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
     }
 
     /**
      * Validation 예외 처리
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
+    public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException e) {
         log.warn("Validation Exception: {}", e.getMessage());
 
         Map<String, String> errors = new HashMap<>();
@@ -153,30 +123,29 @@ public class GlobalExceptionHandler {
             errors.put(error.getField(), error.getDefaultMessage());
         }
 
-        ErrorResponse response = ErrorResponse.of(
+        ErrorCode errorCode = ErrorCode.from(
                 "VALIDATION_ERROR",
                 "입력값이 올바르지 않습니다",
-                HttpStatus.BAD_REQUEST.value(),
-                errors
+                HttpStatus.BAD_REQUEST
         );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(errorCode));
     }
 
     /**
      * 기타 예외 처리
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+    public ResponseEntity<ApiResponse<?>> handleException(Exception e) {
         log.error("Unexpected Exception: {}", e.getMessage(), e);
 
-        ErrorResponse response = ErrorResponse.of(
+        ErrorCode errorCode = ErrorCode.from(
                 "INTERNAL_SERVER_ERROR",
                 "서버 오류가 발생했습니다",
-                HttpStatus.INTERNAL_SERVER_ERROR.value()
+                HttpStatus.INTERNAL_SERVER_ERROR
         );
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(errorCode));
     }
 
     /**
@@ -198,24 +167,5 @@ public class GlobalExceptionHandler {
         } else {
             return HttpStatus.BAD_REQUEST;
         }
-    }
-}
-
-/**
- * 에러 응답 DTO
- */
-record ErrorResponse(
-        String code,
-        String message,
-        int status,
-        Map<String, String> errors,
-        LocalDateTime timestamp
-) {
-    public static ErrorResponse of(String code, String message, int status) {
-        return new ErrorResponse(code, message, status, null, LocalDateTime.now());
-    }
-
-    public static ErrorResponse of(String code, String message, int status, Map<String, String> errors) {
-        return new ErrorResponse(code, message, status, errors, LocalDateTime.now());
     }
 }
