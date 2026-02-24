@@ -3,6 +3,7 @@ package com.soaengry.moment.domain.guestbook.controller;
 import com.soaengry.moment.domain.guestbook.dto.request.GuestbookRequest;
 import com.soaengry.moment.domain.guestbook.dto.response.GuestbookResponse;
 import com.soaengry.moment.domain.guestbook.service.GuestbookService;
+import com.soaengry.moment.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,36 +21,36 @@ public class GuestbookController {
     private final GuestbookService guestbookService;
 
     @PostMapping
-    public ResponseEntity<GuestbookResponse> createEntry(
+    public ResponseEntity<ApiResponse<GuestbookResponse>> createEntry(
             @PathVariable Long weddingId,
             @Valid @RequestBody GuestbookRequest request) {
         GuestbookResponse response = guestbookService.createEntry(weddingId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
     @GetMapping
-    public ResponseEntity<Page<GuestbookResponse>> getEntries(
+    public ResponseEntity<ApiResponse<Page<GuestbookResponse>>> getEntries(
             @PathVariable Long weddingId,
             @PageableDefault(size = 20) Pageable pageable) {
         Page<GuestbookResponse> responses = guestbookService.getEntries(weddingId, pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
     @PutMapping("/{entryId}")
-    public ResponseEntity<GuestbookResponse> updateEntry(
+    public ResponseEntity<ApiResponse<GuestbookResponse>> updateEntry(
             @PathVariable Long weddingId,
             @PathVariable Long entryId,
             @Valid @RequestBody GuestbookRequest request) {
         GuestbookResponse response = guestbookService.updateEntry(weddingId, entryId, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @DeleteMapping("/{entryId}")
-    public ResponseEntity<Void> deleteEntry(
+    public ResponseEntity<ApiResponse<Void>> deleteEntry(
             @PathVariable Long weddingId,
             @PathVariable Long entryId,
             @RequestParam(required = false) String password) {
         guestbookService.deleteEntry(weddingId, entryId, password);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success());
     }
 }

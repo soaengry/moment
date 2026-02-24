@@ -2,6 +2,7 @@ package com.soaengry.moment.domain.user.controller;
 
 import com.soaengry.moment.domain.user.dto.response.UserResponse;
 import com.soaengry.moment.domain.user.service.UserService;
+import com.soaengry.moment.global.common.ApiResponse;
 import com.soaengry.moment.global.service.S3Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,16 +25,16 @@ public class UserController {
      * 내 정보 조회
      */
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getMyInfo(@AuthenticationPrincipal Long userId) {
+    public ResponseEntity<ApiResponse<UserResponse>> getMyInfo(@AuthenticationPrincipal Long userId) {
         UserResponse response = userService.getUserInfo(userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
      * 프로필 수정
      */
     @PatchMapping(value = "/me", consumes = {"application/json", "multipart/form-data"})
-    public ResponseEntity<UserResponse> updateProfile(
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
             @AuthenticationPrincipal Long userId,
             @RequestPart(value = "nickname", required = false) String nickname,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
@@ -68,30 +69,30 @@ public class UserController {
         }
 
         UserResponse response = userService.updateProfile(userId, nickname, newProfileImageUrl);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
      * 비밀번호 변경
      */
     @PatchMapping("/me/password")
-    public ResponseEntity<ChangePasswordResponse> changePassword(
+    public ResponseEntity<ApiResponse<Void>> changePassword(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
         userService.changePassword(userId, request.currentPassword(), request.newPassword());
-        return ResponseEntity.ok(new ChangePasswordResponse("비밀번호가 변경되었습니다"));
+        return ResponseEntity.ok(ApiResponse.success("비밀번호가 변경되었습니다"));
     }
 
     /**
      * 회원 탈퇴
      */
     @DeleteMapping("/me")
-    public ResponseEntity<DeleteAccountResponse> deleteAccount(
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
             @AuthenticationPrincipal Long userId
     ) {
         userService.deleteAccount(userId);
-        return ResponseEntity.ok(new DeleteAccountResponse(
+        return ResponseEntity.ok(ApiResponse.success(
                 "회원 탈퇴가 완료되었습니다. 30일 내 재가입 시 복구 가능합니다"
         ));
     }
@@ -100,11 +101,11 @@ public class UserController {
      * 계정 복구
      */
     @PostMapping("/restore")
-    public ResponseEntity<RestoreAccountResponse> restoreAccount(
+    public ResponseEntity<ApiResponse<Void>> restoreAccount(
             @Valid @RequestBody RestoreAccountRequest request
     ) {
         userService.restoreAccount(request.email(), request.password());
-        return ResponseEntity.ok(new RestoreAccountResponse("계정이 복구되었습니다"));
+        return ResponseEntity.ok(ApiResponse.success("계정이 복구되었습니다"));
     }
 }
 
@@ -131,12 +132,3 @@ record RestoreAccountRequest(
 ) {
 }
 
-// Response DTOs
-record ChangePasswordResponse(String message) {
-}
-
-record DeleteAccountResponse(String message) {
-}
-
-record RestoreAccountResponse(String message) {
-}

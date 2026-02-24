@@ -7,6 +7,7 @@ import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.dto.response.TokenResponse;
 import com.soaengry.moment.domain.user.service.AuthService;
 import com.soaengry.moment.domain.user.service.UserService;
+import com.soaengry.moment.global.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -29,9 +30,9 @@ public class AuthController {
      * 회원가입
      */
     @PostMapping("/signup")
-    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
+    public ResponseEntity<ApiResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest request) {
         SignupResponse response = authService.signup(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
@@ -49,75 +50,75 @@ public class AuthController {
      * 이메일 인증 (GET - 링크 클릭 방식)
      */
     @GetMapping("/verify-email")
-    public ResponseEntity<VerifyEmailResponse> verifyEmailByToken(
+    public ResponseEntity<ApiResponse<Void>> verifyEmailByToken(
             @RequestParam("token") String token
     ) {
         authService.verifyEmailByToken(token);
-        return ResponseEntity.ok(new VerifyEmailResponse("이메일 인증이 완료되었습니다"));
+        return ResponseEntity.ok(ApiResponse.success("이메일 인증이 완료되었습니다"));
     }
 
     /**
      * 이메일 인증 코드 재발송
      */
     @PostMapping("/resend-verification")
-    public ResponseEntity<ResendVerificationResponse> resendVerification(
+    public ResponseEntity<ApiResponse<Void>> resendVerification(
             @Valid @RequestBody ResendVerificationRequest request
     ) {
         authService.resendVerificationEmail(request);
-        return ResponseEntity.ok(new ResendVerificationResponse("인증 코드를 재발송했습니다"));
+        return ResponseEntity.ok(ApiResponse.success("인증 코드를 재발송했습니다"));
     }
 
     /**
      * 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(
+    public ResponseEntity<ApiResponse<TokenResponse>> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest
     ) {
         TokenResponse response = authService.login(request);
         log.info("로그인 성공 - IP: {}", getClientIp(httpRequest));
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
      * 토큰 갱신
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+    public ResponseEntity<ApiResponse<TokenResponse>> refresh(@Valid @RequestBody RefreshRequest request) {
         TokenResponse response = authService.refresh(request.refreshToken());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
      * 로그아웃
      */
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponse> logout(@Valid @RequestBody RefreshRequest request) {
+    public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody RefreshRequest request) {
         authService.logout(request.refreshToken());
-        return ResponseEntity.ok(new LogoutResponse("로그아웃되었습니다"));
+        return ResponseEntity.ok(ApiResponse.success("로그아웃되었습니다"));
     }
 
     /**
      * 이메일 중복 체크
      */
     @PostMapping("/check-email")
-    public ResponseEntity<CheckEmailResponse> checkEmail(
+    public ResponseEntity<ApiResponse<CheckEmailResponse>> checkEmail(
             @Valid @RequestBody CheckEmailRequest request
     ) {
         boolean exists = userService.checkEmailExists(request.email());
-        return ResponseEntity.ok(new CheckEmailResponse(exists));
+        return ResponseEntity.ok(ApiResponse.success(new CheckEmailResponse(exists)));
     }
 
     /**
      * 닉네임 중복 체크
      */
     @PostMapping("/check-nickname")
-    public ResponseEntity<CheckNicknameResponse> checkNickname(
+    public ResponseEntity<ApiResponse<CheckNicknameResponse>> checkNickname(
             @Valid @RequestBody CheckNicknameRequest request
     ) {
         boolean exists = userService.checkNicknameExists(request.nickname());
-        return ResponseEntity.ok(new CheckNicknameResponse(exists));
+        return ResponseEntity.ok(ApiResponse.success(new CheckNicknameResponse(exists)));
     }
 
     /**
@@ -139,15 +140,6 @@ public class AuthController {
 }
 
 // Response DTOs
-record VerifyEmailResponse(String message) {
-}
-
-record ResendVerificationResponse(String message) {
-}
-
-record LogoutResponse(String message) {
-}
-
 record CheckEmailResponse(boolean exists) {
 }
 
