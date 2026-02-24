@@ -3,6 +3,7 @@ import { ENV } from "../config/env";
 import { tokenStorage, isTokenExpired } from "../../domain/auth/auth.utils";
 import { AUTH_API } from "../../domain/auth/auth.constants";
 import type { ApiErrorResponse, TokenResponse } from "../../domain/auth/types";
+import type { ApiResponse } from "../types/ApiResponse";
 
 const axiosInstance = axios.create({
   baseURL: ENV.API_BASE_URL,
@@ -43,7 +44,22 @@ axiosInstance.interceptors.request.use(
 );
 
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // ApiResponse 형식에서 data 필드 자동 추출
+    if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+      const apiResponse = response.data as ApiResponse<unknown>;
+
+      // data가 null이고 message가 있는 경우 (메시지만 반환하는 API)
+      if (apiResponse.data === null && apiResponse.message) {
+        response.data = { message: apiResponse.message };
+      }
+      // data가 있는 경우
+      else if ('data' in apiResponse) {
+        response.data = apiResponse.data;
+      }
+    }
+    return response;
+  },
   async (error: AxiosError<ApiErrorResponse>) => {
     const originalRequest = error.config;
 
