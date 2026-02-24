@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk-slim AS build-stage
+FROM eclipse-temurin:17-jdk-alpine AS build-stage
 WORKDIR /app
 
 COPY gradlew .
@@ -9,7 +9,7 @@ COPY src src
 RUN chmod +x ./gradlew
 RUN ./gradlew bootJar
 
-FROM eclipse-temurin:17-jre-slim
+FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
 
 COPY --from=build-stage /app/build/libs/*.jar app.jar
