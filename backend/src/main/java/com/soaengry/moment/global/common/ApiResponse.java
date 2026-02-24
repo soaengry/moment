@@ -1,38 +1,32 @@
 package com.soaengry.moment.global.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.soaengry.moment.global.exception.ErrorCode;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
 
 @Getter
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ApiResponse<T> {
-    private final boolean success;
-    private final T data;
-    private final String message;
-    private final LocalDateTime timestamp;
 
-    private ApiResponse(boolean success, T data, String message) {
-        this.success = success;
-        this.data = data;
-        this.message = message;
-        this.timestamp = LocalDateTime.now();
+    private ApiStatus status;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private T data;
+
+    public static <T> ApiResponse<T> ok(SuccessCode code, T data) {
+        return ApiResponse.<T>builder()
+                .status(new ApiStatus(code.getCode(), code.getMessage()))
+                .data(data)
+                .build();
     }
 
-    public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, data, null);
-    }
-
-    public static <T> ApiResponse<T> success() {
-        return new ApiResponse<>(true, null, null);
-    }
-
-    public static <T> ApiResponse<T> success(String message) {
-        return new ApiResponse<>(true, null, message);
-    }
-
-    public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, null, message);
+    public static <T> ApiResponse<T> error(ErrorCode code) {
+        return ApiResponse.<T>builder()
+                .status(new ApiStatus(code.getHttpStatus().value(), code.getMessage()))
+                .build();
     }
 }
