@@ -1,4 +1,4 @@
-FROM openjdk:11-jdk AS build-stage
+FROM openjdk:17-jdk AS build-stage
 
 COPY gradlew .
 COPY gradle gradle
