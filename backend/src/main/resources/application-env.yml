@@ -1,0 +1,81 @@
+# Local
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: 8080
+  serverAddress: localhost
+serverName: local_server
+app:
+  email:
+    verification-url: "http://localhost:8080/verify-email"
+    password-reset-url: "http://localhost:8080/reset-password"
+  oauth2:
+    redirect-uri: "http://localhost:3000/oauth2/callback"
+security:
+  oauth2:
+    client:
+      registration:
+        kakao:
+          redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+        naver:
+          redirect-uri: "http://localhost:8080/login/oauth2/code/naver"
+        google:
+          redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+
+---
+
+# Blue
+spring:
+  config:
+    activate:
+      on-profile: blue
+server:
+  port: 8080
+  serverAddress: ${SERVER_ADDRESS}
+serverName: blue_server
+app:
+  email:
+    verification-url: "${BASE_URL}/verify-email"
+    password-reset-url: "${BASE_URL}/reset-password"
+  oauth2:
+    redirect-uri: "${FRONT_URL}/oauth2/callback"
+security:
+  oauth2:
+    client:
+      registration:
+        kakao:
+          redirect-uri: "${BASE_URL}/login/oauth2/code/kakao"
+        naver:
+          redirect-uri: "${BASE_URL}/login/oauth2/code/naver"
+        google:
+          redirect-uri: "${BASE_URL}/login/oauth2/code/google"
+
+---
+
+# Green
+spring:
+  config:
+    activate:
+      on-profile: green
+server:
+  port: 8081
+  serverAddress: ${SERVER_ADDRESS}
+serverName: green_server
+app:
+  email:
+    verification-url: "${BASE_URL}/verify-email"
+    password-reset-url: "${BASE_URL}/reset-password"
+  oauth2:
+    redirect-uri: "${FRONT_URL}/oauth2/callback"
+security:
+  oauth2:
+    client:
+      registration:
+        kakao:
+          redirect-uri: "${BASE_URL}/login/oauth2/code/kakao"
+        naver:
+          redirect-uri: "${BASE_URL}/login/oauth2/code/naver"
+        google:
+          redirect-uri: "${BASE_URL}/login/oauth2/code/google"
