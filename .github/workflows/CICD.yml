@@ -86,9 +86,11 @@ jobs:
 
       - name: Change nginx upstream
         run: |
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@${{ secrets.MOMENT_SERVER_IP }} \
-          "sudo docker exec -i moment-nginx bash -c 'echo \"set \$service_url ${{ env.TARGET_UPSTREAM }};\" > /etc/nginx/conf.d/service-env.inc && nginx -s reload'"
-
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@${{ secrets.MOMENT_SERVER_IP }} << EOF
+          sudo docker exec moment-nginx sh -c 'echo "set \$service_url ${{ env.TARGET_UPSTREAM }};" > /etc/nginx/conf.d/service-env.inc'
+          sudo docker exec moment-nginx nginx -s reload
+          EOF
+    
       - name: Stop current server
         run: |
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@${{ secrets.MOMENT_SERVER_IP }} \
