@@ -28,7 +28,7 @@ jobs:
           ./gradlew clean build -x test
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -78,7 +78,7 @@ jobs:
            sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d"
 
       - name: Check deploy server URL
-        uses: jtalk/url-health-check-action@v3
+        uses: jtalk/url-health-check-action@v4
         with:
           url: http://${{ secrets.MOMENT_SERVER_IP }}:${{env.STOPPED_PORT}}/env
           max-attempts: 3
