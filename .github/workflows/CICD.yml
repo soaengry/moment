@@ -21,8 +21,9 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Gradle
+        working-directory: ./backend
         run: |
-          chmod +x ./gradlew
+          chmod +x gradlew
           ./gradlew clean build -x test
 
       - name: Login to DockerHub
