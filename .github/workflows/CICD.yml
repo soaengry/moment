@@ -92,3 +92,6 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@${{ secrets.MOMENT_SERVER_IP }} \
           "sudo docker stop ${{env.CURRENT_UPSTREAM}} && sudo docker rm ${{env.CURRENT_UPSTREAM}}"
+  
+      - name: Cleanup SSH key
+        run: rm -f ssh_key.pem
