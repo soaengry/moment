@@ -33,7 +33,6 @@ spring:
       on-profile: blue
 server:
   port: 8080
-  serverAddress: ${SERVER_ADDRESS}
 serverName: blue_server
 app:
   email:
@@ -61,7 +60,6 @@ spring:
       on-profile: green
 server:
   port: 8081
-  serverAddress: ${SERVER_ADDRESS}
 serverName: green_server
 app:
   email:
