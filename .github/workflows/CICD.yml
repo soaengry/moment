@@ -82,7 +82,7 @@ jobs:
       
       - name: Deploy via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@${{ secrets.LIVE_SERVER_IP }} \
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@${{ secrets.MOMENT_SERVER_IP }} \
           "sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/moment_server:latest && \
            sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d"
 
