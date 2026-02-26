@@ -2,11 +2,11 @@ spring:
   profiles:
     active: local
     group:
-      local: local, common, secret
-      blue: blue, common, secret
-      green: green, common, secret
+      local: local, common
+      blue: blue, common
+      green: green, common
   config:
-    import: classpath:application-env.yml, classpath:application-common.yml, classpath:application-secret.yml
+    import: classpath:application-env.yml, classpath:application-common.yml
 
 server:
   env: blue
