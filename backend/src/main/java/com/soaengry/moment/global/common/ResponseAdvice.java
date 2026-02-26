@@ -42,6 +42,10 @@ public class ResponseAdvice implements ResponseBodyAdvice<Object> {
             return body;
         }
 
+        if (path.equals("/env") || path.equals("/hc")) {
+            return body;
+        }
+
         // 기본 성공 응답으로 감싸기
         return ApiResponse.ok(SuccessCode.OK, body);
     }
