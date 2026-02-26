@@ -65,16 +65,26 @@ jobs:
             exit 1
           fi
           
-      - name: Docker compose
-        uses: appleboy/ssh-action@v1.2.4
-        with:
-          username: ubuntu
-          host: ${{ secrets.MOMENT_SERVER_IP }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/moment_server:latest
-            sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
+      # - name: Docker compose
+      #   uses: appleboy/ssh-action@v1.2.4
+      #   with:
+      #     username: ubuntu
+      #     host: ${{ secrets.MOMENT_SERVER_IP }}
+      #     key: ${{ secrets.EC2_SSH_KEY }}
+      #     script: |
+      #       set -e
+      #       sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/moment_server:latest
+      #       sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ssh_key.pem
+          chmod 600 ssh_key.pem
+      
+      - name: Deploy via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@${{ secrets.LIVE_SERVER_IP }} \
+          "sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/moment_server:latest && \
+           sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d"
 
       - name: Check deploy server URL
         uses: jtalk/url-health-check-action@v3
