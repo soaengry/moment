@@ -15,8 +15,6 @@ public class HealthCheckController {
     private String env;
     @Value("${server.port}")
     private String serverPort;
-    @Value("${server.serverAddress}")
-    private String serverAddress;
     @Value("${serverName}")
     private String serverName;
 
@@ -26,7 +24,6 @@ public class HealthCheckController {
         responseData.put("env", env);
         responseData.put("serverName", serverName);
         responseData.put("serverPort", serverPort);
-        responseData.put("serverAddress", serverAddress);
 
         return ResponseEntity.ok(responseData);
     }
