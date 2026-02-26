@@ -38,6 +38,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 가능한 경로
                         .requestMatchers(
+                                "/hc",
+                                "/env",
                                 "/api/auth/signup",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
