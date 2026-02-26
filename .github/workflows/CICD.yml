@@ -24,6 +24,7 @@ jobs:
       - name: Build with Gradle
         working-directory: ./backend
         run: |
+          echo ${{secrets.APPLICATION_SECRET}} | base64 --decode > ./src/main/resources/application-secret.yml
           chmod +x gradlew
           ./gradlew clean build -x test
 
