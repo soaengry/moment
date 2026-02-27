@@ -12,7 +12,7 @@ import com.soaengry.moment.domain.user.dto.response.LogoutResponse;
 import com.soaengry.moment.domain.user.dto.response.ResendVerificationResponse;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.dto.response.TokenResponse;
-import com.soaengry.moment.domain.user.dto.response.VerifyEmailResponse;
+
 import com.soaengry.moment.domain.user.service.AuthService;
 import com.soaengry.moment.domain.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,13 +53,63 @@ public class AuthController {
 
     /**
      * 이메일 인증 (GET - 링크 클릭 방식)
+     * 브라우저에서 직접 열리므로 HTML 페이지 반환
      */
-    @GetMapping("/verify-email")
-    public ResponseEntity<VerifyEmailResponse> verifyEmailByToken(
+    @GetMapping(value = "/verify-email", produces = "text/html;charset=UTF-8")
+    public ResponseEntity<String> verifyEmailByToken(
             @RequestParam("token") String token
     ) {
-        authService.verifyEmailByToken(token);
-        return ResponseEntity.ok(new VerifyEmailResponse("이메일 인증이 완료되었습니다"));
+        String resultMessage;
+        String resultType;
+        try {
+            authService.verifyEmailByToken(token);
+            resultMessage = "이메일 인증이 완료되었습니다";
+            resultType = "success";
+        } catch (Exception e) {
+            resultMessage = e.getMessage();
+            resultType = "error";
+        }
+
+        String html = """
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>이메일 인증</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #FAFFF4; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+                        .card { background: white; border-radius: 16px; padding: 48px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); text-align: center; max-width: 400px; }
+                        .icon { width: 56px; height: 56px; border-radius: 50%%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; }
+                        .icon.success { background: #E8F5E9; color: #4CAF50; }
+                        .icon.error { background: #FFEBEE; color: #F44336; }
+                        .message { font-size: 16px; color: #333; margin-bottom: 8px; font-weight: 600; }
+                        .sub { font-size: 14px; color: #888; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <div class="icon %s">%s</div>
+                        <p class="message">%s</p>
+                        <p class="sub">%s</p>
+                    </div>
+                    <script>
+                        if ("%s" === "success") {
+                            setTimeout(function() { window.close(); }, 2000);
+                        }
+                    </script>
+                </body>
+                </html>
+                """.formatted(
+                resultType,
+                resultType.equals("success") ? "&#10003;" : "&#10007;",
+                resultMessage,
+                resultType.equals("success") ? "잠시 후 창이 닫힙니다..." : "다시 시도해주세요",
+                resultType
+        );
+
+        return ResponseEntity.ok(html);
     }
 
     /**
