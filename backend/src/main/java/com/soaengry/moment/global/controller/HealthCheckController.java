@@ -15,7 +15,7 @@ public class HealthCheckController {
     private String env;
     @Value("${server.port}")
     private String serverPort;
-    @Value("${serverName}")
+    @Value("${server.name}")
     private String serverName;
 
     @GetMapping("/hc")
