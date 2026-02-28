@@ -102,8 +102,14 @@ const MyPage: FC = () => {
 
         <div className="space-y-2">
           <button
-            onClick={() => navigate("/edit-profile")}
+            onClick={() => navigate("/my-schedule")}
             className="w-full py-2.5 rounded-lg text-white font-medium bg-primary hover:bg-primaryHover"
+          >
+            내 일정
+          </button>
+          <button
+            onClick={() => navigate("/edit-profile")}
+            className="w-full py-2.5 rounded-lg border border-primary text-primary font-medium hover:bg-green-50 transition-colors"
           >
             프로필 수정
           </button>

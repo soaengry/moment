@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public record WeddingResponse(
         Long id,
         String title,
+        String invitationId,
         LocalDateTime weddingDate,
         String venueName,
         String venueAddress,
@@ -23,6 +24,7 @@ public record WeddingResponse(
         return new WeddingResponse(
                 wedding.getId(),
                 wedding.getTitle(),
+                wedding.getInvitationId(),
                 wedding.getWeddingDate(),
                 wedding.getVenueName(),
                 wedding.getVenueAddress(),
