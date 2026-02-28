@@ -4,8 +4,9 @@ spring:
       local: local, common
       blue: blue, common
       green: green, common
+    active: local
   config:
-    import: classpath:application-env.yml, classpath:application-common.yml
+    import: optional:file:.env[.properties], classpath:application-env.yml, classpath:application-common.yml
 
 server:
   env: blue

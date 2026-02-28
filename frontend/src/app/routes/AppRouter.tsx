@@ -24,6 +24,7 @@ import {
 } from "../../domain/wedding/pages";
 import { FeedPage } from "../../domain/feed/pages";
 import { ChatPage, ChatRoomPage } from "../../domain/chat/pages";
+import MySchedulePage from "../../domain/schedule/pages/MySchedulePage";
 
 const AppRouter: FC = () => {
   return (
@@ -85,6 +86,16 @@ const AppRouter: FC = () => {
           element={
             <ProtectedRoute>
               <ChatRoomPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-schedule"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MySchedulePage />
+              </Layout>
             </ProtectedRoute>
           }
         />

@@ -1,5 +1,6 @@
 package com.soaengry.moment.global.exception;
 
+import com.soaengry.moment.domain.attendance.exception.AttendanceException;
 import com.soaengry.moment.domain.chat.exception.ChatException;
 import com.soaengry.moment.domain.email.exception.EmailException;
 import com.soaengry.moment.domain.feed.exception.FeedException;
@@ -21,6 +22,19 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * AttendanceException 처리
+     */
+    @ExceptionHandler(AttendanceException.class)
+    public ResponseEntity<ApiResponse<?>> handleAttendanceException(AttendanceException e) {
+        log.warn("Attendance Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+
+        HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+        ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
+
+        return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
+    }
 
     /**
      * WeddingException 처리
