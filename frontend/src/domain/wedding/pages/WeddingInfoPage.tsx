@@ -1,5 +1,5 @@
 import { type FC, useEffect, useState } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { weddingApi } from "../api/weddingApi";
 import type { WeddingInfoResponse } from "../types";
@@ -31,7 +31,6 @@ const TAB_LABELS: Record<WeddingTab, string> = {
 const WeddingInfoPage: FC = () => {
   const { invitationId } = useParams<{ invitationId: string }>();
   const location = useLocation();
-  const navigate = useNavigate();
   const [data, setData] = useState<WeddingInfoResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,7 +113,11 @@ const WeddingInfoPage: FC = () => {
       <div className="max-w-lg mx-auto">
         {/* Header */}
         <WeddingHeader
-          title={activeTab === "info" ? (wedding.title || "초대장") : TAB_LABELS[activeTab]}
+          title={
+            activeTab === "info"
+              ? wedding.title || "초대장"
+              : TAB_LABELS[activeTab]
+          }
           weddingId={weddingId}
           invitationId={invitationId}
           showSettings={showSettings}
@@ -141,7 +144,10 @@ const WeddingInfoPage: FC = () => {
             <DateVenueSection wedding={wedding} />
             <LocationSection wedding={wedding} />
             <ScheduleSection schedules={schedules} />
-            <DressCodeSection wedding={wedding} transportation={transportation} />
+            <DressCodeSection
+              wedding={wedding}
+              transportation={transportation}
+            />
             <AccountSection accountGroups={accountGroups} />
 
             <div className="flex items-center justify-center gap-3 py-4">
@@ -160,9 +166,7 @@ const WeddingInfoPage: FC = () => {
           </>
         )}
 
-        {activeTab === "feed" && (
-          <WeddingFeedTab weddingId={weddingId} />
-        )}
+        {activeTab === "feed" && <WeddingFeedTab weddingId={weddingId} />}
 
         {activeTab === "guestbook" && (
           <div className="px-4 py-6">
@@ -179,7 +183,9 @@ const WeddingInfoPage: FC = () => {
       </div>
 
       {/* Announcement FAB — info 탭에서만 */}
-      {activeTab === "info" && <AnnouncementSection announcements={announcements} />}
+      {activeTab === "info" && (
+        <AnnouncementSection announcements={announcements} />
+      )}
 
       {/* Bottom Nav */}
       <WeddingBottomNav
