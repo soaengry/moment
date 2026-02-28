@@ -2,14 +2,29 @@ import { type FC, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { authApi } from "../../auth/api/authApi";
+import { scheduleApi } from "../../schedule/api/scheduleApi";
+import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
+import type { AttendanceResponse } from "../../schedule/types";
+import Calendar from "../../schedule/components/Calendar";
+import {
+  IoArrowBack,
+  IoSettingsOutline,
+  IoDocumentTextOutline,
+  IoBookmarkOutline,
+  IoHeartOutline,
+  IoChatbubbleOutline,
+  IoLogOutOutline,
+  IoChevronForward,
+  IoCalendarOutline,
+} from "react-icons/io5";
 
 const MyPage: FC = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const logout = useAuthStore((state) => state.logout);
-  const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState(false);
+  const [upcomingSchedules, setUpcomingSchedules] = useState<AttendanceResponse[]>([]);
+  const headerVisible = useScrollVisibility();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -23,6 +38,21 @@ const MyPage: FC = () => {
     fetchUser();
   }, [setUser]);
 
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const all = await scheduleApi.getMyAttendances();
+        const now = new Date();
+        const upcoming = all
+          .filter((s) => new Date(s.weddingDate) >= now)
+          .sort((a, b) => new Date(a.weddingDate).getTime() - new Date(b.weddingDate).getTime())
+          .slice(0, 3);
+        setUpcomingSchedules(upcoming);
+      } catch { /* silent */ }
+    };
+    fetchSchedules();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -34,106 +64,145 @@ const MyPage: FC = () => {
     }
   };
 
-  const handleSendVerification = async () => {
-    if (!user) return;
-    setIsSending(true);
-    setVerifyMessage(null);
-    try {
-      await authApi.resendVerification(user.email);
-      setVerifyMessage("인증 메일이 발송되었습니다. 이메일을 확인해주세요.");
-    } catch {
-      setVerifyMessage("인증 메일 발송에 실패했습니다.");
-    } finally {
-      setIsSending(false);
-    }
-  };
-
   if (!user) return null;
 
+  const menuItems = [
+    {
+      icon: IoDocumentTextOutline,
+      label: "내가 작성한 게시글",
+      path: "/my-page/posts",
+    },
+    {
+      icon: IoBookmarkOutline,
+      label: "북마크",
+      path: "/my-page/bookmarks",
+    },
+    {
+      icon: IoHeartOutline,
+      label: "좋아요한 게시글",
+      path: "/my-page/likes",
+    },
+    {
+      icon: IoChatbubbleOutline,
+      label: "내 댓글",
+      path: "/my-page/comments",
+    },
+  ];
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+    const weekday = weekdays[d.getDay()];
+    return `${month}월 ${day}일 (${weekday})`;
+  };
+
   return (
-    <div className="max-w-lg mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-primary">마이페이지</h2>
-
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100">
-        <div className="flex items-center gap-4 mb-6">
-          <img
-            src={user.profileImageUrl ?? "/default-avatar.png"}
-            alt="프로필"
-            className="w-16 h-16 rounded-full object-cover bg-gray-100"
-          />
-          <div>
-            <p className="text-lg font-semibold text-gray-800">
-              {user.nickname}
-            </p>
-            <p className="text-sm text-gray-500">{user.email}</p>
+    <div className="min-h-screen bg-[#faf9f6]">
+      <div className="max-w-lg mx-auto">
+        {/* 헤더 */}
+        <header className={`sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}>
+          <div className="flex items-center justify-between px-4 py-3">
+            <button onClick={() => navigate(-1)} className="p-1 text-gray-600">
+              <IoArrowBack size={22} />
+            </button>
+            <h1 className="text-base font-semibold text-gray-800">마이페이지</h1>
+            <button onClick={() => navigate("/edit-profile")} className="p-1 text-gray-500">
+              <IoSettingsOutline size={20} />
+            </button>
           </div>
-        </div>
+        </header>
 
-        {verifyMessage && (
-          <div className="mb-4 p-3 rounded-lg text-sm bg-bgSuccess text-success">
-            {verifyMessage}
+        <div className="px-4 py-4 space-y-4">
+          {/* 프로필 카드 */}
+          <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
+            <div className="flex items-center gap-4">
+              <img
+                src={user.profileImageUrl ?? "/default-avatar.png"}
+                alt="프로필"
+                className="w-16 h-16 rounded-full object-cover bg-gray-100"
+              />
+              <div>
+                <p className="text-lg font-semibold text-gray-800">{user.nickname}</p>
+                <p className="text-sm text-gray-500">{user.email}</p>
+              </div>
+            </div>
           </div>
-        )}
 
-        <div className="space-y-3 text-sm text-gray-600 mb-6">
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span>이메일 인증</span>
-            {user.isEmailVerified ? (
-              <span className="text-green-600">✅ 인증됨</span>
-            ) : (
+          {/* 다가오는 일정 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
+              <div className="flex items-center gap-2">
+                <IoCalendarOutline size={18} className="text-primary" />
+                <span className="text-sm font-semibold text-gray-700">다가오는 일정</span>
+              </div>
               <button
-                onClick={handleSendVerification}
-                disabled={isSending}
-                className="px-3 py-1 rounded-md text-xs font-medium text-white disabled:opacity-50 bg-gold hover:bg-goldHover"
+                onClick={() => navigate("/my-schedule")}
+                className="text-xs text-primary font-medium"
               >
-                {isSending ? "발송 중..." : "인증 메일 발송"}
+                전체보기
               </button>
+            </div>
+            {upcomingSchedules.length > 0 ? (
+              upcomingSchedules.map((schedule) => (
+                <button
+                  key={schedule.id}
+                  onClick={() => navigate(`/wedding/${schedule.invitationId}`)}
+                  className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
+                >
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-700">{schedule.title}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      {formatDate(schedule.weddingDate)} · {schedule.venueName}
+                    </p>
+                  </div>
+                  <IoChevronForward size={16} className="text-gray-300" />
+                </button>
+              ))
+            ) : (
+              <div className="px-5 py-6 text-center">
+                <p className="text-sm text-gray-300">다가오는 일정이 없습니다</p>
+              </div>
             )}
           </div>
-          <div className="flex justify-between py-2 border-b border-gray-100">
-            <span>가입 방법</span>
-            <span>{user.authProvider}</span>
+
+          {/* 캘린더 */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-gray-100">
+            <Calendar />
           </div>
-          <div className="flex justify-between py-2 border-b border-gray-100">
-            <span>가입일</span>
-            <span>{new Date(user.createdAt).toLocaleDateString("ko-KR")}</span>
+
+          {/* 메뉴 리스트 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {menuItems.map((item, index) => (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors ${
+                  index !== menuItems.length - 1 ? "border-b border-gray-50" : ""
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <item.icon size={20} className="text-gray-500" />
+                  <span className="text-sm text-gray-700">{item.label}</span>
+                </div>
+                <IoChevronForward size={16} className="text-gray-300" />
+              </button>
+            ))}
+
+            {/* 로그아웃 */}
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors border-t border-gray-100"
+            >
+              <IoLogOutOutline size={20} className="text-gray-400" />
+              <span className="text-sm text-gray-500">로그아웃</span>
+            </button>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <button
-            onClick={() => navigate("/my-schedule")}
-            className="w-full py-2.5 rounded-lg text-white font-medium bg-primary hover:bg-primaryHover"
-          >
-            내 일정
-          </button>
-          <button
-            onClick={() => navigate("/edit-profile")}
-            className="w-full py-2.5 rounded-lg border border-primary text-primary font-medium hover:bg-green-50 transition-colors"
-          >
-            프로필 수정
-          </button>
-          {user.authProvider === "LOCAL" && (
-            <button
-              onClick={() => navigate("/change-password")}
-              className="w-full py-2.5 rounded-lg border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
-            >
-              비밀번호 변경
-            </button>
-          )}
-          <button
-            onClick={handleLogout}
-            className="w-full py-2.5 rounded-lg border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
-          >
-            로그아웃
-          </button>
-          <button
-            onClick={() => navigate("/delete-account")}
-            className="w-full py-2.5 rounded-lg text-red-400 font-medium hover:bg-red-50 transition-colors"
-          >
-            회원 탈퇴
-          </button>
-        </div>
+        {/* Bottom space for nav */}
+        <div className="h-20" />
       </div>
     </div>
   );

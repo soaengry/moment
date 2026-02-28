@@ -10,8 +10,11 @@ import {
 import {
   MyPage,
   EditProfilePage,
-  ChangePasswordPage,
   DeleteAccountPage,
+  MyPostsPage,
+  MyBookmarksPage,
+  MyLikesPage,
+  MyCommentsPage,
 } from "../../domain/user/pages";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
@@ -46,6 +49,8 @@ const AppRouter: FC = () => {
         <Route path="/restore-account" element={<RestoreAccountPage />} />
         <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
         <Route path="/wedding/:invitationId" element={<WeddingInfoPage />} />
+        <Route path="/wedding/:invitationId/feed" element={<WeddingInfoPage />} />
+        <Route path="/wedding/:invitationId/guestbook" element={<WeddingInfoPage />} />
 
         {/* 로그인 필요 페이지 */}
 
@@ -58,7 +63,7 @@ const AppRouter: FC = () => {
           }
         />
         <Route
-          path="/wedding/:weddingId/edit"
+          path="/wedding/:invitationId/edit"
           element={
             <ProtectedRoute>
               <WeddingEditPage />
@@ -103,9 +108,39 @@ const AppRouter: FC = () => {
           path="/my-page"
           element={
             <ProtectedRoute>
-              <Layout>
-                <MyPage />
-              </Layout>
+              <MyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-page/posts"
+          element={
+            <ProtectedRoute>
+              <MyPostsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-page/bookmarks"
+          element={
+            <ProtectedRoute>
+              <MyBookmarksPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-page/likes"
+          element={
+            <ProtectedRoute>
+              <MyLikesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-page/comments"
+          element={
+            <ProtectedRoute>
+              <MyCommentsPage />
             </ProtectedRoute>
           }
         />
@@ -115,16 +150,6 @@ const AppRouter: FC = () => {
             <ProtectedRoute>
               <Layout>
                 <EditProfilePage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/change-password"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ChangePasswordPage />
               </Layout>
             </ProtectedRoute>
           }

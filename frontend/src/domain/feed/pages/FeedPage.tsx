@@ -5,6 +5,7 @@ import PostCard from "../components/PostCard";
 import PostComposer from "../components/PostComposer";
 import CommentSheet from "../components/CommentSheet";
 import { useAuthStore } from "../../auth/store/useAuthStore";
+import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 import { IoBookmarkOutline } from "react-icons/io5";
 
 const FeedPage: FC = () => {
@@ -17,6 +18,7 @@ const FeedPage: FC = () => {
   const [editingPost, setEditingPost] = useState<PostResponse | null>(null);
 
   const user = useAuthStore((s) => s.user);
+  const headerVisible = useScrollVisibility();
 
   const fetchPosts = useCallback(async (pageNum: number, append = false) => {
     setIsLoading(true);
@@ -53,11 +55,19 @@ const FeedPage: FC = () => {
     fetchPosts(0);
   };
 
+  const handleCommentCountChange = (postId: number, delta: number) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, commentCount: p.commentCount + delta } : p,
+      ),
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#faf9f6]">
       <div className="max-w-lg mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50">
+        <header className={`sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}>
           <div className="flex items-center justify-between px-4 py-3">
             <h1 className="text-lg font-bold text-gray-800">피드</h1>
             <button
@@ -146,6 +156,7 @@ const FeedPage: FC = () => {
           isOpen={true}
           onClose={() => setCommentPostId(null)}
           currentUserId={user?.id}
+          onCommentCountChange={handleCommentCountChange}
         />
       )}
     </div>

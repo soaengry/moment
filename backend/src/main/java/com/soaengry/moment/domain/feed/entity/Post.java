@@ -24,6 +24,9 @@ public class Post {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column
+    private Long weddingId;
+
     @Column(nullable = false, length = 200)
     private String content;
 
@@ -43,15 +46,20 @@ public class Post {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    private Post(User user, String content) {
+    private Post(User user, String content, Long weddingId) {
         this.user = user;
         this.content = content;
+        this.weddingId = weddingId;
         this.likeCount = 0;
         this.commentCount = 0;
     }
 
     public static Post create(User user, String content) {
-        return new Post(user, content);
+        return new Post(user, content, null);
+    }
+
+    public static Post create(User user, String content, Long weddingId) {
+        return new Post(user, content, weddingId);
     }
 
     @PrePersist

@@ -1,5 +1,5 @@
 import { type FC, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { weddingApi } from "../api/weddingApi";
 import type { WeddingInfoResponse } from "../types";
@@ -14,13 +14,36 @@ import {
   AnnouncementSection,
 } from "../components";
 import GuestbookSection from "../../guestbook/components/GuestbookSection";
+import WeddingFeedTab from "../../feed/components/WeddingFeedTab";
+import WeddingHeader from "../components/WeddingHeader";
+import WeddingBottomNav from "../components/WeddingBottomNav";
 import { tokenStorage, parseJwt } from "../../auth/auth.utils";
+import { useAuthStore } from "../../auth/store/useAuthStore";
+
+type WeddingTab = "info" | "feed" | "guestbook";
+
+const TAB_LABELS: Record<WeddingTab, string> = {
+  info: "정보",
+  feed: "피드",
+  guestbook: "방명록",
+};
 
 const WeddingInfoPage: FC = () => {
   const { invitationId } = useParams<{ invitationId: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [data, setData] = useState<WeddingInfoResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const getTabFromPath = (): WeddingTab => {
+    if (location.pathname.endsWith("/feed")) return "feed";
+    if (location.pathname.endsWith("/guestbook")) return "guestbook";
+    return "info";
+  };
+  const activeTab = getTabFromPath();
+
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     const fetchWeddingInfo = async () => {
@@ -31,7 +54,6 @@ const WeddingInfoPage: FC = () => {
       }
       try {
         const info = await weddingApi.getWeddingInfo(invitationId);
-        console.log("Wedding Info:", info);
         setData(info);
       } catch {
         setError("초대장을 찾을 수 없습니다");
@@ -75,78 +97,96 @@ const WeddingInfoPage: FC = () => {
   const groom = couples.find((c) => c.role === "GROOM");
   const bride = couples.find((c) => c.role === "BRIDE");
 
-  // 현재 로그인한 사용자 ID (JWT sub)
   const token = tokenStorage.getAccessToken();
   const currentUserId = token ? Number(parseJwt(token)?.sub) || null : null;
-  // 호스트: 이 웨딩의 커플로 등록된 사용자들의 ID
   const hostUserIds = couples
     .map((c) => c.userId)
     .filter((id): id is number => id !== null);
 
+  const isHost = currentUserId !== null && hostUserIds.includes(currentUserId);
+  const isAdmin = user?.role === "ADMIN";
+  const showSettings = isHost || isAdmin;
+
+  const weddingId = Number(wedding.id);
+
   return (
     <div className="min-h-screen bg-[#faf9f6]">
       <div className="max-w-lg mx-auto">
-        {/* 랜딩 슬라이더 */}
-        <LandingSection
-          gallery={gallery}
-          title={wedding.title}
-          weddingDate={wedding.weddingDate}
-          groomName={groom?.name}
-          brideName={bride?.name}
+        {/* Header */}
+        <WeddingHeader
+          title={activeTab === "info" ? (wedding.title || "초대장") : TAB_LABELS[activeTab]}
+          weddingId={weddingId}
+          invitationId={invitationId}
+          showSettings={showSettings}
         />
 
-        {/* 구분선 */}
-        <div className="flex items-center justify-center gap-3 py-8">
-          <div className="w-16 h-px bg-primary/10" />
-          <div className="w-1 h-1 rounded-full bg-primary/20" />
-          <div className="w-16 h-px bg-primary/10" />
-        </div>
+        {/* Tab content */}
+        {activeTab === "info" && (
+          <>
+            <LandingSection
+              gallery={gallery}
+              title={wedding.title}
+              weddingDate={wedding.weddingDate}
+              groomName={groom?.name}
+              brideName={bride?.name}
+            />
 
-        {/* 신랑신부 소개 */}
-        <CoupleSection couples={couples} />
+            <div className="flex items-center justify-center gap-3 py-8">
+              <div className="w-16 h-px bg-primary/10" />
+              <div className="w-1 h-1 rounded-full bg-primary/20" />
+              <div className="w-16 h-px bg-primary/10" />
+            </div>
 
-        {/* 예식 일시 및 장소 */}
-        <DateVenueSection wedding={wedding} />
+            <CoupleSection couples={couples} />
+            <DateVenueSection wedding={wedding} />
+            <LocationSection wedding={wedding} />
+            <ScheduleSection schedules={schedules} />
+            <DressCodeSection wedding={wedding} transportation={transportation} />
+            <AccountSection accountGroups={accountGroups} />
 
-        {/* 오시는 길 */}
-        <LocationSection wedding={wedding} />
+            <div className="flex items-center justify-center gap-3 py-4">
+              <div className="w-16 h-px bg-primary/10" />
+              <div className="w-1 h-1 rounded-full bg-primary/20" />
+              <div className="w-16 h-px bg-primary/10" />
+            </div>
 
-        {/* 식순 */}
-        <ScheduleSection schedules={schedules} />
+            <footer className="py-10 text-center">
+              <p className="text-[10px] tracking-[0.3em] text-gray-300 uppercase">
+                Powered by Moment
+              </p>
+            </footer>
 
-        {/* 정보 (드레스코드, 유의사항, 교통 등) */}
-        <DressCodeSection wedding={wedding} transportation={transportation} />
+            {announcements.length > 0 && <div className="h-20" />}
+          </>
+        )}
 
-        {/* 계좌번호 */}
-        <AccountSection accountGroups={accountGroups} />
+        {activeTab === "feed" && (
+          <WeddingFeedTab weddingId={weddingId} />
+        )}
 
-        {/* 구분선 */}
-        <div className="flex items-center justify-center gap-3 py-4">
-          <div className="w-16 h-px bg-primary/10" />
-          <div className="w-1 h-1 rounded-full bg-primary/20" />
-          <div className="w-16 h-px bg-primary/10" />
-        </div>
+        {activeTab === "guestbook" && (
+          <div className="px-4 py-6">
+            <GuestbookSection
+              weddingId={weddingId}
+              currentUserId={currentUserId}
+              hostUserIds={hostUserIds}
+            />
+          </div>
+        )}
 
-        {/* 방명록 */}
-        <GuestbookSection
-          weddingId={Number(wedding.id)}
-          currentUserId={currentUserId}
-          hostUserIds={hostUserIds}
-        />
-
-        {/* 하단 푸터 */}
-        <footer className="py-10 text-center">
-          <p className="text-[10px] tracking-[0.3em] text-gray-300 uppercase">
-            Powered by Moment
-          </p>
-        </footer>
-
-        {/* 공지사항 FAB 공간 */}
-        {announcements.length > 0 && <div className="h-20" />}
+        {/* Bottom space for nav */}
+        <div className="h-20" />
       </div>
 
-      {/* 공지사항 FAB + 모달 */}
-      <AnnouncementSection announcements={announcements} />
+      {/* Announcement FAB — info 탭에서만 */}
+      {activeTab === "info" && <AnnouncementSection announcements={announcements} />}
+
+      {/* Bottom Nav */}
+      <WeddingBottomNav
+        weddingId={weddingId}
+        invitationId={invitationId}
+        activeTab={activeTab}
+      />
 
       <ToastContainer
         position="bottom-center"

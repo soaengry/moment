@@ -211,6 +211,73 @@ public class FeedService {
         post.decrementCommentCount();
     }
 
+    // ==================== Wedding Feed ====================
+
+    @Transactional
+    public PostResponse createWeddingPost(Long userId, Long weddingId, PostRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new FeedException(FeedErrorCode.UNAUTHORIZED_ACCESS));
+
+        Post post = Post.create(user, request.content(), weddingId);
+        postRepository.save(post);
+
+        if (request.imageUrls() != null) {
+            for (int i = 0; i < request.imageUrls().size(); i++) {
+                PostImage image = PostImage.create(post, request.imageUrls().get(i), i);
+                post.addImage(image);
+            }
+        }
+
+        return PostResponse.from(post, false, false);
+    }
+
+    public Page<PostResponse> getWeddingFeed(Long weddingId, Long userId, Pageable pageable) {
+        Page<Post> posts = postRepository.findByWeddingIdWithUserAndImages(weddingId, pageable);
+        return enrichPostResponses(posts, userId);
+    }
+
+    // ==================== My Page ====================
+
+    public Page<PostResponse> getMyPosts(Long userId, Long weddingId, Pageable pageable) {
+        Page<Post> posts = postRepository.findByUserIdAndOptionalWeddingId(userId, weddingId, pageable);
+        return enrichPostResponses(posts, userId);
+    }
+
+    public Page<PostResponse> getMyBookmarks(Long userId, Long weddingId, Pageable pageable) {
+        Page<Long> postIds = bookmarkRepository.findBookmarkedPostIdsByUserIdAndOptionalWeddingId(userId, weddingId, pageable);
+        List<Post> posts = postRepository.findAllById(postIds.getContent());
+
+        Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
+        Set<Long> likedPostIds = postLikeRepository.findByUserIdAndPostIdIn(userId, postIds.getContent())
+                .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+
+        return postIds.map(id -> {
+            Post post = postMap.get(id);
+            if (post == null) return null;
+            return PostResponse.from(post, likedPostIds.contains(id), true);
+        });
+    }
+
+    public Page<PostResponse> getMyLikes(Long userId, Long weddingId, Pageable pageable) {
+        Page<Long> postIds = postLikeRepository.findLikedPostIdsByUserIdAndOptionalWeddingId(userId, weddingId, pageable);
+        List<Post> posts = postRepository.findAllById(postIds.getContent());
+
+        Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
+        Set<Long> bookmarkedPostIds = bookmarkRepository.findByUserIdAndPostIdIn(userId, postIds.getContent())
+                .stream().map(b -> b.getPost().getId()).collect(Collectors.toSet());
+
+        return postIds.map(id -> {
+            Post post = postMap.get(id);
+            if (post == null) return null;
+            return PostResponse.from(post, true, bookmarkedPostIds.contains(id));
+        });
+    }
+
+    public Page<CommentResponse> getMyComments(Long userId, Long weddingId, Pageable pageable) {
+        return commentRepository.findByUserIdAndOptionalWeddingId(userId, weddingId, pageable)
+                .map(CommentResponse::from);
+    }
+
     // ==================== Helper ====================
 
     private Page<PostResponse> enrichPostResponses(Page<Post> posts, Long userId) {

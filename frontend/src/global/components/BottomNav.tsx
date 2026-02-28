@@ -1,10 +1,11 @@
-import { type FC, useState, useEffect, useCallback } from "react";
+import { type FC } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoHomeOutline, IoHome } from "react-icons/io5";
 import { IoPersonOutline, IoPerson } from "react-icons/io5";
 import { IoAddCircleOutline, IoAddCircle } from "react-icons/io5";
 import { IoNewspaperOutline, IoNewspaper } from "react-icons/io5";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
+import { useScrollVisibility } from "../hooks/useScrollVisibility";
 
 interface NavItem {
   path: string;
@@ -46,50 +47,7 @@ const BottomNav: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
-
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [hasScroll, setHasScroll] = useState(false);
-
-  const checkScrollable = useCallback(() => {
-    const scrollable = document.documentElement.scrollHeight > window.innerHeight;
-    setHasScroll(scrollable);
-    if (!scrollable) {
-      setIsVisible(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    checkScrollable();
-
-    const observer = new ResizeObserver(() => {
-      checkScrollable();
-    });
-    observer.observe(document.body);
-
-    return () => observer.disconnect();
-  }, [checkScrollable, location.pathname]);
-
-  useEffect(() => {
-    if (!hasScroll) return;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY <= 0) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasScroll, lastScrollY]);
+  const isVisible = useScrollVisibility();
 
   const isAdmin = user?.role === "ADMIN";
   const visibleItems = NAV_ITEMS.filter(
@@ -103,12 +61,17 @@ const BottomNav: FC = () => {
   }
 
   // wedding info 페이지에서도 숨김
-  if (/^\/wedding\/\d+$/.test(location.pathname)) {
+  if (/^\/wedding\/[^/]+$/.test(location.pathname)) {
     return null;
   }
 
-  // 채팅방 내부에서도 숨김
-  if (/\/chat\/\d+$/.test(location.pathname)) {
+  // 웨딩 하위 페이지 (채팅, 피드, 방명록, 편집 포함) — WeddingBottomNav 사용
+  if (/^\/wedding\/[^/]+\/(chat|feed|guestbook|edit)/.test(location.pathname)) {
+    return null;
+  }
+
+  // 마이페이지 하위 페이지 (자체 헤더 사용)
+  if (/^\/my-page\/.+$/.test(location.pathname)) {
     return null;
   }
 

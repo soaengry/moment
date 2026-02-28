@@ -1,6 +1,7 @@
 package com.soaengry.moment.domain.feed.dto.response;
 
 import com.soaengry.moment.domain.feed.entity.Post;
+import com.soaengry.moment.domain.feed.entity.PostImage;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +15,7 @@ public record PostResponse(
         Integer commentCount,
         Boolean isLiked,
         Boolean isBookmarked,
+        Long weddingId,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -26,11 +28,12 @@ public record PostResponse(
                         post.getUser().getProfileImageUrl()
                 ),
                 post.getContent(),
-                post.getImages().stream().map(img -> img.getImageUrl()).toList(),
+                post.getImages().stream().map(PostImage::getImageUrl).toList(),
                 post.getLikeCount(),
                 post.getCommentCount(),
                 isLiked,
                 isBookmarked,
+                post.getWeddingId(),
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

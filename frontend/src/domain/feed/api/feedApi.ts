@@ -8,6 +8,18 @@ import type {
 } from "../types";
 
 export const feedApi = {
+  // File Upload
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await axiosInstance.post<{ url: string }>(
+      "/api/files/upload",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data.url;
+  },
+
   // Posts
   getFeed: async (page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
     const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
@@ -77,5 +89,99 @@ export const feedApi = {
 
   deleteComment: async (commentId: number): Promise<void> => {
     await axiosInstance.delete(`/api/feed/comments/${commentId}`);
+  },
+
+  // Wedding Feed
+  getWeddingFeed: async (weddingId: number, page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
+    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
+      `/api/weddings/${weddingId}/feed/posts?page=${page}&size=${size}`
+    );
+    return data;
+  },
+
+  createWeddingPost: async (weddingId: number, request: PostRequest): Promise<PostResponse> => {
+    const { data } = await axiosInstance.post<PostResponse>(
+      `/api/weddings/${weddingId}/feed/posts`,
+      request
+    );
+    return data;
+  },
+
+  updateWeddingPost: async (weddingId: number, postId: number, request: PostRequest): Promise<PostResponse> => {
+    const { data } = await axiosInstance.put<PostResponse>(
+      `/api/weddings/${weddingId}/feed/posts/${postId}`,
+      request
+    );
+    return data;
+  },
+
+  deleteWeddingPost: async (weddingId: number, postId: number): Promise<void> => {
+    await axiosInstance.delete(`/api/weddings/${weddingId}/feed/posts/${postId}`);
+  },
+
+  toggleWeddingLike: async (weddingId: number, postId: number): Promise<{ liked: boolean }> => {
+    const { data } = await axiosInstance.post<{ liked: boolean }>(
+      `/api/weddings/${weddingId}/feed/posts/${postId}/like`
+    );
+    return data;
+  },
+
+  toggleWeddingBookmark: async (weddingId: number, postId: number): Promise<{ bookmarked: boolean }> => {
+    const { data } = await axiosInstance.post<{ bookmarked: boolean }>(
+      `/api/weddings/${weddingId}/feed/posts/${postId}/bookmark`
+    );
+    return data;
+  },
+
+  getWeddingComments: async (weddingId: number, postId: number, page = 0, size = 30): Promise<PageResponse<CommentResponse>> => {
+    const { data } = await axiosInstance.get<PageResponse<CommentResponse>>(
+      `/api/weddings/${weddingId}/feed/posts/${postId}/comments?page=${page}&size=${size}`
+    );
+    return data;
+  },
+
+  createWeddingComment: async (weddingId: number, postId: number, request: CommentRequest): Promise<CommentResponse> => {
+    const { data } = await axiosInstance.post<CommentResponse>(
+      `/api/weddings/${weddingId}/feed/posts/${postId}/comments`,
+      request
+    );
+    return data;
+  },
+
+  // My Page
+  getMyPosts: async (page = 0, size = 20, weddingId?: number): Promise<PageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (weddingId != null) params.set("weddingId", String(weddingId));
+    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
+      `/api/feed/my/posts?${params}`
+    );
+    return data;
+  },
+
+  getMyBookmarks: async (page = 0, size = 20, weddingId?: number): Promise<PageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (weddingId != null) params.set("weddingId", String(weddingId));
+    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
+      `/api/feed/my/bookmarks?${params}`
+    );
+    return data;
+  },
+
+  getMyLikes: async (page = 0, size = 20, weddingId?: number): Promise<PageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (weddingId != null) params.set("weddingId", String(weddingId));
+    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
+      `/api/feed/my/likes?${params}`
+    );
+    return data;
+  },
+
+  getMyComments: async (page = 0, size = 20, weddingId?: number): Promise<PageResponse<CommentResponse>> => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (weddingId != null) params.set("weddingId", String(weddingId));
+    const { data } = await axiosInstance.get<PageResponse<CommentResponse>>(
+      `/api/feed/my/comments?${params}`
+    );
+    return data;
   },
 };
