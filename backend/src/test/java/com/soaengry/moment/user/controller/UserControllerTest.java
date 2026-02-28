@@ -1,10 +1,9 @@
 package com.soaengry.moment.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.soaengry.moment.domain.email.entity.EmailVerification;
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
-import com.soaengry.moment.domain.user.controller.*;
-import com.soaengry.moment.domain.user.dto.request.SignupRequest;
-import com.soaengry.moment.domain.user.dto.request.VerifyEmailRequest;
+import com.soaengry.moment.domain.user.dto.request.*;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.user.service.AuthService;
@@ -114,11 +113,9 @@ class UserControllerTest {
         );
         SignupResponse signupResponse = authService.signup(signupRequest);
 
-        VerifyEmailRequest verifyRequest = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
-        authService.verifyEmail(verifyRequest);
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
+        authService.verifyEmailByToken(verification.getVerificationCode());
 
         // 회원 탈퇴
         authService.logoutAll(signupResponse.userId());
