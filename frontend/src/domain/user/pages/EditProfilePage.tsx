@@ -57,7 +57,6 @@ const EditProfilePage: FC = () => {
   // Password state
   const [pwServerError, setPwServerError] = useState<string | null>(null);
   const [isPwSubmitting, setIsPwSubmitting] = useState(false);
-  const [pwSuccess, setPwSuccess] = useState(false);
 
   const {
     register,
