@@ -61,6 +61,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/weddings/*/guestbook/**").permitAll()
                         // 채팅방 목록/메시지 조회는 인증 필요 (authenticated)
                         .requestMatchers(HttpMethod.GET, "/api/weddings/*/chat/**").authenticated()
+                        // 웨딩 피드: GET은 공개, CUD는 인증 필요
+                        .requestMatchers(HttpMethod.GET, "/api/weddings/*/feed/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/weddings/*/feed/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/weddings/*/feed/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/*/feed/**").authenticated()
                         // 피드 조회는 인증 필요
                         .requestMatchers(HttpMethod.GET, "/api/feed/**").authenticated()
                         // Wedding CRUD는 ADMIN만 접근 가능

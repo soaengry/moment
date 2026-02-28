@@ -5,6 +5,7 @@ import com.soaengry.moment.domain.feed.dto.request.PostRequest;
 import com.soaengry.moment.domain.feed.dto.response.CommentResponse;
 import com.soaengry.moment.domain.feed.dto.response.PostResponse;
 import com.soaengry.moment.domain.feed.service.FeedService;
+import org.springframework.lang.Nullable;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -110,6 +111,48 @@ public class FeedController {
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = (Long) authentication.getPrincipal();
         Page<PostResponse> responses = feedService.getBookmarkedPosts(userId, pageable);
+        return ResponseEntity.ok(responses);
+    }
+
+    // ==================== My Page ====================
+
+    @GetMapping("/my/posts")
+    public ResponseEntity<Page<PostResponse>> getMyPosts(
+            Authentication authentication,
+            @RequestParam(required = false) @Nullable Long weddingId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        Long userId = (Long) authentication.getPrincipal();
+        Page<PostResponse> responses = feedService.getMyPosts(userId, weddingId, pageable);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/my/bookmarks")
+    public ResponseEntity<Page<PostResponse>> getMyBookmarks(
+            Authentication authentication,
+            @RequestParam(required = false) @Nullable Long weddingId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        Long userId = (Long) authentication.getPrincipal();
+        Page<PostResponse> responses = feedService.getMyBookmarks(userId, weddingId, pageable);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/my/likes")
+    public ResponseEntity<Page<PostResponse>> getMyLikes(
+            Authentication authentication,
+            @RequestParam(required = false) @Nullable Long weddingId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        Long userId = (Long) authentication.getPrincipal();
+        Page<PostResponse> responses = feedService.getMyLikes(userId, weddingId, pageable);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/my/comments")
+    public ResponseEntity<Page<CommentResponse>> getMyComments(
+            Authentication authentication,
+            @RequestParam(required = false) @Nullable Long weddingId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        Long userId = (Long) authentication.getPrincipal();
+        Page<CommentResponse> responses = feedService.getMyComments(userId, weddingId, pageable);
         return ResponseEntity.ok(responses);
     }
 

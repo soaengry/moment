@@ -15,12 +15,13 @@ import { feedApi } from "../api/feedApi";
 interface Props {
   post: PostResponse;
   currentUserId?: number;
+  weddingId?: number;
   onPostDeleted?: () => void;
   onCommentClick?: (postId: number) => void;
   onPostUpdated?: (post: PostResponse) => void;
 }
 
-const PostCard: FC<Props> = ({ post, currentUserId, onPostDeleted, onCommentClick, onPostUpdated }) => {
+const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, onCommentClick, onPostUpdated }) => {
   const [liked, setLiked] = useState(post.isLiked);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [bookmarked, setBookmarked] = useState(post.isBookmarked);
@@ -31,7 +32,9 @@ const PostCard: FC<Props> = ({ post, currentUserId, onPostDeleted, onCommentClic
 
   const handleLike = async () => {
     try {
-      const res = await feedApi.toggleLike(post.id);
+      const res = weddingId
+        ? await feedApi.toggleWeddingLike(weddingId, post.id)
+        : await feedApi.toggleLike(post.id);
       setLiked(res.liked);
       setLikeCount((prev) => (res.liked ? prev + 1 : prev - 1));
     } catch { /* silent */ }
@@ -39,7 +42,9 @@ const PostCard: FC<Props> = ({ post, currentUserId, onPostDeleted, onCommentClic
 
   const handleBookmark = async () => {
     try {
-      const res = await feedApi.toggleBookmark(post.id);
+      const res = weddingId
+        ? await feedApi.toggleWeddingBookmark(weddingId, post.id)
+        : await feedApi.toggleBookmark(post.id);
       setBookmarked(res.bookmarked);
     } catch { /* silent */ }
   };
@@ -47,7 +52,9 @@ const PostCard: FC<Props> = ({ post, currentUserId, onPostDeleted, onCommentClic
   const handleDelete = async () => {
     if (!confirm("게시글을 삭제하시겠습니까?")) return;
     try {
-      await feedApi.deletePost(post.id);
+      weddingId
+        ? await feedApi.deleteWeddingPost(weddingId, post.id)
+        : await feedApi.deletePost(post.id);
       onPostDeleted?.();
     } catch { /* silent */ }
   };

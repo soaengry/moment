@@ -18,6 +18,9 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
     List<Bookmark> findByUserIdAndPostIdIn(Long userId, List<Long> postIds);
 
-    @Query("SELECT b.post.id FROM Bookmark b WHERE b.user.id = :userId")
+    @Query("SELECT b.post.id FROM Bookmark b WHERE b.user.id = :userId ORDER BY b.createdAt DESC")
     Page<Long> findBookmarkedPostIdsByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("SELECT b.post.id FROM Bookmark b WHERE b.user.id = :userId AND (:weddingId IS NULL OR b.post.weddingId = :weddingId) ORDER BY b.createdAt DESC")
+    Page<Long> findBookmarkedPostIdsByUserIdAndOptionalWeddingId(@Param("userId") Long userId, @Param("weddingId") Long weddingId, Pageable pageable);
 }

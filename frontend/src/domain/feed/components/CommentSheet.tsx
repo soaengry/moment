@@ -8,9 +8,11 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   currentUserId?: number;
+  weddingId?: number;
+  onCommentCountChange?: (postId: number, delta: number) => void;
 }
 
-const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId }) => {
+const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId, weddingId, onCommentCountChange }) => {
   const [comments, setComments] = useState<CommentResponse[]>([]);
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -19,11 +21,13 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId }) => 
   const fetchComments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await feedApi.getComments(postId);
+      const res = weddingId
+        ? await feedApi.getWeddingComments(weddingId, postId)
+        : await feedApi.getComments(postId);
       setComments(res.content);
     } catch { /* silent */ }
     finally { setIsLoading(false); }
-  }, [postId]);
+  }, [postId, weddingId]);
 
   useEffect(() => {
     if (isOpen) fetchComments();
@@ -33,9 +37,12 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId }) => 
     if (!content.trim() || isSubmitting) return;
     setIsSubmitting(true);
     try {
-      await feedApi.createComment(postId, { content: content.trim() });
+      weddingId
+        ? await feedApi.createWeddingComment(weddingId, postId, { content: content.trim() })
+        : await feedApi.createComment(postId, { content: content.trim() });
       setContent("");
       fetchComments();
+      onCommentCountChange?.(postId, 1);
     } catch { /* silent */ }
     finally { setIsSubmitting(false); }
   };
@@ -44,6 +51,7 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId }) => 
     try {
       await feedApi.deleteComment(commentId);
       fetchComments();
+      onCommentCountChange?.(postId, -1);
     } catch { /* silent */ }
   };
 
