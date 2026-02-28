@@ -45,6 +45,11 @@ public class ResponseAdvice implements ResponseBodyAdvice<Object> {
         if (path.equals("/env") || path.equals("/hc")) {
             return body;
         }
+        
+        // HTML 응답은 감싸지 않음
+        if (selectedContentType.includes(MediaType.TEXT_HTML)) {
+            return body;
+        }
 
         // 기본 성공 응답으로 감싸기
         return ApiResponse.ok(SuccessCode.OK, body);

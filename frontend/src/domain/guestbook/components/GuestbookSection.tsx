@@ -1,5 +1,5 @@
-import { type FC, useState, useEffect, useCallback } from "react";
-import { IoSend, IoLockClosed, IoTrash, IoPencil } from "react-icons/io5";
+import { type FC, useState, useEffect, useCallback, useRef } from "react";
+import { IoSend, IoLockClosed, IoEllipsisVertical, IoPencil, IoTrash } from "react-icons/io5";
 import { guestbookApi } from "../api/guestbookApi";
 import type { GuestbookEntry, GuestbookRequest } from "../types";
 
@@ -25,14 +25,35 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
   // 수정 상태
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [editPassword, setEditPassword] = useState<string | null>(null);
 
-  // 삭제 상태
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [deletePassword, setDeletePassword] = useState("");
+  // ⋮ 드롭다운 메뉴
+  const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 비밀번호 모달
+  const [passwordModalAction, setPasswordModalAction] = useState<{
+    entryId: number;
+    action: "edit" | "delete";
+  } | null>(null);
+  const [modalPassword, setModalPassword] = useState("");
 
   const isHost = currentUserId !== null && hostUserIds.includes(currentUserId);
   const isAuthor = (entry: GuestbookEntry) =>
     currentUserId !== null && entry.userId !== null && entry.userId === currentUserId;
+
+  // 메뉴 바깥 클릭 시 닫기
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpenId(null);
+      }
+    };
+    if (menuOpenId !== null) {
+      document.addEventListener("mousedown", handleClick);
+    }
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpenId]);
 
   const fetchEntries = useCallback(async (pageNum: number, append = false) => {
     setIsLoading(true);
@@ -56,15 +77,18 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
     fetchEntries(0);
   }, [fetchEntries]);
 
-  // 등록: 이름 + 비밀번호 모두 필수
+  const isLoggedIn = currentUserId !== null;
+
+  // 등록
   const handleSubmit = async () => {
-    if (!authorName.trim() || !password.trim() || !content.trim()) return;
+    if (!authorName.trim() || !content.trim()) return;
+    if (!isLoggedIn && !password.trim()) return;
     setIsSubmitting(true);
     try {
       const request: GuestbookRequest = {
         authorName: authorName.trim(),
         content: content.trim(),
-        password: password.trim(),
+        ...(password.trim() ? { password: password.trim() } : {}),
         isSecret,
       };
       await guestbookApi.createEntry(weddingId, request);
@@ -80,7 +104,7 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
     }
   };
 
-  // 수정: 본인만 가능
+  // 수정 저장
   const handleUpdate = async (entryId: number) => {
     if (!editContent.trim()) return;
     try {
@@ -90,36 +114,74 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
         authorName: entry.authorName,
         content: editContent.trim(),
         isSecret: entry.isSecret,
+        ...(editPassword ? { password: editPassword } : {}),
       });
       setEditingId(null);
       setEditContent("");
+      setEditPassword(null);
       fetchEntries(0);
     } catch {
-      // silent
+      alert("수정에 실패했습니다. 비밀번호를 확인해주세요.");
     }
   };
 
-  // 삭제: 본인은 비밀번호 입력 후
-  const handleDelete = async (entryId: number) => {
+  // 삭제
+  const handleDelete = async (entryId: number, pw?: string) => {
     try {
-      await guestbookApi.deleteEntry(weddingId, entryId, deletePassword || undefined);
-      setDeletingId(null);
-      setDeletePassword("");
+      await guestbookApi.deleteEntry(weddingId, entryId, pw);
       fetchEntries(0);
     } catch {
       alert("삭제에 실패했습니다. 비밀번호를 확인해주세요.");
     }
   };
 
-  // 호스트 삭제: 비밀번호 없이 바로 삭제
-  const handleHostDelete = async (entryId: number) => {
-    if (!confirm("이 방명록을 삭제하시겠습니까?")) return;
-    try {
-      await guestbookApi.deleteEntry(weddingId, entryId, undefined);
-      fetchEntries(0);
-    } catch {
-      alert("삭제에 실패했습니다.");
+  // ⋮ 메뉴 액션 핸들러
+  const handleMenuAction = (entry: GuestbookEntry, action: "edit" | "delete") => {
+    setMenuOpenId(null);
+
+    if (action === "edit") {
+      if (isAuthor(entry)) {
+        // 로그인 본인: 바로 편집 모드
+        setEditingId(entry.id);
+        setEditContent(entry.content);
+        setEditPassword(null);
+      } else {
+        // 비로그인: 비밀번호 모달
+        setPasswordModalAction({ entryId: entry.id, action: "edit" });
+        setModalPassword("");
+      }
+    } else {
+      // delete
+      if (isHost || isAuthor(entry)) {
+        // 호스트 또는 로그인 본인: confirm 후 바로 삭제
+        if (confirm("이 방명록을 삭제하시겠습니까?")) {
+          void handleDelete(entry.id);
+        }
+      } else {
+        // 비로그인: 비밀번호 모달
+        setPasswordModalAction({ entryId: entry.id, action: "delete" });
+        setModalPassword("");
+      }
     }
+  };
+
+  // 비밀번호 모달 확인
+  const handleModalConfirm = () => {
+    if (!passwordModalAction || !modalPassword.trim()) return;
+    const { entryId, action } = passwordModalAction;
+
+    if (action === "edit") {
+      const entry = entries.find((e) => e.id === entryId);
+      if (!entry) return;
+      setEditingId(entryId);
+      setEditContent(entry.content);
+      setEditPassword(modalPassword.trim());
+    } else {
+      void handleDelete(entryId, modalPassword.trim());
+    }
+
+    setPasswordModalAction(null);
+    setModalPassword("");
   };
 
   const formatDate = (dateStr: string) => {
@@ -127,7 +189,7 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  const canSubmit = authorName.trim() !== "" && password.trim() !== "" && content.trim() !== "";
+  const canSubmit = authorName.trim() !== "" && content.trim() !== "" && (isLoggedIn || password.trim() !== "");
 
   return (
     <section className="px-6 py-12">
@@ -157,7 +219,7 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
           <div className="flex items-center gap-3">
             <input
               type="password"
-              placeholder="비밀번호 *"
+              placeholder={isLoggedIn ? "비밀번호" : "비밀번호 *"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-28 text-xs border border-gray-100 rounded-lg px-2 py-1.5 outline-none placeholder:text-gray-300"
@@ -187,36 +249,12 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
       {/* 방명록 목록 */}
       <div className="space-y-3">
         {entries.map((entry) => {
-          const myEntry = isAuthor(entry);
           const secretMasked = entry.isSecret && entry.content === "비밀 메시지입니다";
 
           return (
             <div key={entry.id} className="bg-white rounded-xl p-4 shadow-sm">
-              {/* 삭제 비밀번호 입력 (본인 삭제 시) */}
-              {deletingId === entry.id ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="password"
-                    placeholder="비밀번호 입력"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none"
-                  />
-                  <button
-                    onClick={() => handleDelete(entry.id)}
-                    className="text-xs text-red-500 font-medium"
-                  >
-                    확인
-                  </button>
-                  <button
-                    onClick={() => { setDeletingId(null); setDeletePassword(""); }}
-                    className="text-xs text-gray-400"
-                  >
-                    취소
-                  </button>
-                </div>
-              ) : editingId === entry.id ? (
-                /* 수정 (본인만) */
+              {editingId === entry.id ? (
+                /* 수정 모드 */
                 <div>
                   <textarea
                     value={editContent}
@@ -233,7 +271,7 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
                       저장
                     </button>
                     <button
-                      onClick={() => { setEditingId(null); setEditContent(""); }}
+                      onClick={() => { setEditingId(null); setEditContent(""); setEditPassword(null); }}
                       className="text-xs text-gray-400"
                     >
                       취소
@@ -249,38 +287,61 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
                       </span>
                       {entry.isSecret && <IoLockClosed size={12} className="text-gray-300" />}
                     </div>
-                    <span className="text-[10px] text-gray-300">{formatDate(entry.createdAt)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-300">{formatDate(entry.createdAt)}</span>
+                      {/* 비로그인 작성 글(userId 없음): ⋮ 드롭다운 메뉴 */}
+                      {entry.userId === null && (
+                        <div className="relative" ref={menuOpenId === entry.id ? menuRef : undefined}>
+                          <button
+                            onClick={() => setMenuOpenId(menuOpenId === entry.id ? null : entry.id)}
+                            className="text-gray-300 hover:text-gray-500 p-0.5"
+                          >
+                            <IoEllipsisVertical size={14} />
+                          </button>
+                          {menuOpenId === entry.id && (
+                            <div className="absolute right-0 top-6 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-10 min-w-[80px]">
+                              <button
+                                onClick={() => handleMenuAction(entry, "edit")}
+                                className="w-full text-left text-xs text-gray-600 px-3 py-1.5 hover:bg-gray-50"
+                              >
+                                수정
+                              </button>
+                              <button
+                                onClick={() => handleMenuAction(entry, "delete")}
+                                className="w-full text-left text-xs text-red-500 px-3 py-1.5 hover:bg-gray-50"
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <p className={`text-sm leading-relaxed ${secretMasked ? "text-gray-300 italic" : "text-gray-600"}`}>
                     {entry.content}
                   </p>
-                  {/* 액션 버튼 */}
-                  <div className="flex justify-end gap-2 mt-2">
-                    {/* 수정: 본인만 */}
-                    {myEntry && (
-                      <button
-                        onClick={() => { setEditingId(entry.id); setEditContent(entry.content); }}
-                        className="text-gray-300 hover:text-gray-500"
-                      >
-                        <IoPencil size={14} />
-                      </button>
-                    )}
-                    {/* 삭제: 본인(비밀번호 필요) 또는 호스트(바로 삭제) */}
-                    {(myEntry || isHost) && (
-                      <button
-                        onClick={() => {
-                          if (isHost && !myEntry) {
-                            void handleHostDelete(entry.id);
-                          } else {
-                            setDeletingId(entry.id);
-                          }
-                        }}
-                        className="text-gray-300 hover:text-red-400"
-                      >
-                        <IoTrash size={14} />
-                      </button>
-                    )}
-                  </div>
+                  {/* 로그인 작성 글: 본인만 수정/삭제 아이콘, 호스트는 삭제만 */}
+                  {entry.userId !== null && (isAuthor(entry) || isHost) && (
+                    <div className="flex justify-end gap-2 mt-2">
+                      {isAuthor(entry) && (
+                        <button
+                          onClick={() => { setEditingId(entry.id); setEditContent(entry.content); setEditPassword(null); }}
+                          className="text-gray-300 hover:text-gray-500"
+                        >
+                          <IoPencil size={14} />
+                        </button>
+                      )}
+                      {(isAuthor(entry) || isHost) && (
+                        <button
+                          onClick={() => handleMenuAction(entry, "delete")}
+                          className="text-gray-300 hover:text-red-400"
+                        >
+                          <IoTrash size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -303,6 +364,41 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
         <p className="text-center text-sm text-gray-300 mt-8">
           아직 남겨진 메시지가 없습니다
         </p>
+      )}
+
+      {/* 비밀번호 모달 */}
+      {passwordModalAction && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-sm font-medium text-gray-700 mb-4">
+              {passwordModalAction.action === "edit" ? "수정" : "삭제"}하려면 비밀번호를 입력해주세요
+            </h3>
+            <input
+              type="password"
+              placeholder="비밀번호"
+              value={modalPassword}
+              onChange={(e) => setModalPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleModalConfirm()}
+              autoFocus
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => { setPasswordModalAction(null); setModalPassword(""); }}
+                className="text-xs text-gray-400 px-3 py-1.5"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleModalConfirm}
+                disabled={!modalPassword.trim()}
+                className="text-xs text-white bg-primary px-4 py-1.5 rounded-full disabled:opacity-40"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

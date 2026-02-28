@@ -1,5 +1,8 @@
 package com.soaengry.moment.domain.wedding.service;
 
+import com.soaengry.moment.domain.attendance.entity.Attendance;
+import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
+import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.wedding.dto.request.*;
 import com.soaengry.moment.domain.wedding.dto.response.*;
 import com.soaengry.moment.domain.wedding.entity.*;
@@ -28,6 +31,8 @@ public class WeddingService {
     private final AccommodationRepository accommodationRepository;
     private final AnnouncementRepository announcementRepository;
     private final KakaoGeocodingService kakaoGeocodingService;
+    private final UserRepository userRepository;
+    private final AttendanceRepository attendanceRepository;
 
     private KakaoGeocodingService.Coordinate resolveCoordinate(String address) {
         KakaoGeocodingService.Coordinate coord = kakaoGeocodingService.geocode(address);
@@ -103,6 +108,14 @@ public class WeddingService {
 
         Couple couple = request.toEntity(wedding);
         Couple saved = coupleRepository.save(couple);
+
+        // 커플 이메일로 가입된 사용자가 있으면 자동 참석 등록
+        userRepository.findByEmail(saved.getEmail()).ifPresent(user -> {
+            if (!attendanceRepository.existsByUserIdAndWeddingId(user.getId(), weddingId)) {
+                attendanceRepository.save(Attendance.create(user.getId(), weddingId));
+            }
+        });
+
         return CoupleResponse.from(saved);
     }
 

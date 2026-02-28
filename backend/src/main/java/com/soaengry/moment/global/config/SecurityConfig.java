@@ -57,6 +57,8 @@ public class SecurityConfig {
                         // 방명록: GET은 공개, POST/PUT/DELETE는 인증 필요 (서비스에서 처리)
                         .requestMatchers(HttpMethod.GET, "/api/weddings/*/guestbook/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/weddings/*/guestbook/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/weddings/*/guestbook/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/*/guestbook/**").permitAll()
                         // 채팅방 목록/메시지 조회는 인증 필요 (authenticated)
                         .requestMatchers(HttpMethod.GET, "/api/weddings/*/chat/**").authenticated()
                         // 피드 조회는 인증 필요
