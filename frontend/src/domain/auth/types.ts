@@ -37,8 +37,10 @@ export interface RestoreAccountRequest {
 export interface SignupResponse {
   userId: number;
   email: string;
-  verificationCode: string;
   message: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 export interface TokenResponse {
