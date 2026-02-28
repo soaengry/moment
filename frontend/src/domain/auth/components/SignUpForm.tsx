@@ -4,7 +4,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { authApi } from "../api/authApi";
+import { useAuthStore } from "../store/useAuthStore";
 import { AUTH_VALIDATION } from "../auth.constants";
+import { tokenStorage } from "../auth.utils";
 import { isAxiosError } from "axios";
 
 const signUpSchema = z
@@ -44,6 +46,7 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 const SignUpForm: FC = () => {
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailDupError, setEmailDupError] = useState<string | null>(null);
@@ -96,14 +99,18 @@ const SignUpForm: FC = () => {
     setIsSubmitting(true);
 
     try {
-      await authApi.signup({
+      const signupResponse = await authApi.signup({
         email: values.email,
         password: values.password,
         nickname: values.nickname,
       });
-      navigate("/login", {
-        state: { message: "회원가입이 완료되었습니다. 로그인해주세요." },
-      });
+      tokenStorage.setTokens(
+        signupResponse.accessToken,
+        signupResponse.refreshToken,
+      );
+      const user = await authApi.getMe();
+      setAuth(signupResponse, user);
+      navigate("/");
     } catch (error: unknown) {
       if (isAxiosError(error) && error.response) {
         const status = error.response.status;

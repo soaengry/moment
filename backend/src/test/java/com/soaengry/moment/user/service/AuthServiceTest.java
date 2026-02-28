@@ -1,9 +1,9 @@
 package com.soaengry.moment.user.service;
 
+import com.soaengry.moment.domain.email.entity.EmailVerification;
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
 import com.soaengry.moment.domain.user.dto.request.LoginRequest;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
-import com.soaengry.moment.domain.user.dto.request.VerifyEmailRequest;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.dto.response.TokenResponse;
 import com.soaengry.moment.domain.user.entity.User;
@@ -72,7 +72,9 @@ class AuthServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.userId()).isNotNull();
         assertThat(response.email()).isEqualTo("test@example.com");
-        assertThat(response.verificationCode()).hasSize(6);
+        assertThat(response.accessToken()).isNotEmpty();
+        assertThat(response.refreshToken()).isNotEmpty();
+        assertThat(response.expiresIn()).isPositive();
 
         // DB 확인
         User user = userRepository.findByEmail("test@example.com").orElseThrow();
@@ -82,7 +84,6 @@ class AuthServiceTest {
 
         System.out.println("✅ 회원가입 성공 테스트 통과");
         System.out.println("   - 사용자 ID: " + response.userId());
-        System.out.println("   - 인증 코드: " + response.verificationCode());
     }
 
     @Test
@@ -119,15 +120,13 @@ class AuthServiceTest {
                 "Test1234!@",
                 "테스터"
         );
-        SignupResponse signupResponse = authService.signup(signupRequest);
+        authService.signup(signupRequest);
 
-        VerifyEmailRequest verifyRequest = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
 
         // when
-        authService.verifyEmail(verifyRequest);
+        authService.verifyEmailByToken(verification.getVerificationCode());
 
         // then
         User user = userRepository.findByEmail("test@example.com").orElseThrow();
@@ -146,14 +145,12 @@ class AuthServiceTest {
                 "Test1234!@",
                 "테스터"
         );
-        SignupResponse signupResponse = authService.signup(signupRequest);
+        authService.signup(signupRequest);
 
         // 2. 이메일 인증
-        VerifyEmailRequest verifyRequest = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
-        authService.verifyEmail(verifyRequest);
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
+        authService.verifyEmailByToken(verification.getVerificationCode());
 
         // 3. 로그인
         LoginRequest loginRequest = new LoginRequest(
@@ -220,13 +217,11 @@ class AuthServiceTest {
                 "Test1234!@",
                 "테스터"
         );
-        SignupResponse signupResponse = authService.signup(signupRequest);
+        authService.signup(signupRequest);
 
-        VerifyEmailRequest verifyRequest = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
-        authService.verifyEmail(verifyRequest);
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
+        authService.verifyEmailByToken(verification.getVerificationCode());
 
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
@@ -274,13 +269,11 @@ class AuthServiceTest {
                 "Test1234!@",
                 "테스터"
         );
-        SignupResponse signupResponse = authService.signup(signupRequest);
+        authService.signup(signupRequest);
 
-        VerifyEmailRequest verifyRequest = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
-        authService.verifyEmail(verifyRequest);
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
+        authService.verifyEmailByToken(verification.getVerificationCode());
 
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",

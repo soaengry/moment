@@ -1,12 +1,11 @@
 package com.soaengry.moment.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.soaengry.moment.domain.email.entity.EmailVerification;
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
-import com.soaengry.moment.domain.user.controller.RefreshRequest;
 import com.soaengry.moment.domain.user.dto.request.LoginRequest;
+import com.soaengry.moment.domain.user.dto.request.RefreshRequest;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
-import com.soaengry.moment.domain.user.dto.request.VerifyEmailRequest;
-import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.user.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,9 +20,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -69,8 +68,10 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").exists())
                 .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.verificationCode").exists())
-                .andExpect(jsonPath("$.message").exists());
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.refreshToken").exists())
+                .andExpect(jsonPath("$.expiresIn").exists());
 
         System.out.println("✅ 회원가입 API 테스트 통과");
     }
@@ -95,7 +96,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/auth/verify-email - 이메일 인증 성공")
+    @DisplayName("GET /api/auth/verify-email - 이메일 인증 성공")
     void verifyEmail_Success() throws Exception {
         // given
         SignupRequest signupRequest = new SignupRequest(
@@ -103,19 +104,16 @@ class AuthControllerTest {
                 "Test1234!@",
                 "테스터"
         );
-        SignupResponse signupResponse = authService.signup(signupRequest);
+        authService.signup(signupRequest);
 
-        VerifyEmailRequest request = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
 
         // when & then
-        mockMvc.perform(post("/api/auth/verify-email")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(get("/api/auth/verify-email")
+                        .param("token", verification.getVerificationCode()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("이메일 인증이 완료되었습니다"));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("이메일 인증이 완료되었습니다")));
 
         System.out.println("✅ 이메일 인증 API 테스트 통과");
     }
@@ -129,13 +127,11 @@ class AuthControllerTest {
                 "Test1234!@",
                 "테스터"
         );
-        SignupResponse signupResponse = authService.signup(signupRequest);
+        authService.signup(signupRequest);
 
-        VerifyEmailRequest verifyRequest = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
-        authService.verifyEmail(verifyRequest);
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
+        authService.verifyEmailByToken(verification.getVerificationCode());
 
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
@@ -192,13 +188,11 @@ class AuthControllerTest {
                 "Test1234!@",
                 "테스터"
         );
-        SignupResponse signupResponse = authService.signup(signupRequest);
+        authService.signup(signupRequest);
 
-        VerifyEmailRequest verifyRequest = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
-        authService.verifyEmail(verifyRequest);
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
+        authService.verifyEmailByToken(verification.getVerificationCode());
 
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
@@ -238,13 +232,11 @@ class AuthControllerTest {
                 "Test1234!@",
                 "테스터"
         );
-        SignupResponse signupResponse = authService.signup(signupRequest);
+        authService.signup(signupRequest);
 
-        VerifyEmailRequest verifyRequest = new VerifyEmailRequest(
-                "test@example.com",
-                signupResponse.verificationCode()
-        );
-        authService.verifyEmail(verifyRequest);
+        EmailVerification verification = emailVerificationRepository
+                .findLatestByEmail("test@example.com").orElseThrow();
+        authService.verifyEmailByToken(verification.getVerificationCode());
 
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",

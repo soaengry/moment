@@ -68,14 +68,26 @@ public class AuthService {
         // 이메일 발송 (토큰 링크)
         emailService.sendVerificationEmail(user.getEmail(), verificationToken);
 
+        // 자동 로그인을 위한 JWT 토큰 생성
+        String deviceId = UUID.randomUUID().toString();
+        manageDeviceLimit(user.getId());
+
+        String accessToken = jwtProvider.generateAccessToken(user);
+        String refreshToken = jwtProvider.generateRefreshToken(
+                user.getId(), deviceId, user.getTokenVersion()
+        );
+        refreshTokenRepository.save(user.getId(), deviceId, refreshToken);
+
         log.info("회원가입 완료 - 사용자 ID: {}, 이메일: {}",
                 user.getId(), user.getEmail());
 
         return new SignupResponse(
                 user.getId(),
                 user.getEmail(),
-                null,  // 토큰은 응답에 포함하지 않음 (이메일로만 전송)
-                "회원가입이 완료되었습니다. 이메일을 확인하여 인증을 완료해주세요."
+                "회원가입이 완료되었습니다. 이메일을 확인하여 인증을 완료해주세요.",
+                accessToken,
+                refreshToken,
+                accessTokenExpiration
         );
     }
 
@@ -91,9 +103,9 @@ public class AuthService {
         emailService.sendVerificationEmail(request.email(), verificationToken);
     }
 
-    /**
-     * 이메일 인증 (코드 입력 방식)
-     */
+//    /**
+//     * 이메일 인증 (코드 입력 방식)
+//     */
 //    @Transactional
 //    public void verifyEmail(VerifyEmailRequest request) {
 //        // 인증 정보 조회

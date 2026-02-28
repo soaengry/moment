@@ -3,7 +3,9 @@ package com.soaengry.moment.domain.user.dto.response;
 public record SignupResponse(
         Long userId,
         String email,
-        String verificationCode,
-        String message
+        String message,
+        String accessToken,
+        String refreshToken,
+        Long expiresIn
 ) {
 }
