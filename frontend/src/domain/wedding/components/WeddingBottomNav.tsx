@@ -55,7 +55,7 @@ const WeddingBottomNav: FC<Props> = ({ weddingId, invitationId, activeTab }) => 
       label: "채팅",
       icon: IoChatbubblesOutline,
       activeIcon: IoChatbubbles,
-      action: () => navigate(`/wedding/${weddingId}/chat`),
+      action: () => navigate(`${basePath}/chat`),
     },
     {
       key: "mypage" as const,

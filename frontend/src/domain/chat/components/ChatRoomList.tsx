@@ -6,9 +6,10 @@ import type { ChatRoom } from "../types";
 
 interface Props {
   weddingId: number;
+  invitationId: string;
 }
 
-const ChatRoomList: FC<Props> = ({ weddingId }) => {
+const ChatRoomList: FC<Props> = ({ weddingId, invitationId }) => {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +47,7 @@ const ChatRoomList: FC<Props> = ({ weddingId }) => {
       {rooms.map((room) => (
         <button
           key={room.id}
-          onClick={() => navigate(`/wedding/${weddingId}/chat/${room.id}`)}
+          onClick={() => navigate(`/wedding/${invitationId}/chat/${room.id}`)}
           className="w-full flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
         >
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
