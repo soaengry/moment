@@ -8,17 +8,26 @@ import type { ChatMessage } from "../types";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { tokenStorage } from "../../auth/auth.utils";
 import { ENV } from "../../../global/config/env";
+import { weddingApi } from "../../wedding/api/weddingApi";
 
 const ChatRoomPage: FC = () => {
-  const { weddingId, roomId } = useParams<{ weddingId: string; roomId: string }>();
+  const { invitationId, roomId } = useParams<{ invitationId: string; roomId: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
 
+  const [weddingId, setWeddingId] = useState<number | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [roomName, setRoomName] = useState("");
+
+  useEffect(() => {
+    if (!invitationId) return;
+    weddingApi.getWeddingInfo(invitationId).then((info) => {
+      setWeddingId(Number(info.wedding.id));
+    }).catch(() => { /* silent */ });
+  }, [invitationId]);
 
   const clientRef = useRef<Client | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -28,19 +37,19 @@ const ChatRoomPage: FC = () => {
   };
 
   const fetchMessages = useCallback(async () => {
-    if (!weddingId || !roomId) return;
+    if (weddingId === null || !roomId) return;
     setIsLoading(true);
     try {
-      const res = await chatApi.getMessages(Number(weddingId), Number(roomId));
+      const res = await chatApi.getMessages(weddingId, Number(roomId));
       setMessages(res.content.reverse());
     } catch { /* silent */ }
     finally { setIsLoading(false); }
   }, [weddingId, roomId]);
 
   const fetchRoomInfo = useCallback(async () => {
-    if (!weddingId) return;
+    if (weddingId === null) return;
     try {
-      const rooms = await chatApi.getRooms(Number(weddingId));
+      const rooms = await chatApi.getRooms(weddingId);
       const room = rooms.find((r) => r.id === Number(roomId));
       if (room) setRoomName(room.name);
     } catch { /* silent */ }

@@ -79,7 +79,7 @@ const AppRouter: FC = () => {
           }
         />
         <Route
-          path="/wedding/:weddingId/chat"
+          path="/wedding/:invitationId/chat"
           element={
             <ProtectedRoute>
               <ChatPage />
@@ -87,7 +87,7 @@ const AppRouter: FC = () => {
           }
         />
         <Route
-          path="/wedding/:weddingId/chat/:roomId"
+          path="/wedding/:invitationId/chat/:roomId"
           element={
             <ProtectedRoute>
               <ChatRoomPage />
