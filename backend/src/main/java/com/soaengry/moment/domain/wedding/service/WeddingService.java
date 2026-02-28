@@ -199,7 +199,7 @@ public class WeddingService {
         }
 
         long count = accountGroupRepository.countByWeddingId(weddingId);
-        if (count >= 3) {
+        if (count >= 4) {
             throw new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_LIMIT_EXCEEDED);
         }
 
@@ -245,7 +245,7 @@ public class WeddingService {
         }
 
         long count = accountRepository.countByAccountGroupId(accountGroupId);
-        if (count >= 2) {
+        if (count >= 3) {
             throw new WeddingException(WeddingErrorCode.ACCOUNT_LIMIT_EXCEEDED);
         }
 

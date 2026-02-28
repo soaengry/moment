@@ -8,7 +8,7 @@ export interface AccountGroupFormData {
   side: AccountSide;
   groupName: string;
   orderIndex: number;
-  accounts: AccountRequest[];
+  accounts: (AccountRequest & { type?: PaymentMethod })[];
 }
 
 interface Props {
@@ -19,50 +19,50 @@ interface Props {
 
 const SIDE_OPTIONS: { value: AccountSide; label: string }[] = [
   { value: "GROOM", label: "신랑측" },
+  { value: "GROOM_FAMILY", label: "신랑 혼주측" },
   { value: "BRIDE", label: "신부측" },
-  { value: "BOTH", label: "공동" },
+  { value: "BRIDE_FAMILY", label: "신부 혼주측" },
 ];
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: string }[] = [
   { value: "BANK", label: "은행 계좌", icon: "🏦" },
-  { value: "KAKAOPAY", label: "카카오페이 송금", icon: "💛" },
-  { value: "TOSS", label: "토스 송금", icon: "💙" },
+  { value: "KAKAOPAY", label: "카카오페이", icon: "💛" },
+  { value: "TOSS", label: "토스", icon: "💙" },
 ];
 
-const emptyAccount = (orderIndex: number): AccountRequest => ({
-  bankName: "",
-  bankCode: "",
-  accountNumber: "",
-  accountHolder: "",
-  orderIndex,
-});
+const createAccount = (type: PaymentMethod, orderIndex: number): AccountRequest & { type?: PaymentMethod } => {
+  if (type === "KAKAOPAY") {
+    return { bankName: "카카오페이", bankCode: "KAKAOPAY", accountNumber: "", accountHolder: "", kakaoPayUrl: "", orderIndex, type };
+  }
+  if (type === "TOSS") {
+    return { bankName: "토스", bankCode: "TOSS", accountNumber: "", accountHolder: "", orderIndex, type };
+  }
+  return { bankName: "", bankCode: "", accountNumber: "", accountHolder: "", orderIndex, type: "BANK" };
+};
+
+const getAccountType = (account: AccountRequest & { type?: PaymentMethod }): PaymentMethod => {
+  if (account.type) return account.type;
+  if (account.bankCode === "KAKAOPAY") return "KAKAOPAY";
+  if (account.bankCode === "TOSS") return "TOSS";
+  return "BANK";
+};
 
 const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
   const [groups, setGroups] = useState<AccountGroupFormData[]>(
     initialData.length > 0 ? initialData : [],
   );
-  const [paymentMethods, setPaymentMethods] = useState<Record<number, PaymentMethod>>(() => {
-    const methods: Record<number, PaymentMethod> = {};
-    initialData.forEach((g, i) => {
-      if (g.groupName.includes("카카오페이")) methods[i] = "KAKAOPAY";
-      else if (g.groupName.includes("토스")) methods[i] = "TOSS";
-      else methods[i] = "BANK";
-    });
-    return methods;
-  });
   const [detectingMap, setDetectingMap] = useState<Record<string, boolean>>({});
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const addGroup = () => {
-    if (groups.length >= 3) return;
+    if (groups.length >= 4) return;
     const newIndex = groups.length;
     setGroups((prev) => [...prev, {
       side: "GROOM",
       groupName: "",
       orderIndex: newIndex,
-      accounts: [emptyAccount(0)],
+      accounts: [createAccount("BANK", 0)],
     }]);
-    setPaymentMethods((prev) => ({ ...prev, [newIndex]: "BANK" }));
   };
 
   const removeGroup = (index: number) => {
@@ -71,16 +71,6 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
         .filter((_, i) => i !== index)
         .map((g, i) => ({ ...g, orderIndex: i })),
     );
-    setPaymentMethods((prev) => {
-      const newMethods: Record<number, PaymentMethod> = {};
-      Object.entries(prev)
-        .filter(([k]) => Number(k) !== index)
-        .forEach(([k, v], i) => {
-          newMethods[Number(k) > index ? Number(k) - 1 : Number(k)] = v;
-          void i;
-        });
-      return newMethods;
-    });
   };
 
   const updateGroup = (
@@ -96,7 +86,7 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
   const updateAccount = (
     groupIndex: number,
     accountIndex: number,
-    field: keyof AccountRequest,
+    field: keyof (AccountRequest & { type?: PaymentMethod }),
     value: string | number,
   ) => {
     setGroups((prev) =>
@@ -163,63 +153,50 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     detectBank(groupIndex, accountIndex, value);
   };
 
-  const handlePaymentMethodChange = (groupIndex: number, method: PaymentMethod) => {
-    setPaymentMethods((prev) => ({ ...prev, [groupIndex]: method }));
+  const getUsedTypes = (group: AccountGroupFormData): PaymentMethod[] =>
+    group.accounts.map(getAccountType);
 
-    // Reset account data for the group based on method
+  const addAccountToGroup = (gi: number, type: PaymentMethod) => {
     setGroups((prev) =>
       prev.map((g, i) => {
-        if (i !== groupIndex) return g;
-        if (method === "KAKAOPAY") {
-          return {
-            ...g,
-            groupName: "카카오페이 송금",
-            accounts: [{
-              bankName: "카카오페이",
-              bankCode: "KAKAOPAY",
-              accountNumber: "",
-              accountHolder: g.accounts[0]?.accountHolder ?? "",
-              kakaoPayUrl: g.accounts[0]?.kakaoPayUrl ?? "",
-              orderIndex: 0,
-            }],
-          };
-        } else if (method === "TOSS") {
-          return {
-            ...g,
-            groupName: "토스 송금",
-            accounts: [{
-              bankName: "토스",
-              bankCode: "TOSS",
-              accountNumber: "",
-              accountHolder: g.accounts[0]?.accountHolder ?? "",
-              kakaoPayUrl: "",
-              orderIndex: 0,
-            }],
-          };
-        } else {
-          return {
-            ...g,
-            groupName: "",
-            accounts: [emptyAccount(0)],
-          };
-        }
+        if (i !== gi || g.accounts.length >= 3) return g;
+        return { ...g, accounts: [...g.accounts, createAccount(type, g.accounts.length)] };
+      }),
+    );
+  };
+
+  const removeAccount = (gi: number, ai: number) => {
+    setGroups((prev) =>
+      prev.map((g, i) => {
+        if (i !== gi) return g;
+        return {
+          ...g,
+          accounts: g.accounts
+            .filter((_, idx) => idx !== ai)
+            .map((a, idx) => ({ ...a, orderIndex: idx })),
+        };
       }),
     );
   };
 
   const handleSubmit = () => {
     const valid = groups
-      .filter((g) => {
-        const method = paymentMethods[groups.indexOf(g)] ?? "BANK";
-        if (method === "KAKAOPAY") return g.accounts.some((a) => a.kakaoPayUrl?.trim());
-        if (method === "TOSS") return g.accounts.some((a) => a.accountNumber.trim());
-        return g.accounts.some((a) => a.bankCode.trim() && a.accountNumber.trim());
-      })
+      .filter((g) =>
+        g.accounts.some((a) => {
+          const type = getAccountType(a);
+          if (type === "KAKAOPAY") return a.kakaoPayUrl?.trim();
+          if (type === "TOSS") return a.accountNumber.trim();
+          return a.bankCode.trim() && a.accountNumber.trim();
+        }),
+      )
       .map((g, i) => ({
         ...g,
         orderIndex: i,
         groupName: g.groupName || SIDE_OPTIONS.find((s) => s.value === g.side)?.label || "",
-        accounts: g.accounts.map((a, ai) => ({ ...a, orderIndex: ai })),
+        accounts: g.accounts.map((a, ai) => {
+          const { type: _type, ...rest } = a as AccountRequest & { type?: PaymentMethod };
+          return { ...rest, orderIndex: ai };
+        }),
       }));
     onSubmit(valid);
   };
@@ -228,119 +205,61 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     "w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-primary";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
 
-  const renderBankForm = (group: AccountGroupFormData, gi: number) => (
-    <div className="space-y-3">
-      {group.accounts.map((account, ai) => {
-        const detectKey = `${gi}-${ai}`;
-        const isDetecting = detectingMap[detectKey] ?? false;
+  const renderBankForm = (account: AccountRequest & { type?: PaymentMethod }, gi: number, ai: number) => {
+    const detectKey = `${gi}-${ai}`;
+    const isDetecting = detectingMap[detectKey] ?? false;
 
-        return (
-          <div
-            key={ai}
-            className="p-3 rounded-lg bg-white border border-gray-100 space-y-2 relative"
-          >
-            {group.accounts.length > 1 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setGroups((prev) =>
-                    prev.map((g, i) => {
-                      if (i !== gi) return g;
-                      return {
-                        ...g,
-                        accounts: g.accounts
-                          .filter((_, idx) => idx !== ai)
-                          .map((a, idx) => ({ ...a, orderIndex: idx })),
-                      };
-                    }),
-                  );
-                }}
-                className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full text-gray-300 hover:text-gray-500 text-xs"
-              >
-                ✕
-              </button>
-            )}
+    return (
+      <div className="space-y-2">
+        <div>
+          <label className={labelClass}>계좌번호</label>
+          <input
+            value={account.accountNumber}
+            onChange={(e) => handleAccountNumberChange(gi, ai, e.target.value)}
+            placeholder="계좌번호를 입력하면 은행이 자동 감지됩니다"
+            className={inputClass}
+          />
+        </div>
 
-            <div>
-              <label className={labelClass}>계좌번호</label>
-              <input
-                value={account.accountNumber}
-                onChange={(e) => handleAccountNumberChange(gi, ai, e.target.value)}
-                placeholder="계좌번호를 입력하면 은행이 자동 감지됩니다"
-                className={inputClass}
-              />
-            </div>
+        <div className="flex items-center gap-2 min-h-[32px]">
+          {isDetecting ? (
+            <span className="text-xs text-gray-400">은행 감지 중...</span>
+          ) : account.bankName ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+              {account.bankName}
+            </span>
+          ) : account.accountNumber.replace(/[^0-9]/g, "").length >= 3 ? (
+            <span className="text-xs text-red-400">은행을 감지할 수 없습니다. 직접 입력해주세요.</span>
+          ) : null}
+        </div>
 
-            <div className="flex items-center gap-2 min-h-[32px]">
-              {isDetecting ? (
-                <span className="text-xs text-gray-400">은행 감지 중...</span>
-              ) : account.bankName ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  {account.bankName}
-                  <span className="text-primary/60">({account.bankCode})</span>
-                </span>
-              ) : account.accountNumber.replace(/[^0-9]/g, "").length >= 3 ? (
-                <span className="text-xs text-red-400">은행을 감지할 수 없습니다. 직접 입력해주세요.</span>
-              ) : null}
-            </div>
-
-            {!account.bankName && account.accountNumber.replace(/[^0-9]/g, "").length >= 3 && !isDetecting && (
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className={labelClass}>은행명</label>
-                  <input
-                    value={account.bankName}
-                    onChange={(e) => updateAccount(gi, ai, "bankName", e.target.value)}
-                    placeholder="○○은행"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>은행코드</label>
-                  <input
-                    value={account.bankCode}
-                    onChange={(e) => updateAccount(gi, ai, "bankCode", e.target.value)}
-                    placeholder="004"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className={labelClass}>예금주</label>
-              <input
-                value={account.accountHolder}
-                onChange={(e) => updateAccount(gi, ai, "accountHolder", e.target.value)}
-                placeholder="홍길동"
-                className={inputClass}
-              />
-            </div>
+        {!account.bankName && account.accountNumber.replace(/[^0-9]/g, "").length >= 3 && !isDetecting && (
+          <div>
+            <label className={labelClass}>은행명</label>
+            <input
+              value={account.bankName}
+              onChange={(e) => updateAccount(gi, ai, "bankName", e.target.value)}
+              placeholder="○○은행"
+              className={inputClass}
+            />
           </div>
-        );
-      })}
+        )}
 
-      {group.accounts.length < 2 && (
-        <button
-          type="button"
-          onClick={() => {
-            setGroups((prev) =>
-              prev.map((g, i) => {
-                if (i !== gi || g.accounts.length >= 2) return g;
-                return { ...g, accounts: [...g.accounts, emptyAccount(g.accounts.length)] };
-              }),
-            );
-          }}
-          className="w-full py-2 rounded-lg border border-dashed border-gray-300 text-gray-400 text-xs font-medium hover:bg-white transition-colors"
-        >
-          + 계좌 추가 (최대 2개)
-        </button>
-      )}
-    </div>
-  );
+        <div>
+          <label className={labelClass}>예금주</label>
+          <input
+            value={account.accountHolder}
+            onChange={(e) => updateAccount(gi, ai, "accountHolder", e.target.value)}
+            placeholder="홍길동"
+            className={inputClass}
+          />
+        </div>
+      </div>
+    );
+  };
 
-  const renderKakaoPayForm = (group: AccountGroupFormData, gi: number) => (
-    <div className="p-3 rounded-lg bg-white border border-gray-100 space-y-3">
+  const renderKakaoPayForm = (account: AccountRequest & { type?: PaymentMethod }, gi: number, ai: number) => (
+    <div className="space-y-3">
       <div className="flex items-center gap-2 px-2 py-1.5 bg-yellow-50 rounded-lg">
         <span className="text-lg">💛</span>
         <span className="text-xs text-yellow-700 font-medium">카카오페이 송금 링크를 입력해주세요</span>
@@ -348,8 +267,8 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
       <div>
         <label className={labelClass}>카카오페이 송금 URL *</label>
         <input
-          value={group.accounts[0]?.kakaoPayUrl ?? ""}
-          onChange={(e) => updateAccount(gi, 0, "kakaoPayUrl", e.target.value)}
+          value={account.kakaoPayUrl ?? ""}
+          onChange={(e) => updateAccount(gi, ai, "kakaoPayUrl", e.target.value)}
           placeholder="https://qr.kakaopay.com/..."
           className={inputClass}
         />
@@ -357,8 +276,8 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
       <div>
         <label className={labelClass}>받는 분</label>
         <input
-          value={group.accounts[0]?.accountHolder ?? ""}
-          onChange={(e) => updateAccount(gi, 0, "accountHolder", e.target.value)}
+          value={account.accountHolder}
+          onChange={(e) => updateAccount(gi, ai, "accountHolder", e.target.value)}
           placeholder="홍길동"
           className={inputClass}
         />
@@ -366,8 +285,8 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     </div>
   );
 
-  const renderTossForm = (group: AccountGroupFormData, gi: number) => (
-    <div className="p-3 rounded-lg bg-white border border-gray-100 space-y-3">
+  const renderTossForm = (account: AccountRequest & { type?: PaymentMethod }, gi: number, ai: number) => (
+    <div className="space-y-3">
       <div className="flex items-center gap-2 px-2 py-1.5 bg-blue-50 rounded-lg">
         <span className="text-lg">💙</span>
         <span className="text-xs text-blue-700 font-medium">토스 송금 정보를 입력해주세요</span>
@@ -375,8 +294,8 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
       <div>
         <label className={labelClass}>토스 ID (전화번호) *</label>
         <input
-          value={group.accounts[0]?.accountNumber ?? ""}
-          onChange={(e) => updateAccount(gi, 0, "accountNumber", e.target.value)}
+          value={account.accountNumber}
+          onChange={(e) => updateAccount(gi, ai, "accountNumber", e.target.value)}
           placeholder="010-1234-5678"
           className={inputClass}
         />
@@ -384,8 +303,8 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
       <div>
         <label className={labelClass}>받는 분</label>
         <input
-          value={group.accounts[0]?.accountHolder ?? ""}
-          onChange={(e) => updateAccount(gi, 0, "accountHolder", e.target.value)}
+          value={account.accountHolder}
+          onChange={(e) => updateAccount(gi, ai, "accountHolder", e.target.value)}
           placeholder="홍길동"
           className={inputClass}
         />
@@ -401,12 +320,13 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
             계좌 / 송금 정보
           </h3>
           <span className="text-xs text-gray-400">
-            선택사항 (최대 3그룹)
+            선택사항 (최대 4그룹)
           </span>
         </div>
 
         {groups.map((group, gi) => {
-          const currentMethod = paymentMethods[gi] ?? "BANK";
+          const usedTypes = getUsedTypes(group);
+          const availableTypes = PAYMENT_METHODS.filter((m) => !usedTypes.includes(m.value));
 
           return (
             <div
@@ -439,41 +359,67 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
                 </select>
               </div>
 
-              {/* Payment Method Radio */}
-              <div>
-                <label className={labelClass}>송금 방법</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {PAYMENT_METHODS.map((method) => (
-                    <button
-                      key={method.value}
-                      type="button"
-                      onClick={() => handlePaymentMethodChange(gi, method.value)}
-                      className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center ${
-                        currentMethod === method.value
-                          ? "border-primary bg-primary/5"
-                          : "border-gray-200 bg-white hover:border-gray-300"
-                      }`}
+              {/* Account list */}
+              <div className="space-y-3">
+                {group.accounts.map((account, ai) => {
+                  const accountType = getAccountType(account);
+
+                  return (
+                    <div
+                      key={ai}
+                      className="p-3 rounded-lg bg-white border border-gray-100 space-y-2 relative"
                     >
-                      <span className="text-xl">{method.icon}</span>
-                      <span className={`text-[11px] font-medium leading-tight ${
-                        currentMethod === method.value ? "text-primary" : "text-gray-500"
-                      }`}>
-                        {method.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                      {group.accounts.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeAccount(gi, ai)}
+                          className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full text-gray-300 hover:text-gray-500 text-xs"
+                        >
+                          ✕
+                        </button>
+                      )}
+
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-sm">
+                          {accountType === "KAKAOPAY" ? "💛" : accountType === "TOSS" ? "💙" : "🏦"}
+                        </span>
+                        <span className="text-xs font-medium text-gray-500">
+                          {PAYMENT_METHODS.find((m) => m.value === accountType)?.label}
+                        </span>
+                      </div>
+
+                      {accountType === "BANK" && renderBankForm(account, gi, ai)}
+                      {accountType === "KAKAOPAY" && renderKakaoPayForm(account, gi, ai)}
+                      {accountType === "TOSS" && renderTossForm(account, gi, ai)}
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Conditional Form */}
-              {currentMethod === "BANK" && renderBankForm(group, gi)}
-              {currentMethod === "KAKAOPAY" && renderKakaoPayForm(group, gi)}
-              {currentMethod === "TOSS" && renderTossForm(group, gi)}
+              {/* Add account button */}
+              {group.accounts.length < 3 && availableTypes.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-gray-400 font-medium">송금 방법 추가</p>
+                  <div className="flex gap-2">
+                    {availableTypes.map((method) => (
+                      <button
+                        key={method.value}
+                        type="button"
+                        onClick={() => addAccountToGroup(gi, method.value)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-gray-400 text-xs font-medium hover:bg-white transition-colors"
+                      >
+                        <span>{method.icon}</span>
+                        <span>{method.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
 
-        {groups.length < 3 && (
+        {groups.length < 4 && (
           <button
             type="button"
             onClick={addGroup}

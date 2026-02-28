@@ -46,6 +46,6 @@ public class AccountGroup {
     }
 
     public enum Side {
-        GROOM, BRIDE, BOTH
+        GROOM, GROOM_FAMILY, BRIDE, BRIDE_FAMILY
     }
 }
