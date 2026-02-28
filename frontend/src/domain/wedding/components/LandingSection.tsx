@@ -9,7 +9,13 @@ interface Props {
   brideName?: string;
 }
 
-const LandingSection: FC<Props> = ({ gallery, title, weddingDate, groomName, brideName }) => {
+const LandingSection: FC<Props> = ({
+  gallery,
+  title,
+  weddingDate,
+  groomName,
+  brideName,
+}) => {
   const images = [...gallery].sort((a, b) => a.orderIndex - b.orderIndex);
   const [current, setCurrent] = useState(0);
 
@@ -20,7 +26,7 @@ const LandingSection: FC<Props> = ({ gallery, title, weddingDate, groomName, bri
 
   useEffect(() => {
     if (images.length <= 1) return;
-    const timer = setInterval(next, 4000);
+    const timer = setInterval(next, 2000);
     return () => clearInterval(timer);
   }, [images.length, next]);
 
@@ -35,7 +41,10 @@ const LandingSection: FC<Props> = ({ gallery, title, weddingDate, groomName, bri
   };
 
   return (
-    <section className="relative w-full overflow-hidden bg-black" style={{ minHeight: "85vh" }}>
+    <section
+      className="relative w-full overflow-hidden bg-black"
+      style={{ minHeight: "85vh" }}
+    >
       {/* 슬라이드 이미지 */}
       {images.length > 0 ? (
         <div className="relative w-full h-full" style={{ minHeight: "85vh" }}>
@@ -68,7 +77,8 @@ const LandingSection: FC<Props> = ({ gallery, title, weddingDate, groomName, bri
       <div className="absolute bottom-0 left-0 right-0 pb-12 px-6 text-center text-white">
         {groomName && brideName && (
           <p className="text-lg tracking-[0.3em] font-light mb-3 drop-shadow-lg">
-            {groomName} <span className="text-white/60 mx-2">&</span> {brideName}
+            {groomName} <span className="text-white/60 mx-2">&</span>{" "}
+            {brideName}
           </p>
         )}
         <h1 className="text-2xl font-semibold mb-4 drop-shadow-lg leading-relaxed">

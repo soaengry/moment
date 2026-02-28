@@ -17,11 +17,11 @@ public enum WeddingErrorCode {
 
     // AccountGroup
     ACCOUNT_GROUP_NOT_FOUND("계좌 그룹을 찾을 수 없습니다"),
-    ACCOUNT_GROUP_LIMIT_EXCEEDED("계좌 그룹은 최대 3개까지 생성할 수 있습니다"),
+    ACCOUNT_GROUP_LIMIT_EXCEEDED("계좌 그룹은 최대 4개까지 생성할 수 있습니다"),
 
     // Account
     ACCOUNT_NOT_FOUND("계좌 정보를 찾을 수 없습니다"),
-    ACCOUNT_LIMIT_EXCEEDED("계좌 그룹당 계좌는 최대 2개까지 등록할 수 있습니다"),
+    ACCOUNT_LIMIT_EXCEEDED("계좌 그룹당 계좌는 최대 3개까지 등록할 수 있습니다"),
 
     // Gallery
     GALLERY_NOT_FOUND("갤러리 이미지를 찾을 수 없습니다"),
