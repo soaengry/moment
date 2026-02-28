@@ -22,8 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -71,7 +69,7 @@ public class GuestbookService {
         GuestbookEntry entry = guestbookEntryRepository.findById(entryId)
                 .orElseThrow(() -> new GuestbookException(GuestbookErrorCode.GUESTBOOK_ENTRY_NOT_FOUND));
 
-        validateUpdateAccess(entry, weddingId);
+        validateUpdateAccess(entry, weddingId, request.password());
         entry.update(request.content(), request.isSecret());
 
         return GuestbookResponse.from(entry);
@@ -86,8 +84,8 @@ public class GuestbookService {
         guestbookEntryRepository.delete(entry);
     }
 
-    // 수정: 본인만 가능 (호스트/ADMIN 불가)
-    private void validateUpdateAccess(GuestbookEntry entry, Long weddingId) {
+    // 수정: 로그인 본인 또는 비밀번호 일치 시 허용
+    private void validateUpdateAccess(GuestbookEntry entry, Long weddingId, String password) {
         if (isCurrentUserAdmin()) return;
 
         Long currentUserId = getCurrentUserId();
@@ -96,10 +94,16 @@ public class GuestbookService {
             return;
         }
 
+        // 비로그인: 비밀번호 일치 시 허용
+        if (entry.getPassword() != null && password != null
+                && passwordEncoder.matches(password, entry.getPassword())) {
+            return;
+        }
+
         throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);
     }
 
-    // 삭제: 호스트 및 ADMIN은 비밀번호 없이, 본인은 비밀번호 필요
+    // 삭제: 호스트/ADMIN은 비밀번호 없이, 로그인 본인도 비밀번호 없이, 비로그인은 비밀번호 필요
     private void validateDeleteAccess(GuestbookEntry entry, Long weddingId, String password) {
         if (isCurrentUserAdmin()) return;
 
@@ -110,15 +114,10 @@ public class GuestbookService {
             return;
         }
 
-        // 본인 작성 글은 비밀번호로 삭제
+        // 로그인 본인: 비밀번호 없이 삭제 허용
         if (entry.getUser() != null && currentUserId != null
                 && currentUserId.equals(entry.getUser().getId())) {
-            if (entry.getPassword() != null && password != null
-                    && passwordEncoder.matches(password, entry.getPassword())) {
-                return;
-            }
-
-            throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);
+            return;
         }
 
         // 그 외: 비밀번호가 맞으면 삭제 가능
@@ -131,7 +130,9 @@ public class GuestbookService {
     }
 
     private boolean isCurrentUserHostOfWedding(Long weddingId) {
-        String email = Objects.requireNonNull(getCurrentUser()).getEmail();
+        User user = getCurrentUser();
+        if (user == null) return false;
+        String email = user.getEmail();
         if (email == null) return false;
         return coupleRepository.existsByWeddingIdAndEmail(weddingId, email);
     }
