@@ -8,43 +8,57 @@ interface Props {
 
 const SIDE_LABEL: Record<AccountSide, string> = {
   GROOM: "신랑측",
+  GROOM_FAMILY: "신랑 혼주측",
   BRIDE: "신부측",
-  BOTH: "공동",
+  BRIDE_FAMILY: "신부 혼주측",
 };
 
 const AccountCard: FC<{ account: AccountResponse }> = ({ account }) => {
+  const isKakaoPay = account.bankCode === "KAKAOPAY";
+  const isToss = account.bankCode === "TOSS";
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(account.accountNumber);
-      toast.success("계좌번호가 복사되었습니다");
+      const text = isToss ? account.accountNumber : account.accountNumber;
+      await navigator.clipboard.writeText(text);
+      toast.success(isToss ? "휴대폰 번호가 복사되었습니다" : "계좌번호가 복사되었습니다");
     } catch { toast.error("복사에 실패했습니다"); }
   };
+
+  if (isKakaoPay) {
+    return (
+      <div className="p-4 rounded-xl bg-white border border-gray-100">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-gray-700">카카오페이</span>
+          <span className="text-xs text-gray-400">{account.accountHolder}</span>
+        </div>
+        <button
+          onClick={() => window.open(account.kakaoPayUrl!, "_blank")}
+          className="w-full py-2 rounded-lg bg-[#FEE500] text-[#191919] text-[11px] font-medium hover:opacity-90 transition-colors"
+        >
+          카카오페이
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 rounded-xl bg-white border border-gray-100">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700">{account.bankName}</span>
+        <span className="text-sm font-medium text-gray-700">
+          {isToss ? "토스" : account.bankName}
+        </span>
         <span className="text-xs text-gray-400">{account.accountHolder}</span>
       </div>
       <p className="text-sm text-gray-500 font-mono tracking-wider mb-3">
         {account.accountNumber}
       </p>
-      <div className="flex gap-2">
-        <button
-          onClick={handleCopy}
-          className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 text-[11px] font-medium hover:bg-gray-50 transition-colors"
-        >
-          계좌번호 복사
-        </button>
-        {account.kakaoPayUrl && (
-          <button
-            onClick={() => window.open(account.kakaoPayUrl!, "_blank")}
-            className="flex-1 py-2 rounded-lg bg-[#FEE500] text-[#191919] text-[11px] font-medium hover:opacity-90 transition-colors"
-          >
-            카카오페이
-          </button>
-        )}
-      </div>
+      <button
+        onClick={handleCopy}
+        className="w-full py-2 rounded-lg border border-gray-200 text-gray-600 text-[11px] font-medium hover:bg-gray-50 transition-colors"
+      >
+        {isToss ? "휴대폰 번호 복사" : "계좌번호 복사"}
+      </button>
     </div>
   );
 };

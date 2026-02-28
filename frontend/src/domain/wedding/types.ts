@@ -1,7 +1,7 @@
 // ─── Enums ───
 
 export type CoupleRole = "GROOM" | "BRIDE";
-export type AccountSide = "GROOM" | "BRIDE" | "BOTH";
+export type AccountSide = "GROOM" | "GROOM_FAMILY" | "BRIDE" | "BRIDE_FAMILY";
 export type TransportType = "SUBWAY" | "BUS" | "SHUTTLE";
 
 // ─── Response ───
