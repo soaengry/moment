@@ -322,12 +322,6 @@ const EditProfilePage: FC = () => {
             </div>
           )}
 
-          {pwSuccess && (
-            <div className="mb-4 p-3 rounded-lg text-sm bg-bgSuccess text-success">
-              비밀번호가 변경되었습니다.
-            </div>
-          )}
-
           <form onSubmit={handlePwSubmit(onPasswordSubmit)} className="space-y-4">
             <div>
               <label
