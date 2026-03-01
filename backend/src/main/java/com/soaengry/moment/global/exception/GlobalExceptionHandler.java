@@ -168,7 +168,7 @@ public class GlobalExceptionHandler {
     private HttpStatus determineHttpStatusFromCode(String code) {
         if (code.startsWith("AUTH") || code.equals("UNAUTHORIZED_ACCESS")) {
             return HttpStatus.UNAUTHORIZED;
-        } else if (code.equals("INVALID_PASSWORD")) {
+        } else if (code.equals("INVALID_PASSWORD") || code.endsWith("UNAUTHORIZED")) {
             return HttpStatus.FORBIDDEN;
         } else if (code.startsWith("DUPLICATE")) {
             return HttpStatus.CONFLICT;

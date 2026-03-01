@@ -68,11 +68,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/weddings/*/feed/**").authenticated()
                         // 피드 조회는 인증 필요
                         .requestMatchers(HttpMethod.GET, "/api/feed/**").authenticated()
-                        // Wedding CRUD는 ADMIN만 접근 가능
+                        // 채팅방 생성은 ADMIN만
                         .requestMatchers(HttpMethod.POST, "/api/weddings/*/chat/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/weddings/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/weddings/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/**").hasRole("ADMIN")
+                        // 웨딩 생성은 ADMIN만, 하위 리소스 CUD는 인증 사용자 (서비스에서 권한 검증)
+                        .requestMatchers(HttpMethod.POST, "/api/weddings").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/weddings/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/weddings/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/**").authenticated()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

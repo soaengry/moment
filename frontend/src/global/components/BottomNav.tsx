@@ -50,12 +50,16 @@ const BottomNav: FC = () => {
   const isVisible = useScrollVisibility();
 
   const isAdmin = user?.role === "ADMIN";
-  const visibleItems = NAV_ITEMS.filter(
-    (item) => !item.adminOnly || isAdmin,
-  );
+  const visibleItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
 
   // 특정 페이지에서는 BottomNav를 숨김 (로그인, 회원가입 등)
-  const hiddenPaths = ["/login", "/signup", "/verify-email", "/restore-account", "/oauth2/callback"];
+  const hiddenPaths = [
+    "/login",
+    "/signup",
+    "/verify-email",
+    "/restore-account",
+    "/oauth2/callback",
+  ];
   if (hiddenPaths.some((p) => location.pathname.startsWith(p))) {
     return null;
   }
@@ -81,7 +85,7 @@ const BottomNav: FC = () => {
         isVisible ? "translate-y-0" : "translate-y-full"
       }`}
     >
-      <div className="max-w-5xl mx-auto flex items-center justify-around py-2">
+      <div className="max-w-lg mx-auto flex items-center justify-around py-2">
         {visibleItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = isActive ? item.activeIcon : item.icon;
@@ -90,7 +94,7 @@ const BottomNav: FC = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className="flex flex-col items-center gap-0.5 px-4 py-1 min-w-[64px]"
+              className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px]"
             >
               <Icon
                 className={`text-2xl ${isActive ? "text-primary" : "text-gray-400"}`}

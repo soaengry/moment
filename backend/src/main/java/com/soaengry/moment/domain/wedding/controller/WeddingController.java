@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,14 +36,19 @@ public class WeddingController {
     @PutMapping("/{weddingId}")
     public ResponseEntity<WeddingResponse> updateWedding(
             @PathVariable Long weddingId,
-            @RequestBody WeddingRequest request) {
-        WeddingResponse response = weddingService.updateWedding(weddingId, request);
+            @RequestBody WeddingRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        WeddingResponse response = weddingService.updateWedding(weddingId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{weddingId}")
-    public ResponseEntity<Void> deleteWedding(@PathVariable Long weddingId) {
-        weddingService.deleteWedding(weddingId);
+    public ResponseEntity<Void> deleteWedding(
+            @PathVariable Long weddingId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteWedding(weddingId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -67,8 +73,10 @@ public class WeddingController {
     @PostMapping("/{weddingId}/couples")
     public ResponseEntity<CoupleResponse> createCouple(
             @PathVariable Long weddingId,
-            @RequestBody CoupleRequest request) {
-        CoupleResponse response = weddingService.createCouple(weddingId, request);
+            @RequestBody CoupleRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        CoupleResponse response = weddingService.createCouple(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -81,14 +89,19 @@ public class WeddingController {
     @PutMapping("/couples/{coupleId}")
     public ResponseEntity<CoupleResponse> updateCouple(
             @PathVariable Long coupleId,
-            @RequestBody CoupleRequest request) {
-        CoupleResponse response = weddingService.updateCouple(coupleId, request);
+            @RequestBody CoupleRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        CoupleResponse response = weddingService.updateCouple(coupleId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/couples/{coupleId}")
-    public ResponseEntity<Void> deleteCouple(@PathVariable Long coupleId) {
-        weddingService.deleteCouple(coupleId);
+    public ResponseEntity<Void> deleteCouple(
+            @PathVariable Long coupleId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteCouple(coupleId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -97,8 +110,10 @@ public class WeddingController {
     @PostMapping("/{weddingId}/schedules")
     public ResponseEntity<ScheduleResponse> createSchedule(
             @PathVariable Long weddingId,
-            @RequestBody ScheduleRequest request) {
-        ScheduleResponse response = weddingService.createSchedule(weddingId, request);
+            @RequestBody ScheduleRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        ScheduleResponse response = weddingService.createSchedule(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -111,14 +126,19 @@ public class WeddingController {
     @PutMapping("/schedules/{scheduleId}")
     public ResponseEntity<ScheduleResponse> updateSchedule(
             @PathVariable Long scheduleId,
-            @RequestBody ScheduleRequest request) {
-        ScheduleResponse response = weddingService.updateSchedule(scheduleId, request);
+            @RequestBody ScheduleRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        ScheduleResponse response = weddingService.updateSchedule(scheduleId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/schedules/{scheduleId}")
-    public ResponseEntity<Void> deleteSchedule(@PathVariable Long scheduleId) {
-        weddingService.deleteSchedule(scheduleId);
+    public ResponseEntity<Void> deleteSchedule(
+            @PathVariable Long scheduleId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteSchedule(scheduleId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -127,8 +147,10 @@ public class WeddingController {
     @PostMapping("/{weddingId}/account-groups")
     public ResponseEntity<AccountGroupResponse> createAccountGroup(
             @PathVariable Long weddingId,
-            @RequestBody AccountGroupRequest request) {
-        AccountGroupResponse response = weddingService.createAccountGroup(weddingId, request);
+            @RequestBody AccountGroupRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        AccountGroupResponse response = weddingService.createAccountGroup(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -141,14 +163,19 @@ public class WeddingController {
     @PutMapping("/account-groups/{accountGroupId}")
     public ResponseEntity<AccountGroupResponse> updateAccountGroup(
             @PathVariable Long accountGroupId,
-            @RequestBody AccountGroupRequest request) {
-        AccountGroupResponse response = weddingService.updateAccountGroup(accountGroupId, request);
+            @RequestBody AccountGroupRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        AccountGroupResponse response = weddingService.updateAccountGroup(accountGroupId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/account-groups/{accountGroupId}")
-    public ResponseEntity<Void> deleteAccountGroup(@PathVariable Long accountGroupId) {
-        weddingService.deleteAccountGroup(accountGroupId);
+    public ResponseEntity<Void> deleteAccountGroup(
+            @PathVariable Long accountGroupId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteAccountGroup(accountGroupId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -157,8 +184,10 @@ public class WeddingController {
     @PostMapping("/account-groups/{accountGroupId}/accounts")
     public ResponseEntity<AccountResponse> createAccount(
             @PathVariable Long accountGroupId,
-            @RequestBody AccountRequest request) {
-        AccountResponse response = weddingService.createAccount(accountGroupId, request);
+            @RequestBody AccountRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        AccountResponse response = weddingService.createAccount(accountGroupId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -171,14 +200,19 @@ public class WeddingController {
     @PutMapping("/accounts/{accountId}")
     public ResponseEntity<AccountResponse> updateAccount(
             @PathVariable Long accountId,
-            @RequestBody AccountRequest request) {
-        AccountResponse response = weddingService.updateAccount(accountId, request);
+            @RequestBody AccountRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        AccountResponse response = weddingService.updateAccount(accountId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/accounts/{accountId}")
-    public ResponseEntity<Void> deleteAccount(@PathVariable Long accountId) {
-        weddingService.deleteAccount(accountId);
+    public ResponseEntity<Void> deleteAccount(
+            @PathVariable Long accountId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteAccount(accountId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -187,8 +221,10 @@ public class WeddingController {
     @PostMapping("/{weddingId}/galleries")
     public ResponseEntity<GalleryResponse> createGallery(
             @PathVariable Long weddingId,
-            @RequestBody GalleryRequest request) {
-        GalleryResponse response = weddingService.createGallery(weddingId, request);
+            @RequestBody GalleryRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        GalleryResponse response = weddingService.createGallery(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -201,14 +237,19 @@ public class WeddingController {
     @PutMapping("/galleries/{galleryId}")
     public ResponseEntity<GalleryResponse> updateGallery(
             @PathVariable Long galleryId,
-            @RequestBody GalleryRequest request) {
-        GalleryResponse response = weddingService.updateGallery(galleryId, request);
+            @RequestBody GalleryRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        GalleryResponse response = weddingService.updateGallery(galleryId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/galleries/{galleryId}")
-    public ResponseEntity<Void> deleteGallery(@PathVariable Long galleryId) {
-        weddingService.deleteGallery(galleryId);
+    public ResponseEntity<Void> deleteGallery(
+            @PathVariable Long galleryId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteGallery(galleryId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -217,8 +258,10 @@ public class WeddingController {
     @PostMapping("/{weddingId}/transportation")
     public ResponseEntity<TransportationResponse> createTransportation(
             @PathVariable Long weddingId,
-            @RequestBody TransportationRequest request) {
-        TransportationResponse response = weddingService.createTransportation(weddingId, request);
+            @RequestBody TransportationRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        TransportationResponse response = weddingService.createTransportation(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -231,14 +274,19 @@ public class WeddingController {
     @PutMapping("/transportation/{transportationId}")
     public ResponseEntity<TransportationResponse> updateTransportation(
             @PathVariable Long transportationId,
-            @RequestBody TransportationRequest request) {
-        TransportationResponse response = weddingService.updateTransportation(transportationId, request);
+            @RequestBody TransportationRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        TransportationResponse response = weddingService.updateTransportation(transportationId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/transportation/{transportationId}")
-    public ResponseEntity<Void> deleteTransportation(@PathVariable Long transportationId) {
-        weddingService.deleteTransportation(transportationId);
+    public ResponseEntity<Void> deleteTransportation(
+            @PathVariable Long transportationId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteTransportation(transportationId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -247,8 +295,10 @@ public class WeddingController {
     @PostMapping("/{weddingId}/accommodations")
     public ResponseEntity<AccommodationResponse> createAccommodation(
             @PathVariable Long weddingId,
-            @RequestBody AccommodationRequest request) {
-        AccommodationResponse response = weddingService.createAccommodation(weddingId, request);
+            @RequestBody AccommodationRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        AccommodationResponse response = weddingService.createAccommodation(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -261,14 +311,19 @@ public class WeddingController {
     @PutMapping("/accommodations/{accommodationId}")
     public ResponseEntity<AccommodationResponse> updateAccommodation(
             @PathVariable Long accommodationId,
-            @RequestBody AccommodationRequest request) {
-        AccommodationResponse response = weddingService.updateAccommodation(accommodationId, request);
+            @RequestBody AccommodationRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        AccommodationResponse response = weddingService.updateAccommodation(accommodationId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/accommodations/{accommodationId}")
-    public ResponseEntity<Void> deleteAccommodation(@PathVariable Long accommodationId) {
-        weddingService.deleteAccommodation(accommodationId);
+    public ResponseEntity<Void> deleteAccommodation(
+            @PathVariable Long accommodationId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteAccommodation(accommodationId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -277,8 +332,10 @@ public class WeddingController {
     @PostMapping("/{weddingId}/announcements")
     public ResponseEntity<AnnouncementResponse> createAnnouncement(
             @PathVariable Long weddingId,
-            @RequestBody AnnouncementRequest request) {
-        AnnouncementResponse response = weddingService.createAnnouncement(weddingId, request);
+            @RequestBody AnnouncementRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        AnnouncementResponse response = weddingService.createAnnouncement(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -291,14 +348,19 @@ public class WeddingController {
     @PutMapping("/announcements/{announcementId}")
     public ResponseEntity<AnnouncementResponse> updateAnnouncement(
             @PathVariable Long announcementId,
-            @RequestBody AnnouncementRequest request) {
-        AnnouncementResponse response = weddingService.updateAnnouncement(announcementId, request);
+            @RequestBody AnnouncementRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        AnnouncementResponse response = weddingService.updateAnnouncement(announcementId, userId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/announcements/{announcementId}")
-    public ResponseEntity<Void> deleteAnnouncement(@PathVariable Long announcementId) {
-        weddingService.deleteAnnouncement(announcementId);
+    public ResponseEntity<Void> deleteAnnouncement(
+            @PathVariable Long announcementId,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        weddingService.deleteAnnouncement(announcementId, userId);
         return ResponseEntity.noContent().build();
     }
 }

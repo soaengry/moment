@@ -117,3 +117,6 @@ jwt:
 app:
   password-reset-token-expiration: 3600000
   max-devices-per-user: 5
+  
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY}
