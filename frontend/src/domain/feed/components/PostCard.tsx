@@ -1,4 +1,4 @@
-import { type FC, useState } from "react";
+import { type FC, useState, useRef } from "react";
 import {
   IoHeart,
   IoHeartOutline,
@@ -11,6 +11,7 @@ import {
 } from "react-icons/io5";
 import type { PostResponse } from "../types";
 import { feedApi } from "../api/feedApi";
+import ImageViewer from "./ImageViewer";
 
 interface Props {
   post: PostResponse;
@@ -27,6 +28,13 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
   const [bookmarked, setBookmarked] = useState(post.isBookmarked);
   const [showMenu, setShowMenu] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
+
+  // 스와이프 상태
+  const [swipeX, setSwipeX] = useState(0);
+  const startXRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const isSwipingRef = useRef(false);
 
   const isOwner = currentUserId === post.author.id;
 
@@ -71,6 +79,55 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
     const days = Math.floor(hours / 24);
     if (days < 30) return `${days}일`;
     return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  };
+
+  // 이미지 스와이프 핸들러
+  const handleImageTouchStart = (e: React.TouchEvent) => {
+    startXRef.current = e.touches[0].clientX;
+    isDraggingRef.current = true;
+    isSwipingRef.current = false;
+    setSwipeX(0);
+  };
+
+  const handleImageTouchMove = (e: React.TouchEvent) => {
+    if (!isDraggingRef.current) return;
+    const diff = e.touches[0].clientX - startXRef.current;
+
+    if (Math.abs(diff) > 10) {
+      isSwipingRef.current = true;
+    }
+
+    // 경계 제한: 저항감 부여
+    if (imageIndex === 0 && diff > 0) {
+      setSwipeX(diff * 0.3);
+      return;
+    }
+    if (imageIndex === post.imageUrls.length - 1 && diff < 0) {
+      setSwipeX(diff * 0.3);
+      return;
+    }
+
+    setSwipeX(diff);
+  };
+
+  const handleImageTouchEnd = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+
+    const threshold = 50;
+    if (swipeX < -threshold && imageIndex < post.imageUrls.length - 1) {
+      setImageIndex((prev) => prev + 1);
+    } else if (swipeX > threshold && imageIndex > 0) {
+      setImageIndex((prev) => prev - 1);
+    }
+
+    setSwipeX(0);
+  };
+
+  const handleImageClick = () => {
+    // 스와이프 중이면 클릭 무시
+    if (isSwipingRef.current) return;
+    setViewerOpen(true);
   };
 
   return (
@@ -127,12 +184,30 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
       {/* Images */}
       {post.imageUrls.length > 0 && (
         <div className="mt-3 relative">
-          <div className="aspect-square bg-gray-50 overflow-hidden">
-            <img
-              src={post.imageUrls[imageIndex]}
-              alt=""
-              className="w-full h-full object-cover"
-            />
+          <div
+            className="aspect-square bg-gray-50 overflow-hidden"
+            onTouchStart={handleImageTouchStart}
+            onTouchMove={handleImageTouchMove}
+            onTouchEnd={handleImageTouchEnd}
+          >
+            <div
+              className="flex h-full"
+              style={{
+                transform: `translateX(calc(-${imageIndex * 100}% + ${swipeX}px))`,
+                transition: isDraggingRef.current ? "none" : "transform 300ms ease-out",
+              }}
+            >
+              {post.imageUrls.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt=""
+                  className="w-full h-full object-cover cursor-pointer select-none flex-shrink-0"
+                  onClick={handleImageClick}
+                  draggable={false}
+                />
+              ))}
+            </div>
           </div>
           {post.imageUrls.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
@@ -179,6 +254,15 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
           )}
         </button>
       </div>
+
+      {/* Image Viewer Modal */}
+      {viewerOpen && (
+        <ImageViewer
+          imageUrls={post.imageUrls}
+          initialIndex={imageIndex}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
     </div>
   );
 };

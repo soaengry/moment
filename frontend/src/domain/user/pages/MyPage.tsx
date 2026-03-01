@@ -16,6 +16,7 @@ import {
   IoLogOutOutline,
   IoChevronForward,
   IoCalendarOutline,
+  IoTimeOutline,
 } from "react-icons/io5";
 
 const MyPage: FC = () => {
@@ -67,6 +68,11 @@ const MyPage: FC = () => {
   if (!user) return null;
 
   const menuItems = [
+    {
+      icon: IoTimeOutline,
+      label: "이전 일정",
+      path: "/my-page/past-schedules",
+    },
     {
       icon: IoDocumentTextOutline,
       label: "내가 작성한 게시글",
@@ -132,17 +138,9 @@ const MyPage: FC = () => {
 
           {/* 다가오는 일정 */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
-              <div className="flex items-center gap-2">
-                <IoCalendarOutline size={18} className="text-primary" />
-                <span className="text-sm font-semibold text-gray-700">다가오는 일정</span>
-              </div>
-              <button
-                onClick={() => navigate("/my-schedule")}
-                className="text-xs text-primary font-medium"
-              >
-                전체보기
-              </button>
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-50">
+              <IoCalendarOutline size={18} className="text-primary" />
+              <span className="text-sm font-semibold text-gray-700">다가오는 일정</span>
             </div>
             {upcomingSchedules.length > 0 ? (
               upcomingSchedules.map((schedule) => (

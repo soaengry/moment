@@ -15,6 +15,7 @@ import {
   MyBookmarksPage,
   MyLikesPage,
   MyCommentsPage,
+  PastSchedulesPage,
 } from "../../domain/user/pages";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
@@ -133,6 +134,14 @@ const AppRouter: FC = () => {
           element={
             <ProtectedRoute>
               <MyLikesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-page/past-schedules"
+          element={
+            <ProtectedRoute>
+              <PastSchedulesPage />
             </ProtectedRoute>
           }
         />
