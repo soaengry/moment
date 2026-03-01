@@ -2,6 +2,7 @@ package com.soaengry.moment.domain.wedding.service;
 
 import com.soaengry.moment.domain.attendance.entity.Attendance;
 import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
+import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.wedding.dto.request.*;
 import com.soaengry.moment.domain.wedding.dto.response.*;
@@ -42,6 +43,33 @@ public class WeddingService {
         return coord;
     }
 
+    /**
+     * 웨딩 접근 권한 검증: ADMIN이거나 해당 웨딩의 커플(이메일 매칭)이면 통과
+     */
+    private void validateWeddingAccess(Long weddingId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_UNAUTHORIZED));
+
+        if (user.getRole() == User.Role.ADMIN) {
+            return;
+        }
+
+        if (coupleRepository.existsByWeddingIdAndEmail(weddingId, user.getEmail())) {
+            return;
+        }
+
+        throw new WeddingException(WeddingErrorCode.WEDDING_UNAUTHORIZED);
+    }
+
+    /**
+     * Couple의 이메일로 User를 조회하여 userId 반환
+     */
+    private Long resolveCoupleUserId(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getId)
+                .orElse(null);
+    }
+
     @Transactional
     public WeddingResponse createWedding(WeddingRequest request) {
         KakaoGeocodingService.Coordinate coord = resolveCoordinate(request.venueAddress());
@@ -57,7 +85,9 @@ public class WeddingService {
     }
 
     @Transactional
-    public WeddingResponse updateWedding(Long weddingId, WeddingRequest request) {
+    public WeddingResponse updateWedding(Long weddingId, Long userId, WeddingRequest request) {
+        validateWeddingAccess(weddingId, userId);
+
         Wedding wedding = weddingRepository.findById(weddingId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
 
@@ -81,7 +111,9 @@ public class WeddingService {
     }
 
     @Transactional
-    public void deleteWedding(Long weddingId) {
+    public void deleteWedding(Long weddingId, Long userId) {
+        validateWeddingAccess(weddingId, userId);
+
         if (!weddingRepository.existsById(weddingId)) {
             throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
         }
@@ -98,10 +130,8 @@ public class WeddingService {
 
     // Couple CRUD
     @Transactional
-    public CoupleResponse createCouple(Long weddingId, CoupleRequest request) {
-        if (!weddingRepository.existsById(weddingId)) {
-            throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
-        }
+    public CoupleResponse createCouple(Long weddingId, Long userId, CoupleRequest request) {
+        validateWeddingAccess(weddingId, userId);
 
         Wedding wedding = weddingRepository.findById(weddingId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
@@ -116,20 +146,22 @@ public class WeddingService {
             }
         });
 
-        return CoupleResponse.from(saved);
+        return CoupleResponse.from(saved, resolveCoupleUserId(saved.getEmail()));
     }
 
     public List<CoupleResponse> getCouplesByWedding(Long weddingId) {
         List<Couple> couples = coupleRepository.findByWeddingIdOrderByRole(weddingId);
         return couples.stream()
-                .map(CoupleResponse::from)
+                .map(couple -> CoupleResponse.from(couple, resolveCoupleUserId(couple.getEmail())))
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public CoupleResponse updateCouple(Long coupleId, CoupleRequest request) {
+    public CoupleResponse updateCouple(Long coupleId, Long userId, CoupleRequest request) {
         Couple couple = coupleRepository.findById(coupleId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.COUPLE_NOT_FOUND));
+
+        validateWeddingAccess(couple.getWedding().getId(), userId);
 
         couple.updateName(request.name());
         couple.updateFather(request.fatherName(), request.isFatherAlive());
@@ -138,23 +170,23 @@ public class WeddingService {
         couple.updateProfileImageUrl(request.profileImageUrl());
         couple.updateIntroduction(request.introduction());
 
-        return CoupleResponse.from(couple);
+        return CoupleResponse.from(couple, resolveCoupleUserId(couple.getEmail()));
     }
 
     @Transactional
-    public void deleteCouple(Long coupleId) {
-        if (!coupleRepository.existsById(coupleId)) {
-            throw new WeddingException(WeddingErrorCode.COUPLE_NOT_FOUND);
-        }
+    public void deleteCouple(Long coupleId, Long userId) {
+        Couple couple = coupleRepository.findById(coupleId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.COUPLE_NOT_FOUND));
+
+        validateWeddingAccess(couple.getWedding().getId(), userId);
+
         coupleRepository.deleteById(coupleId);
     }
 
     // Schedule CRUD
     @Transactional
-    public ScheduleResponse createSchedule(Long weddingId, ScheduleRequest request) {
-        if (!weddingRepository.existsById(weddingId)) {
-            throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
-        }
+    public ScheduleResponse createSchedule(Long weddingId, Long userId, ScheduleRequest request) {
+        validateWeddingAccess(weddingId, userId);
 
         Schedule schedule = request.toEntity(weddingId);
         Schedule saved = scheduleRepository.save(schedule);
@@ -169,9 +201,11 @@ public class WeddingService {
     }
 
     @Transactional
-    public ScheduleResponse updateSchedule(Long scheduleId, ScheduleRequest request) {
+    public ScheduleResponse updateSchedule(Long scheduleId, Long userId, ScheduleRequest request) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.SCHEDULE_NOT_FOUND));
+
+        validateWeddingAccess(schedule.getWeddingId(), userId);
 
         schedule.update(
                 request.time(),
@@ -184,19 +218,19 @@ public class WeddingService {
     }
 
     @Transactional
-    public void deleteSchedule(Long scheduleId) {
-        if (!scheduleRepository.existsById(scheduleId)) {
-            throw new WeddingException(WeddingErrorCode.SCHEDULE_NOT_FOUND);
-        }
+    public void deleteSchedule(Long scheduleId, Long userId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.SCHEDULE_NOT_FOUND));
+
+        validateWeddingAccess(schedule.getWeddingId(), userId);
+
         scheduleRepository.deleteById(scheduleId);
     }
 
     // AccountGroup CRUD
     @Transactional
-    public AccountGroupResponse createAccountGroup(Long weddingId, AccountGroupRequest request) {
-        if (!weddingRepository.existsById(weddingId)) {
-            throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
-        }
+    public AccountGroupResponse createAccountGroup(Long weddingId, Long userId, AccountGroupRequest request) {
+        validateWeddingAccess(weddingId, userId);
 
         long count = accountGroupRepository.countByWeddingId(weddingId);
         if (count >= 4) {
@@ -216,9 +250,11 @@ public class WeddingService {
     }
 
     @Transactional
-    public AccountGroupResponse updateAccountGroup(Long accountGroupId, AccountGroupRequest request) {
+    public AccountGroupResponse updateAccountGroup(Long accountGroupId, Long userId, AccountGroupRequest request) {
         AccountGroup accountGroup = accountGroupRepository.findById(accountGroupId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_NOT_FOUND));
+
+        validateWeddingAccess(accountGroup.getWeddingId(), userId);
 
         accountGroup.update(
                 request.side(),
@@ -230,19 +266,22 @@ public class WeddingService {
     }
 
     @Transactional
-    public void deleteAccountGroup(Long accountGroupId) {
-        if (!accountGroupRepository.existsById(accountGroupId)) {
-            throw new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_NOT_FOUND);
-        }
+    public void deleteAccountGroup(Long accountGroupId, Long userId) {
+        AccountGroup accountGroup = accountGroupRepository.findById(accountGroupId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_NOT_FOUND));
+
+        validateWeddingAccess(accountGroup.getWeddingId(), userId);
+
         accountGroupRepository.deleteById(accountGroupId);
     }
 
     // Account CRUD
     @Transactional
-    public AccountResponse createAccount(Long accountGroupId, AccountRequest request) {
-        if (!accountGroupRepository.existsById(accountGroupId)) {
-            throw new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_NOT_FOUND);
-        }
+    public AccountResponse createAccount(Long accountGroupId, Long userId, AccountRequest request) {
+        AccountGroup accountGroup = accountGroupRepository.findById(accountGroupId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_NOT_FOUND));
+
+        validateWeddingAccess(accountGroup.getWeddingId(), userId);
 
         long count = accountRepository.countByAccountGroupId(accountGroupId);
         if (count >= 3) {
@@ -262,9 +301,14 @@ public class WeddingService {
     }
 
     @Transactional
-    public AccountResponse updateAccount(Long accountId, AccountRequest request) {
+    public AccountResponse updateAccount(Long accountId, Long userId, AccountRequest request) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOUNT_NOT_FOUND));
+
+        AccountGroup accountGroup = accountGroupRepository.findById(account.getAccountGroupId())
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_NOT_FOUND));
+
+        validateWeddingAccess(accountGroup.getWeddingId(), userId);
 
         account.update(
                 request.bankName(),
@@ -279,19 +323,22 @@ public class WeddingService {
     }
 
     @Transactional
-    public void deleteAccount(Long accountId) {
-        if (!accountRepository.existsById(accountId)) {
-            throw new WeddingException(WeddingErrorCode.ACCOUNT_NOT_FOUND);
-        }
+    public void deleteAccount(Long accountId, Long userId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOUNT_NOT_FOUND));
+
+        AccountGroup accountGroup = accountGroupRepository.findById(account.getAccountGroupId())
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_NOT_FOUND));
+
+        validateWeddingAccess(accountGroup.getWeddingId(), userId);
+
         accountRepository.deleteById(accountId);
     }
 
     // Gallery CRUD
     @Transactional
-    public GalleryResponse createGallery(Long weddingId, GalleryRequest request) {
-        if (!weddingRepository.existsById(weddingId)) {
-            throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
-        }
+    public GalleryResponse createGallery(Long weddingId, Long userId, GalleryRequest request) {
+        validateWeddingAccess(weddingId, userId);
 
         Gallery gallery = request.toEntity(weddingId);
         Gallery saved = galleryRepository.save(gallery);
@@ -306,9 +353,11 @@ public class WeddingService {
     }
 
     @Transactional
-    public GalleryResponse updateGallery(Long galleryId, GalleryRequest request) {
+    public GalleryResponse updateGallery(Long galleryId, Long userId, GalleryRequest request) {
         Gallery gallery = galleryRepository.findById(galleryId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.GALLERY_NOT_FOUND));
+
+        validateWeddingAccess(gallery.getWeddingId(), userId);
 
         gallery.update(
                 request.caption(),
@@ -319,19 +368,19 @@ public class WeddingService {
     }
 
     @Transactional
-    public void deleteGallery(Long galleryId) {
-        if (!galleryRepository.existsById(galleryId)) {
-            throw new WeddingException(WeddingErrorCode.GALLERY_NOT_FOUND);
-        }
+    public void deleteGallery(Long galleryId, Long userId) {
+        Gallery gallery = galleryRepository.findById(galleryId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.GALLERY_NOT_FOUND));
+
+        validateWeddingAccess(gallery.getWeddingId(), userId);
+
         galleryRepository.deleteById(galleryId);
     }
 
     // Transportation CRUD
     @Transactional
-    public TransportationResponse createTransportation(Long weddingId, TransportationRequest request) {
-        if (!weddingRepository.existsById(weddingId)) {
-            throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
-        }
+    public TransportationResponse createTransportation(Long weddingId, Long userId, TransportationRequest request) {
+        validateWeddingAccess(weddingId, userId);
 
         Transportation transportation = request.toEntity(weddingId);
         Transportation saved = transportationRepository.save(transportation);
@@ -346,9 +395,11 @@ public class WeddingService {
     }
 
     @Transactional
-    public TransportationResponse updateTransportation(Long transportationId, TransportationRequest request) {
+    public TransportationResponse updateTransportation(Long transportationId, Long userId, TransportationRequest request) {
         Transportation transportation = transportationRepository.findById(transportationId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.TRANSPORTATION_NOT_FOUND));
+
+        validateWeddingAccess(transportation.getWeddingId(), userId);
 
         transportation.update(
                 request.type(),
@@ -361,19 +412,19 @@ public class WeddingService {
     }
 
     @Transactional
-    public void deleteTransportation(Long transportationId) {
-        if (!transportationRepository.existsById(transportationId)) {
-            throw new WeddingException(WeddingErrorCode.TRANSPORTATION_NOT_FOUND);
-        }
+    public void deleteTransportation(Long transportationId, Long userId) {
+        Transportation transportation = transportationRepository.findById(transportationId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.TRANSPORTATION_NOT_FOUND));
+
+        validateWeddingAccess(transportation.getWeddingId(), userId);
+
         transportationRepository.deleteById(transportationId);
     }
 
     // Accommodation CRUD
     @Transactional
-    public AccommodationResponse createAccommodation(Long weddingId, AccommodationRequest request) {
-        if (!weddingRepository.existsById(weddingId)) {
-            throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
-        }
+    public AccommodationResponse createAccommodation(Long weddingId, Long userId, AccommodationRequest request) {
+        validateWeddingAccess(weddingId, userId);
 
         Accommodation accommodation = request.toEntity(weddingId);
         Accommodation saved = accommodationRepository.save(accommodation);
@@ -388,9 +439,11 @@ public class WeddingService {
     }
 
     @Transactional
-    public AccommodationResponse updateAccommodation(Long accommodationId, AccommodationRequest request) {
+    public AccommodationResponse updateAccommodation(Long accommodationId, Long userId, AccommodationRequest request) {
         Accommodation accommodation = accommodationRepository.findById(accommodationId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOMMODATION_NOT_FOUND));
+
+        validateWeddingAccess(accommodation.getWeddingId(), userId);
 
         accommodation.update(
                 request.name(),
@@ -405,19 +458,19 @@ public class WeddingService {
     }
 
     @Transactional
-    public void deleteAccommodation(Long accommodationId) {
-        if (!accommodationRepository.existsById(accommodationId)) {
-            throw new WeddingException(WeddingErrorCode.ACCOMMODATION_NOT_FOUND);
-        }
+    public void deleteAccommodation(Long accommodationId, Long userId) {
+        Accommodation accommodation = accommodationRepository.findById(accommodationId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOMMODATION_NOT_FOUND));
+
+        validateWeddingAccess(accommodation.getWeddingId(), userId);
+
         accommodationRepository.deleteById(accommodationId);
     }
 
     // Announcement CRUD
     @Transactional
-    public AnnouncementResponse createAnnouncement(Long weddingId, AnnouncementRequest request) {
-        if (!weddingRepository.existsById(weddingId)) {
-            throw new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND);
-        }
+    public AnnouncementResponse createAnnouncement(Long weddingId, Long userId, AnnouncementRequest request) {
+        validateWeddingAccess(weddingId, userId);
 
         Announcement announcement = request.toEntity(weddingId);
         Announcement saved = announcementRepository.save(announcement);
@@ -432,9 +485,11 @@ public class WeddingService {
     }
 
     @Transactional
-    public AnnouncementResponse updateAnnouncement(Long announcementId, AnnouncementRequest request) {
+    public AnnouncementResponse updateAnnouncement(Long announcementId, Long userId, AnnouncementRequest request) {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.ANNOUNCEMENT_NOT_FOUND));
+
+        validateWeddingAccess(announcement.getWeddingId(), userId);
 
         announcement.update(
                 request.title(),
@@ -446,10 +501,12 @@ public class WeddingService {
     }
 
     @Transactional
-    public void deleteAnnouncement(Long announcementId) {
-        if (!announcementRepository.existsById(announcementId)) {
-            throw new WeddingException(WeddingErrorCode.ANNOUNCEMENT_NOT_FOUND);
-        }
+    public void deleteAnnouncement(Long announcementId, Long userId) {
+        Announcement announcement = announcementRepository.findById(announcementId)
+                .orElseThrow(() -> new WeddingException(WeddingErrorCode.ANNOUNCEMENT_NOT_FOUND));
+
+        validateWeddingAccess(announcement.getWeddingId(), userId);
+
         announcementRepository.deleteById(announcementId);
     }
 

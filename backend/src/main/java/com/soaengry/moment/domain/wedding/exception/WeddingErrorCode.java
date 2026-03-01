@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum WeddingErrorCode {
     // Wedding
     WEDDING_NOT_FOUND("결혼식 정보를 찾을 수 없습니다"),
+    WEDDING_UNAUTHORIZED("해당 웨딩에 대한 권한이 없습니다"),
 
     // Couple
     COUPLE_NOT_FOUND("신랑신부 정보를 찾을 수 없습니다"),
