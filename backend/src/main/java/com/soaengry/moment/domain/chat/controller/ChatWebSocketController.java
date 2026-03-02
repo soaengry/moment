@@ -6,7 +6,6 @@ import com.soaengry.moment.domain.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
@@ -23,14 +22,6 @@ public class ChatWebSocketController {
     public void sendMessage(@Payload ChatMessageRequest request, Principal principal) {
         Long userId = Long.parseLong(principal.getName());
         ChatMessageResponse response = chatService.saveMessage(userId, request);
-        messagingTemplate.convertAndSend("/topic/chat/" + request.roomId(), response);
-    }
-
-    @MessageMapping("/chat.join")
-    public void joinRoom(@Payload ChatMessageRequest request, Principal principal) {
-        Long userId = Long.parseLong(principal.getName());
-        ChatMessageRequest joinRequest = new ChatMessageRequest(request.roomId(), request.content(), "JOIN");
-        ChatMessageResponse response = chatService.saveMessage(userId, joinRequest);
-        messagingTemplate.convertAndSend("/topic/chat/" + request.roomId(), response);
+        messagingTemplate.convertAndSend("/topic/chat/wedding/" + request.weddingId(), response);
     }
 }

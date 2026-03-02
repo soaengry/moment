@@ -119,6 +119,38 @@ public class S3Service {
     }
 
     /**
+     * 채팅 이미지 업로드
+     */
+    public String uploadChatImage(MultipartFile file) {
+        validateImageFile(file);
+
+        try {
+            String fileName = generateFileName(file.getOriginalFilename());
+            String key = "chat/" + fileName;
+
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .contentType(file.getContentType())
+                    .contentLength(file.getSize())
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
+
+            String fileUrl = String.format("https://%s.s3.%s.amazonaws.com/%s",
+                    bucketName, region, key);
+
+            log.info("S3 채팅 이미지 업로드 완료 - 파일명: {}, URL: {}", fileName, fileUrl);
+
+            return fileUrl;
+
+        } catch (IOException e) {
+            log.error("S3 채팅 이미지 업로드 실패", e);
+            throw new CustomException(ErrorCode.FILE_UPLOAD_FAILED, "파일 업로드에 실패했습니다");
+        }
+    }
+
+    /**
      * 이미지 파일 검증
      */
     private void validateImageFile(MultipartFile file) {

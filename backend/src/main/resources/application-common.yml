@@ -23,6 +23,10 @@ spring:
     open-in-view: false
 
   data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: ${MONGODB_DATABASE:moment}
+
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
@@ -106,8 +110,7 @@ spring:
         secret-key: ${AWS_SECRET_KEY}
       region:
         static: ${AWS_REGION}
-      stack:
-        auto: false
+
 
 jwt:
   secret: ${JWT_SECRET}
@@ -115,8 +118,7 @@ jwt:
   refresh-token-expiration: 604800000
 
 app:
-  password-reset-token-expiration: 3600000
   max-devices-per-user: 5
-  
+
 kakao:
   rest-api-key: ${KAKAO_REST_API_KEY}
