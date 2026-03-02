@@ -27,7 +27,7 @@ import {
   WeddingEditPage,
 } from "../../domain/wedding/pages";
 import { FeedPage } from "../../domain/feed/pages";
-import { ChatPage, ChatRoomPage } from "../../domain/chat/pages";
+import { ChatPage } from "../../domain/chat/pages";
 import MySchedulePage from "../../domain/schedule/pages/MySchedulePage";
 
 const AppRouter: FC = () => {
@@ -81,19 +81,7 @@ const AppRouter: FC = () => {
         />
         <Route
           path="/wedding/:invitationId/chat"
-          element={
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/wedding/:invitationId/chat/:roomId"
-          element={
-            <ProtectedRoute>
-              <ChatRoomPage />
-            </ProtectedRoute>
-          }
+          element={<ChatPage />}
         />
         <Route
           path="/my-schedule"

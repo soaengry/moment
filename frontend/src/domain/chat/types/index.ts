@@ -1,24 +1,19 @@
-export interface ChatRoom {
-  id: number;
-  weddingId: number;
-  name: string;
-  createdAt: string;
-}
-
 export interface ChatMessage {
-  id: number;
-  roomId: number;
+  id: string;
+  weddingId: number;
   userId: number;
   nickname: string;
   profileImageUrl: string | null;
   content: string;
-  type: "CHAT" | "JOIN" | "LEAVE";
+  imageUrl: string | null;
+  type: "CHAT" | "IMAGE";
   createdAt: string;
 }
 
 export interface ChatMessageRequest {
-  roomId: number;
+  weddingId: number;
   content: string;
+  imageUrl?: string;
   type?: string;
 }
 

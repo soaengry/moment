@@ -1,7 +1,8 @@
 package com.soaengry.moment.domain.chat.dto.request;
 
 public record ChatMessageRequest(
-        Long roomId,
+        Long weddingId,
         String content,
+        String imageUrl,
         String type
 ) {}

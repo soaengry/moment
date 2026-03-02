@@ -1,58 +1,57 @@
 package com.soaengry.moment.domain.chat.entity;
 
-import com.soaengry.moment.domain.user.entity.User;
-import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Entity
+@Document(collection = "chat_messages")
+@CompoundIndex(def = "{'weddingId': 1, 'createdAt': -1}")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "chat_messages")
 public class ChatMessage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_room_id", nullable = false)
-    private ChatRoom chatRoom;
+    private Long weddingId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Long userId;
 
-    @Column(nullable = false, length = 500)
+    private String nickname;
+
+    private String profileImageUrl;
+
     private String content;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private MessageType type = MessageType.CHAT;
+    private String imageUrl;
 
-    @Column(nullable = false, updatable = false)
+    private MessageType type;
+
     private LocalDateTime createdAt;
 
-    private ChatMessage(ChatRoom chatRoom, User user, String content, MessageType type) {
-        this.chatRoom = chatRoom;
-        this.user = user;
+    private ChatMessage(Long weddingId, Long userId, String nickname, String profileImageUrl,
+                        String content, String imageUrl, MessageType type) {
+        this.weddingId = weddingId;
+        this.userId = userId;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
         this.content = content;
+        this.imageUrl = imageUrl;
         this.type = type != null ? type : MessageType.CHAT;
-    }
-
-    public static ChatMessage create(ChatRoom chatRoom, User user, String content, MessageType type) {
-        return new ChatMessage(chatRoom, user, content, type);
-    }
-
-    @PrePersist
-    protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
+    public static ChatMessage create(Long weddingId, Long userId, String nickname, String profileImageUrl,
+                                     String content, String imageUrl, MessageType type) {
+        return new ChatMessage(weddingId, userId, nickname, profileImageUrl, content, imageUrl, type);
+    }
+
     public enum MessageType {
-        CHAT, JOIN, LEAVE
+        CHAT, IMAGE
     }
 }

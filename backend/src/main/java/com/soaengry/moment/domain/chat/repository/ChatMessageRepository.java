@@ -3,12 +3,9 @@ package com.soaengry.moment.domain.chat.repository;
 import com.soaengry.moment.domain.chat.entity.ChatMessage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
+public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
 
-    @Query("SELECT m FROM ChatMessage m JOIN FETCH m.user WHERE m.chatRoom.id = :roomId ORDER BY m.createdAt DESC")
-    Page<ChatMessage> findByRoomIdWithUser(@Param("roomId") Long roomId, Pageable pageable);
+    Page<ChatMessage> findByWeddingIdOrderByCreatedAtDesc(Long weddingId, Pageable pageable);
 }
