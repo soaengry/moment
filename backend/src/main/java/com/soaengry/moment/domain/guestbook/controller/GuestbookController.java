@@ -3,6 +3,8 @@ package com.soaengry.moment.domain.guestbook.controller;
 import com.soaengry.moment.domain.guestbook.dto.request.GuestbookRequest;
 import com.soaengry.moment.domain.guestbook.dto.response.GuestbookResponse;
 import com.soaengry.moment.domain.guestbook.service.GuestbookService;
+import com.soaengry.moment.global.common.ApiResponse;
+import com.soaengry.moment.global.common.SuccessCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,6 +44,15 @@ public class GuestbookController {
             @Valid @RequestBody GuestbookRequest request) {
         GuestbookResponse response = guestbookService.updateEntry(weddingId, entryId, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{entryId}/verify-password")
+    public ResponseEntity<ApiResponse<?>> verifyPassword(
+            @PathVariable Long weddingId,
+            @PathVariable Long entryId,
+            @RequestBody java.util.Map<String, String> body) {
+        guestbookService.verifyPassword(entryId, body.get("password"));
+        return ResponseEntity.ok(ApiResponse.ok(SuccessCode.OK, null));
     }
 
     @DeleteMapping("/{entryId}")
