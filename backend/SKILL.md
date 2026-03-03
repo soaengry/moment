@@ -14,10 +14,67 @@
 5. Service: `@Service`, `@Transactional`, `@RequiredArgsConstructor`
    - 읽기 전용 메서드는 `@Transactional(readOnly = true)`
 6. Controller: `@RestController`, `@RequestMapping("/api/{module}")`
-7. Exception: `{Module}ErrorCode` enum + `{Module}Exception` 클래스 생성
-8. `GlobalExceptionHandler`에 `@ExceptionHandler({Module}Exception.class)` 추가
+   - 반환 타입 `ResponseEntity<ApiResponse<?>>` 고정
+7. Exception: `{Module}ErrorCode` enum + `{Module}Exception` 클래스 생성 (아래 템플릿 참고)
+8. **`GlobalExceptionHandler`에 `@ExceptionHandler({Module}Exception.class)` 반드시 추가**
 
 **참고**: 기존 도메인(user, email, wedding) 구조를 참고.
+
+### ErrorCode enum 템플릿
+
+```java
+package com.soaengry.moment.domain.{module}.exception;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
+public enum {Module}ErrorCode {
+
+    // 네이밍 규칙에 따라 HttpStatus 자동 결정됨 (CLAUDE.md HttpStatus 매핑 표 참고)
+    {MODULE}_NOT_FOUND("~을(를) 찾을 수 없습니다"),           // → 404
+    DUPLICATE_{MODULE}("이미 존재하는 ~입니다"),               // → 409
+    AUTH_{MODULE}_DENIED("~에 대한 인증이 필요합니다"),        // → 401
+    {MODULE}_UNAUTHORIZED("~에 대한 권한이 없습니다"),         // → 403
+    VALIDATION_{MODULE}_INVALID("~의 입력값이 올바르지 않습니다"), // → 400
+    {MODULE}_LIMIT_EXCEEDED("~의 최대 개수를 초과했습니다");   // → 400
+
+    private final String message;
+}
+```
+
+### Exception 클래스 템플릿
+
+```java
+package com.soaengry.moment.domain.{module}.exception;
+
+import lombok.Getter;
+
+@Getter
+public class {Module}Exception extends RuntimeException {
+
+    private final {Module}ErrorCode errorCode;
+
+    public {Module}Exception({Module}ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
+}
+```
+
+### GlobalExceptionHandler 핸들러 등록 템플릿
+
+```java
+// GlobalExceptionHandler.java 에 추가
+@ExceptionHandler({Module}Exception.class)
+public ResponseEntity<ApiResponse<?>> handle{Module}Exception({Module}Exception e) {
+    log.warn("{Module} Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+    HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+    ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
+    return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
+}
+```
 
 ## 새 도메인의 DB 선택
 - **MySQL**: 사용자, 게시글, 방명록, 결혼식 정보 등 핵심 데이터
@@ -27,13 +84,20 @@
 ## 새 에러 코드 추가
 
 1. 해당 도메인의 `{Module}ErrorCode` enum에 추가
-2. 네이밍 규칙: `{카테고리}_{설명}` (예: `WEDDING_NOT_FOUND`, `ACCOUNT_LIMIT_EXCEEDED`)
-3. `GlobalExceptionHandler`의 HTTP 상태 매핑 확인:
-   - `AUTH*` → 401
-   - `DUPLICATE*` → 409
-   - `*NOT_FOUND` → 404
-   - `VALIDATION*`, `*LIMIT_EXCEEDED` → 400
-4. 새 카테고리 추가 시 `determineHttpStatus()` 메서드에 조건 추가
+2. 네이밍 규칙에 따라 HttpStatus 자동 결정:
+
+| 패턴 | HttpStatus |
+|------|-----------|
+| `AUTH*` | 401 Unauthorized |
+| `UNAUTHORIZED_ACCESS` | 401 Unauthorized |
+| `INVALID_PASSWORD` 또는 `*UNAUTHORIZED` (AUTH 제외) | 403 Forbidden |
+| `DUPLICATE*` | 409 Conflict |
+| `*NOT_FOUND` | 404 Not Found |
+| `VALIDATION*` | 400 Bad Request |
+| `*LIMIT_EXCEEDED` | 400 Bad Request |
+| 기타 | 400 Bad Request |
+
+3. 새 HttpStatus 분기가 필요하면 `GlobalExceptionHandler.determineHttpStatusFromCode()`에 조건 추가
 
 ## 새 API 엔드포인트 추가
 
@@ -120,8 +184,8 @@ public class Example {
 1. `{Module}ErrorCode`에 `*_LIMIT_EXCEEDED` 에러 코드 정의
 2. Service에서 count 조회 후 제한 검증
 3. 참고 사례:
-   - AccountGroup: 웨딩당 최대 3개
-   - Account: 그룹당 최대 2개
+   - AccountGroup: 웨딩당 최대 4개
+   - Account: 그룹당 최대 3개
    - Device: 사용자당 최대 5대
 
 ## 테스트 작성

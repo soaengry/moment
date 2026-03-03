@@ -1,7 +1,20 @@
 # Moment Backend
 
 Spring Boot 3.5.10 기반 웨딩 초대장 플랫폼 REST API.
-Java 17, Gradle, MySQL, Redis, AWS S3.
+
+## Tech Stack
+
+| 분류 | 기술 | 버전 |
+|------|------|------|
+| 언어 | Java | 17 |
+| 프레임워크 | Spring Boot | 3.5.10 |
+| 빌드 | Gradle | - |
+| 주 DB | MySQL | - |
+| 캐시/세션 | Redis | - |
+| 문서 DB | MongoDB | - (채팅) |
+| 파일 스토리지 | AWS S3 | - |
+| 인증 | JWT (HS256) + OAuth2 | jjwt 0.12.3 |
+| 테스트 | JUnit 5 + AssertJ + MockMvc | - |
 
 ## Quick Commands
 
@@ -33,19 +46,25 @@ com.soaengry.moment/
 │   │   ├── repository/     (EmailVerificationRepository)
 │   │   └── service/        (EmailService)
 │   │
-│   └── wedding/            # 웨딩 초대장 (핵심 도메인)
-│       ├── controller/     (WeddingController)
-│       ├── dto/
-│       │   ├── request/    (WeddingRequest, CoupleRequest, ScheduleRequest, etc.)
-│       │   └── response/   (WeddingResponse, WeddingInfoResponse, CoupleResponse, etc.)
-│       ├── entity/         (Wedding, Couple, Schedule, AccountGroup, Account,
-│       │                    Gallery, Transportation, Accommodation, Announcement)
-│       ├── exception/      (WeddingErrorCode, WeddingException)
-│       ├── repository/     (9개 리포지토리)
-│       └── service/        (WeddingService)
+│   ├── wedding/            # 웨딩 초대장 (핵심 도메인)
+│   │   ├── controller/     (WeddingController)
+│   │   ├── dto/
+│   │   │   ├── request/    (WeddingRequest, CoupleRequest, ScheduleRequest, etc.)
+│   │   │   └── response/   (WeddingResponse, WeddingInfoResponse, CoupleResponse, etc.)
+│   │   ├── entity/         (Wedding, Couple, Schedule, AccountGroup, Account,
+│   │   │                    Gallery, Transportation, Accommodation, Announcement)
+│   │   ├── exception/      (WeddingErrorCode, WeddingException)
+│   │   ├── repository/     (9개 리포지토리)
+│   │   └── service/        (WeddingService)
+│   │
+│   ├── guestbook/          # 방명록
+│   ├── attendance/         # 참석 관리
+│   ├── chat/               # 채팅 (WebSocket + MongoDB)
+│   ├── feed/               # 피드
+│   └── bank/               # 계좌 정보
 │
 └── global/
-    ├── common/             (ApiResponse)
+    ├── common/             (ApiResponse, SuccessCode)
     ├── config/             (SecurityConfig, CorsConfig, S3Config, RedisConfig, JwtProperties)
     ├── exception/          (CustomException, ErrorCode, FileException, GlobalExceptionHandler)
     ├── security/
@@ -70,23 +89,90 @@ com.soaengry.moment/
 - **Entity 메서드 패턴**: `create()` static 팩토리 + `update()` 인스턴스 메서드
 - **Audit 필드**: `@PrePersist`, `@PreUpdate`로 createdAt/updatedAt 자동 관리
 
+## ApiResponse 공통 응답 규칙
+
+모든 API는 `ApiResponse<T>`로 응답한다. 직접 객체를 반환하거나 다른 래퍼를 사용하지 않는다.
+
+```java
+// 구조
+ApiResponse<T> {
+    ApiStatus status;  // code(int) + message(String)
+    T data;            // null 이면 JSON에서 제외 (@JsonInclude(NON_NULL))
+}
+```
+
+**사용 패턴:**
+
+```java
+// 성공 응답 — SuccessCode enum 사용
+return ResponseEntity.ok(ApiResponse.ok(SuccessCode.CREATED, responseDto));
+
+// 에러 응답 — ErrorCode 사용 (GlobalExceptionHandler에서 자동 처리)
+throw new UserException(UserErrorCode.USER_NOT_FOUND);
+```
+
+**SuccessCode**: `global/common/SuccessCode` enum에 정의. 새 성공 코드 추가 시 여기에만 추가.
+
+**Controller 반환 타입**: 항상 `ResponseEntity<ApiResponse<?>>`.
+
 ## Exception System
 
-각 도메인은 자체 ErrorCode enum + Exception 클래스를 가짐:
+### 도메인별 ErrorCode + Exception 구조
 
-| 도메인 | ErrorCode | Exception | 코드 예시 |
-|--------|-----------|-----------|-----------|
-| user | `UserErrorCode` | `UserException` | AUTH_INVALID_CREDENTIALS, DUPLICATE_EMAIL, USER_NOT_FOUND |
-| email | `EmailErrorCode` | `EmailException` | EMAIL_SEND_FAILED |
-| wedding | `WeddingErrorCode` | `WeddingException` | WEDDING_NOT_FOUND, ACCOUNT_LIMIT_EXCEEDED |
-| global | `ErrorCode` | `CustomException`, `FileException` | FILE_UPLOAD_FAILED, FILE_SIZE_EXCEEDED |
+각 도메인은 `{Module}ErrorCode` enum + `{Module}Exception` 클래스 쌍으로 예외를 관리한다.
 
-**HTTP 상태 매핑** (GlobalExceptionHandler):
-- `AUTH*` → 401 Unauthorized
-- `DUPLICATE*` → 409 Conflict
-- `*NOT_FOUND` → 404 Not Found
-- `VALIDATION*`, `*LIMIT_EXCEEDED` → 400 Bad Request
-- 기타 → 500 Internal Server Error
+| 도메인 | ErrorCode enum | Exception 클래스 |
+|--------|---------------|-----------------|
+| user | `UserErrorCode` | `UserException` |
+| email | `EmailErrorCode` | `EmailException` |
+| wedding | `WeddingErrorCode` | `WeddingException` |
+| guestbook | `GuestbookErrorCode` | `GuestbookException` |
+| attendance | `AttendanceErrorCode` | `AttendanceException` |
+| feed | `FeedErrorCode` | `FeedException` |
+| chat | `ChatErrorCode` | `ChatException` |
+| global (파일) | `ErrorCode` (static 상수) | `FileException` |
+
+### HttpStatus 매핑 규칙 (GlobalExceptionHandler.determineHttpStatusFromCode)
+
+ErrorCode enum 이름(code) 패턴에 따라 HTTP 상태가 자동 결정된다:
+
+| 패턴 | HttpStatus | 예시 |
+|------|-----------|------|
+| `AUTH*` | **401 Unauthorized** | `AUTH_INVALID_CREDENTIALS`, `AUTH_TOKEN_EXPIRED` |
+| `UNAUTHORIZED_ACCESS` | **401 Unauthorized** | `UNAUTHORIZED_ACCESS` |
+| `INVALID_PASSWORD` 또는 `*UNAUTHORIZED` (AUTH 제외) | **403 Forbidden** | `INVALID_PASSWORD`, `WEDDING_UNAUTHORIZED` |
+| `DUPLICATE*` | **409 Conflict** | `DUPLICATE_EMAIL`, `DUPLICATE_NICKNAME` |
+| `*NOT_FOUND` | **404 Not Found** | `USER_NOT_FOUND`, `WEDDING_NOT_FOUND` |
+| `VALIDATION*` | **400 Bad Request** | `VALIDATION_INVALID_PASSWORD` |
+| `*LIMIT_EXCEEDED` | **400 Bad Request** | `ACCOUNT_LIMIT_EXCEEDED`, `IMAGE_LIMIT_EXCEEDED` |
+| 나머지 | **400 Bad Request** | `DUPLICATE_ATTENDANCE`, `GEOCODING_FAILED` |
+
+**특수 케이스:**
+- `EmailException` → 항상 **500 Internal Server Error** (이메일 발송 실패는 서버 오류)
+- `FileException` → `ErrorCode` 정적 상수에 명시된 HttpStatus 직접 사용 (`FILE_EMPTY` → 400, `FILE_UPLOAD_FAILED` → 500)
+
+### 새 ErrorCode 네이밍 규칙
+
+```
+{CATEGORY}_{DESCRIPTION}
+```
+
+- 패턴에 맞게 이름을 지으면 HttpStatus가 자동 결정됨
+- 새 HTTP 상태가 필요하면 `determineHttpStatusFromCode()`에 조건 추가
+
+### GlobalExceptionHandler 등록
+
+새 도메인 Exception 추가 시 반드시 `GlobalExceptionHandler`에 핸들러 메서드 등록:
+
+```java
+@ExceptionHandler({Module}Exception.class)
+public ResponseEntity<ApiResponse<?>> handle{Module}Exception({Module}Exception e) {
+    log.warn("{Module} Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+    HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+    ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
+    return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
+}
+```
 
 ## API Endpoints
 
@@ -149,6 +235,7 @@ com.soaengry.moment/
   - `user/service/` — AuthServiceTest, UserServiceTest, EmailServiceTest
   - `wedding/repository/` — 9개 리포지토리 테스트
   - `wedding/service/` — WeddingServiceTest
+- **테스트 작성 기준**: 성공 케이스 + 실패 케이스(예외) 필수 작성
 
 ## Environment Variables
 
@@ -192,12 +279,22 @@ GOOGLE_CLIENT_SECRET=
 
 ## Rules for AI Assistants
 
-- 새 도메인 모듈 추가 시 `domain/{module}/` 하위 구조를 따를 것
-- DTO는 반드시 Java Record 사용, `dto/request/`와 `dto/response/` 분리
-- 도메인별 ErrorCode enum + Exception 클래스 쌍으로 생성
-- 로그 메시지는 한국어 사용
-- 테스트는 Given-When-Then 패턴 + 한글 `@DisplayName`
+### 새 도메인 생성 시 필수 체크리스트
+
+1. `domain/{module}/` 하위에 controller, service, repository, entity, dto/request, dto/response, exception 패키지 생성
+2. Entity: `@Entity`, `@Getter`, `@Builder`, `@NoArgsConstructor(access = PROTECTED)` + `create()` static + `update()` 인스턴스 메서드
+3. DTO: 반드시 **Java Record** 사용, `dto/request/`와 `dto/response/` 분리
+4. Service: `@Service`, `@Transactional` (클래스 레벨), `@RequiredArgsConstructor`
+5. Controller: 반환 타입 `ResponseEntity<ApiResponse<?>>` 고정
+6. Exception: `{Module}ErrorCode` enum + `{Module}Exception` 클래스 생성
+7. **`GlobalExceptionHandler`에 `@ExceptionHandler({Module}Exception.class)` 핸들러 반드시 등록**
+8. ErrorCode 이름은 HttpStatus 매핑 패턴에 맞게 작명
+9. 로그 메시지는 한국어 사용
+10. 테스트: Given-When-Then 패턴 + 한글 `@DisplayName`, 성공/실패 케이스 모두 작성
+
+### 추가 주의사항
+
 - `open-in-view: false` 유지, lazy loading 주의
 - `ddl-auto: validate` 모드 — 스키마 변경 시 DB 직접 변경 필요
-- Entity에 `create()` static 메서드 + `update()` 인스턴스 메서드 패턴 사용
-- 비즈니스 제한은 Service 레이어에서 count 조회 후 검증
+- 비즈니스 제한은 Service 레이어에서 count 조회 후 검증 (`*_LIMIT_EXCEEDED` 에러 코드 사용)
+- 새 DB 선택: MySQL(핵심 데이터), MongoDB(채팅/실시간), Redis(캐시/세션)

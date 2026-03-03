@@ -18,6 +18,9 @@
 3. `AppRouter.tsx`에 라우트 추가
 4. 인증 필요 시 `ProtectedRoute`로 감싸기
 
+> ⚠️ **미사용 변수 금지**: import, 변수, 파라미터 선언 후 사용하지 않으면 즉시 삭제.
+> 모듈 추가 후 `npm run lint`로 반드시 확인.
+
 ## 새 페이지 추가
 
 1. `domain/{module}/pages/{PageName}.tsx` 생성 (FC 타입)
@@ -77,6 +80,9 @@
    }
    ```
 
+> ⚠️ **미사용 변수 금지**: `data`를 선언했으면 반드시 사용해야 한다.
+> 응답값을 사용하지 않을 때는 `await moduleApi.create(request)`로 변수 선언 없이 호출.
+
 ## 폼 컴포넌트 추가
 
 ```tsx
@@ -92,7 +98,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-// 2. 폼 훅 사용
+// 2. 폼 훅 사용 — 사용하지 않는 구조분해 항목은 선언하지 않음
 const { register, handleSubmit, formState: { errors, isSubmitting } } =
   useForm<FormData>({ resolver: zodResolver(formSchema) });
 
@@ -105,6 +111,9 @@ const handleEmailBlur = async () => {
   if (data.exists) setError("email", { message: "이미 사용 중인 이메일입니다" });
 };
 ```
+
+> ⚠️ `useForm`의 구조분해 시 실제로 사용하는 항목만 꺼낼 것.
+> 예: `isValid`를 꺼냈지만 사용 안 하면 삭제.
 
 ## Zustand 스토어 추가
 
@@ -127,7 +136,7 @@ export const useModuleStore = create<ModuleState>((set) => ({
   reset: () => set({ items: [], isLoading: false }),
 }));
 
-// 컴포넌트에서 선택적 구독
+// 컴포넌트에서 선택적 구독 — 사용하는 값만 구독
 const items = useModuleStore((s) => s.items);
 ```
 
@@ -135,7 +144,7 @@ const items = useModuleStore((s) => s.items);
 
 1. `src/global/components/{Component}.tsx` 생성
 2. Props 인터페이스 정의
-3. Tailwind 유틸리티 클래스로 스타일링
+3. Tailwind 유틸리티 클래스로 스타일링 (인라인 `style` 속성 금지)
 4. 커스텀 컬러는 `tailwind.config.js` 테마 참조:
    - `text-primary`, `bg-bgPrimary`, `text-rose`, `bg-error` 등
 
@@ -160,10 +169,10 @@ const handleUpload = async (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  // Content-Type을 설정하지 않음 (axios가 자동 설정)
   const { data } = await axiosInstance.patch("/api/users/me", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return data;
 };
 
 // 이미지 미리보기
@@ -202,3 +211,13 @@ useEffect(() => {
 - 인증됨 → children 렌더링
 - 미인증 + 로딩 중 → 로딩 표시
 - 미인증 + 로딩 완료 → `/login`으로 Navigate
+
+## 미사용 변수 체크리스트
+
+코드 작성 완료 후 아래를 확인한다:
+
+- [ ] 사용하지 않는 `import` 문 없음
+- [ ] 선언 후 참조하지 않는 `const` / `let` 변수 없음
+- [ ] 함수 파라미터 중 실제로 사용하지 않는 것 없음
+- [ ] `useForm`, `useState`, `useEffect` 등 훅에서 구조분해한 값 모두 사용
+- [ ] `npm run lint` 통과
