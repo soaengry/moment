@@ -84,6 +84,17 @@ public class GuestbookService {
         guestbookEntryRepository.delete(entry);
     }
 
+    // 비밀번호 검증 (비로그인 방명록 수정/삭제 전 확인용)
+    public void verifyPassword(Long entryId, String password) {
+        GuestbookEntry entry = guestbookEntryRepository.findById(entryId)
+                .orElseThrow(() -> new GuestbookException(GuestbookErrorCode.GUESTBOOK_ENTRY_NOT_FOUND));
+
+        if (entry.getPassword() == null || password == null
+                || !passwordEncoder.matches(password, entry.getPassword())) {
+            throw new GuestbookException(GuestbookErrorCode.INVALID_PASSWORD);
+        }
+    }
+
     // 수정: 로그인 본인 또는 비밀번호 일치 시 허용
     private void validateUpdateAccess(GuestbookEntry entry, Long weddingId, String password) {
         if (isCurrentUserAdmin()) return;
@@ -98,6 +109,11 @@ public class GuestbookService {
         if (entry.getPassword() != null && password != null
                 && passwordEncoder.matches(password, entry.getPassword())) {
             return;
+        }
+
+        // 비밀번호가 있는 항목인데 비밀번호가 틀린 경우
+        if (entry.getPassword() != null) {
+            throw new GuestbookException(GuestbookErrorCode.INVALID_PASSWORD);
         }
 
         throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);
@@ -124,6 +140,11 @@ public class GuestbookService {
         if (entry.getPassword() != null && password != null
                 && passwordEncoder.matches(password, entry.getPassword())) {
             return;
+        }
+
+        // 비밀번호가 있는 항목인데 비밀번호가 틀린 경우
+        if (entry.getPassword() != null) {
+            throw new GuestbookException(GuestbookErrorCode.INVALID_PASSWORD);
         }
 
         throw new GuestbookException(GuestbookErrorCode.UNAUTHORIZED_ACCESS);

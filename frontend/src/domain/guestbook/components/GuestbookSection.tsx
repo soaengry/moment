@@ -37,6 +37,8 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
     action: "edit" | "delete";
   } | null>(null);
   const [modalPassword, setModalPassword] = useState("");
+  const [modalError, setModalError] = useState("");
+  const [modalVerifying, setModalVerifying] = useState(false);
 
   const isHost = currentUserId !== null && hostUserIds.includes(currentUserId);
   const isAuthor = (entry: GuestbookEntry) =>
@@ -166,22 +168,36 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
   };
 
   // 비밀번호 모달 확인
-  const handleModalConfirm = () => {
+  const handleModalConfirm = async () => {
     if (!passwordModalAction || !modalPassword.trim()) return;
     const { entryId, action } = passwordModalAction;
+    const pw = modalPassword.trim();
+
+    setModalVerifying(true);
+    setModalError("");
+
+    try {
+      await guestbookApi.verifyPassword(weddingId, entryId, pw);
+    } catch {
+      setModalError("비밀번호가 일치하지 않습니다");
+      setModalVerifying(false);
+      return;
+    }
+
+    setModalVerifying(false);
+    setPasswordModalAction(null);
+    setModalPassword("");
+    setModalError("");
 
     if (action === "edit") {
       const entry = entries.find((e) => e.id === entryId);
       if (!entry) return;
       setEditingId(entryId);
       setEditContent(entry.content);
-      setEditPassword(modalPassword.trim());
+      setEditPassword(pw);
     } else {
-      void handleDelete(entryId, modalPassword.trim());
+      void handleDelete(entryId, pw);
     }
-
-    setPasswordModalAction(null);
-    setModalPassword("");
   };
 
   const formatDate = (dateStr: string) => {
@@ -377,24 +393,27 @@ const GuestbookSection: FC<Props> = ({ weddingId, currentUserId, hostUserIds }) 
               type="password"
               placeholder="비밀번호"
               value={modalPassword}
-              onChange={(e) => setModalPassword(e.target.value)}
+              onChange={(e) => { setModalPassword(e.target.value); setModalError(""); }}
               onKeyDown={(e) => e.key === "Enter" && handleModalConfirm()}
               autoFocus
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none mb-4"
+              className={`w-full text-sm border rounded-lg px-3 py-2 outline-none ${modalError ? "border-error" : "border-gray-200"}`}
             />
-            <div className="flex justify-end gap-2">
+            {modalError && (
+              <p className="text-xs text-error mt-1.5">{modalError}</p>
+            )}
+            <div className="flex justify-end gap-2 mt-4">
               <button
-                onClick={() => { setPasswordModalAction(null); setModalPassword(""); }}
+                onClick={() => { setPasswordModalAction(null); setModalPassword(""); setModalError(""); }}
                 className="text-xs text-gray-400 px-3 py-1.5"
               >
                 취소
               </button>
               <button
                 onClick={handleModalConfirm}
-                disabled={!modalPassword.trim()}
+                disabled={!modalPassword.trim() || modalVerifying}
                 className="text-xs text-white bg-primary px-4 py-1.5 rounded-full disabled:opacity-40"
               >
-                확인
+                {modalVerifying ? "확인 중..." : "확인"}
               </button>
             </div>
           </div>

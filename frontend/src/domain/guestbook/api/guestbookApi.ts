@@ -29,4 +29,8 @@ export const guestbookApi = {
     const params = password ? `?password=${encodeURIComponent(password)}` : "";
     await axiosInstance.delete(`/api/weddings/${weddingId}/guestbook/${entryId}${params}`);
   },
+
+  verifyPassword: async (weddingId: number, entryId: number, password: string): Promise<void> => {
+    await axiosInstance.post(`/api/weddings/${weddingId}/guestbook/${entryId}/verify-password`, { password });
+  },
 };
