@@ -25,7 +25,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI}
-      database: ${MONGODB_DATABASE:moment}
+      database: ${MONGODB_DATABASE}
 
     redis:
       host: ${REDIS_HOST}
