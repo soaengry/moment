@@ -1,9 +1,12 @@
 package com.soaengry.moment;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+
+import java.util.TimeZone;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = {
@@ -17,6 +20,11 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 })
 @EnableMongoRepositories(basePackages = "com.soaengry.moment.domain.chat.repository")
 public class MomentApplication {
+
+    @PostConstruct
+    void setTimeZone() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(MomentApplication.class, args);
