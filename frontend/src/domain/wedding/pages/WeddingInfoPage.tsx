@@ -120,7 +120,7 @@ const WeddingInfoPage: FC = () => {
           }
           weddingId={weddingId}
           invitationId={invitationId}
-          showSettings={showSettings}
+          showSettings={showSettings && activeTab === "info"}
         />
 
         {/* Tab content */}

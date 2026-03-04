@@ -100,9 +100,8 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
   const onFormSubmit = (values: FormValues) => {
     if (invitationIdDupError) return; // 중복이면 제출 막기
 
-    const weddingDate = new Date(
-      `${values.weddingDate}T${values.weddingTime || "00:00"}`,
-    ).toISOString();
+    // LocalDateTime 형식으로 전송 (타임존 변환 없이 KST 그대로)
+    const weddingDate = `${values.weddingDate}T${values.weddingTime || "00:00"}:00`;
 
     const request: WeddingRequest = {
       title: values.title,

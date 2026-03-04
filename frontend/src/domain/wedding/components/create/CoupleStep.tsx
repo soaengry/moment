@@ -1,10 +1,12 @@
 import { type FC, useState, useRef } from "react";
-import { IoAdd, IoClose } from "react-icons/io5";
+import { IoAdd, IoClose, IoPersonOutline } from "react-icons/io5";
 import type { CoupleRequest, CoupleRole } from "../../types";
+import { weddingApi } from "../../api/weddingApi";
 
 export interface LandingPhoto {
-  file: File;
+  file?: File;
   preview: string;
+  url?: string; // existing S3 URL (for edit mode)
 }
 
 interface Props {
@@ -39,8 +41,16 @@ const CoupleStep: FC<Props> = ({
     initialData.find((c) => c.role === "BRIDE") ?? emptyCoupleForm("BRIDE"),
   );
   const [photos, setPhotos] = useState<LandingPhoto[]>(initialPhotos ?? []);
+  const [groomPreview, setGroomPreview] = useState<string | null>(
+    groom.profileImageUrl ?? null,
+  );
+  const [bridePreview, setBridePreview] = useState<string | null>(
+    bride.profileImageUrl ?? null,
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const groomProfileRef = useRef<HTMLInputElement>(null);
+  const brideProfileRef = useRef<HTMLInputElement>(null);
 
   const handleAddPhoto = () => {
     fileInputRef.current?.click();
@@ -68,9 +78,52 @@ const CoupleStep: FC<Props> = ({
   const handleRemovePhoto = (index: number) => {
     setPhotos((prev) => {
       const removed = prev[index];
-      URL.revokeObjectURL(removed.preview);
+      if (removed.file) {
+        URL.revokeObjectURL(removed.preview);
+      }
       return prev.filter((_, i) => i !== index);
     });
+  };
+
+  const [uploadingProfile, setUploadingProfile] = useState<string | null>(null);
+
+  const handleProfileSelect = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    role: "GROOM" | "BRIDE",
+    data: CoupleRequest,
+    setData: (d: CoupleRequest) => void,
+    setPreview: (url: string | null) => void,
+    preview: string | null,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+    setUploadingProfile(role);
+    try {
+      const url = await weddingApi.uploadFile(file);
+      setData({ ...data, profileImageUrl: url });
+    } catch {
+      setPreview(null);
+      setData({ ...data, profileImageUrl: undefined });
+    } finally {
+      setUploadingProfile(null);
+      if (e.target) e.target.value = "";
+    }
+  };
+
+  const handleRemoveProfile = (
+    setData: (d: CoupleRequest) => void,
+    data: CoupleRequest,
+    setPreview: (url: string | null) => void,
+    preview: string | null,
+    inputRef: React.RefObject<HTMLInputElement | null>,
+  ) => {
+    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    setPreview(null);
+    setData({ ...data, profileImageUrl: undefined });
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleSubmit = () => {
@@ -101,9 +154,63 @@ const CoupleStep: FC<Props> = ({
     data: CoupleRequest,
     setData: (d: CoupleRequest) => void,
     nameKey: string,
+    role: "GROOM" | "BRIDE",
+    preview: string | null,
+    setPreview: (url: string | null) => void,
+    profileInputRef: React.RefObject<HTMLInputElement | null>,
   ) => (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 space-y-4">
       <h3 className="text-sm font-semibold text-primary">{label}</h3>
+
+      {/* 프로필 사진 */}
+      <div className="flex flex-col items-center gap-2">
+        <div className="relative">
+          {preview ? (
+            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-100">
+              <img src={preview} alt="프로필" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => profileInputRef.current?.click()}
+              className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors"
+            >
+              <IoPersonOutline size={28} />
+            </button>
+          )}
+          {preview && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleRemoveProfile(setData, data, setPreview, preview, profileInputRef)}
+                className="absolute -top-1 -right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+              >
+                <IoClose size={14} className="text-white" />
+              </button>
+              <button
+                type="button"
+                onClick={() => profileInputRef.current?.click()}
+                className="absolute bottom-0 left-0 right-0 h-[28%] flex items-center justify-center rounded-b-full bg-black/50 text-white text-[10px] font-medium"
+              >
+                변경
+              </button>
+            </>
+          )}
+          {uploadingProfile === role && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+        </div>
+        <input
+          ref={profileInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          onChange={(e) => handleProfileSelect(e, role, data, setData, setPreview, preview)}
+          className="hidden"
+        />
+        <span className="text-[10px] text-gray-400">프로필 사진 (선택)</span>
+      </div>
 
       <div>
         <label className={labelClass}>이름 *</label>
@@ -194,8 +301,8 @@ const CoupleStep: FC<Props> = ({
 
   return (
     <div className="space-y-4">
-      {renderPersonForm("신랑 정보", groom, setGroom, "groomName")}
-      {renderPersonForm("신부 정보", bride, setBride, "brideName")}
+      {renderPersonForm("신랑 정보", groom, setGroom, "groomName", "GROOM", groomPreview, setGroomPreview, groomProfileRef)}
+      {renderPersonForm("신부 정보", bride, setBride, "brideName", "BRIDE", bridePreview, setBridePreview, brideProfileRef)}
 
       {/* Landing Photos */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 space-y-4">
