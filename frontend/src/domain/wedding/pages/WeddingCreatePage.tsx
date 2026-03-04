@@ -137,7 +137,7 @@ const WeddingCreatePage: FC = () => {
       // 5. 랜딩 사진 → S3 업로드 → 갤러리 생성
       for (let i = 0; i < state.landingPhotos.length; i++) {
         const photo = state.landingPhotos[i];
-        const imageUrl = await weddingApi.uploadFile(photo.file);
+        const imageUrl = await weddingApi.uploadFile(photo.file!);
         await weddingApi.createGallery(weddingId, {
           imageUrl,
           orderIndex: i,

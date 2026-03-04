@@ -11,7 +11,7 @@ import type {
   AnnouncementRequest,
 } from "../types";
 import BasicInfoStep from "../components/create/BasicInfoStep";
-import CoupleStep from "../components/create/CoupleStep";
+import CoupleStep, { type LandingPhoto } from "../components/create/CoupleStep";
 import ScheduleStep from "../components/create/ScheduleStep";
 import AccountStep, {
   type AccountGroupFormData,
@@ -25,6 +25,7 @@ const STEPS = ["기본 정보", "신랑신부", "식순", "계좌 정보", "추�
 export interface WeddingFormState {
   basic: WeddingRequest | null;
   couples: CoupleRequest[];
+  landingPhotos: LandingPhoto[];
   schedules: ScheduleRequest[];
   accountGroups: AccountGroupFormData[];
   transportation: TransportationRequest[];
@@ -133,9 +134,17 @@ const WeddingEditPage: FC = () => {
           }),
         );
 
+        const existingPhotos: LandingPhoto[] = (info.gallery ?? [])
+          .sort((a, b) => a.orderIndex - b.orderIndex)
+          .map((g) => ({
+            preview: g.imageUrl,
+            url: g.imageUrl,
+          }));
+
         setFormState({
           basic,
           couples: coupleRequests,
+          landingPhotos: existingPhotos,
           schedules: scheduleRequests,
           accountGroups: accountGroupData,
           transportation: transportRequests,
@@ -170,8 +179,8 @@ const WeddingEditPage: FC = () => {
     handleNext();
   };
 
-  const handleCoupleSubmit = (couples: CoupleRequest[]) => {
-    setFormState((prev) => prev && { ...prev, couples });
+  const handleCoupleSubmit = (couples: CoupleRequest[], photos: LandingPhoto[]) => {
+    setFormState((prev) => prev && { ...prev, couples, landingPhotos: photos });
     handleNext();
   };
 
@@ -262,6 +271,24 @@ const WeddingEditPage: FC = () => {
         await weddingApi.createAnnouncement(id, announcement);
       }
 
+      // Gallery (landing photos)
+      for (const g of (originalData.gallery ?? [])) {
+        await weddingApi.deleteGallery(g.id);
+      }
+      for (let i = 0; i < state.landingPhotos.length; i++) {
+        const photo = state.landingPhotos[i];
+        let imageUrl = photo.url;
+        if (photo.file) {
+          imageUrl = await weddingApi.uploadFile(photo.file);
+        }
+        if (imageUrl) {
+          await weddingApi.createGallery(id, {
+            imageUrl,
+            orderIndex: i,
+          });
+        }
+      }
+
       toast.success("초대장이 수정되었습니다!");
       setTimeout(() => navigate(`/wedding/${invitationId}`), 1500);
     } catch {
@@ -317,6 +344,7 @@ const WeddingEditPage: FC = () => {
         {step === 1 && (
           <CoupleStep
             initialData={formState.couples}
+            initialPhotos={formState.landingPhotos}
             onSubmit={handleCoupleSubmit}
             onBack={handlePrev}
           />
@@ -348,8 +376,10 @@ const WeddingEditPage: FC = () => {
             onSubmit={handleExtraSubmit}
             onBack={handlePrev}
             isSubmitting={isSubmitting}
+            submitLabel="초대장 수정"
           />
         )}
+
       </div>
 
       <ToastContainer
