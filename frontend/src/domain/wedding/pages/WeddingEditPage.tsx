@@ -1,6 +1,8 @@
 import { type FC, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import { IoArrowBack } from "react-icons/io5";
+import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 import { weddingApi } from "../api/weddingApi";
 import type {
   WeddingInfoResponse,
@@ -46,6 +48,13 @@ const WeddingEditPage: FC = () => {
   const [originalData, setOriginalData] = useState<WeddingInfoResponse | null>(
     null,
   );
+  const headerVisible = useScrollVisibility();
+
+  const handleBack = () => {
+    if (window.confirm("수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.")) {
+      navigate(-1);
+    }
+  };
 
   const id = originalData?.wedding.id;
 
@@ -300,11 +309,23 @@ const WeddingEditPage: FC = () => {
 
   return (
     <div className="min-h-screen bg-bgPrimary">
-      <div className="max-w-lg mx-auto px-4 py-6">
-        <h1 className="text-xl font-bold text-gray-800 mb-6 text-center">
-          초대장 수정하기
-        </h1>
+      {/* 헤더 */}
+      <header
+        className={`sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50 transition-transform duration-300 ${
+          headerVisible ? "translate-y-0" : "-translate-y-full"
+        }`}
+      >
+        <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3">
+          <button onClick={handleBack} className="text-gray-600">
+            <IoArrowBack size={22} />
+          </button>
+          <h1 className="text-base font-semibold text-gray-800">
+            초대장 수정하기
+          </h1>
+        </div>
+      </header>
 
+      <div className="max-w-lg mx-auto px-4 py-6">
         {/* 스텝 인디케이터 */}
         <div className="flex items-center justify-center gap-1 mb-8">
           {STEPS.map((label, i) => (
