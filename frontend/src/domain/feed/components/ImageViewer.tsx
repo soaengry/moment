@@ -11,6 +11,7 @@ const ImageViewer: FC<Props> = ({ imageUrls, initialIndex, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [translateX, setTranslateX] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
   const isDraggingRef = useRef(false);
 
@@ -26,6 +27,7 @@ const ImageViewer: FC<Props> = ({ imageUrls, initialIndex, onClose }) => {
     if (isTransitioning) return;
     startXRef.current = e.touches[0].clientX;
     isDraggingRef.current = true;
+    setIsDragging(true);
     setTranslateX(0);
   };
 
@@ -50,6 +52,7 @@ const ImageViewer: FC<Props> = ({ imageUrls, initialIndex, onClose }) => {
   const handleTouchEnd = () => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
+    setIsDragging(false);
 
     const threshold = 50;
 
@@ -95,7 +98,7 @@ const ImageViewer: FC<Props> = ({ imageUrls, initialIndex, onClose }) => {
           className="flex h-full"
           style={{
             transform: `translateX(calc(-${currentIndex * 100}% + ${translateX}px))`,
-            transition: isDraggingRef.current ? "none" : "transform 300ms ease-out",
+            transition: isDragging ? "none" : "transform 300ms ease-out",
           }}
         >
           {imageUrls.map((url, i) => (
