@@ -22,7 +22,14 @@ interface Props {
   onPostUpdated?: (post: PostResponse) => void;
 }
 
-const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, onCommentClick, onPostUpdated }) => {
+const PostCard: FC<Props> = ({
+  post,
+  currentUserId,
+  weddingId,
+  onPostDeleted,
+  onCommentClick,
+  onPostUpdated,
+}) => {
   const [liked, setLiked] = useState(post.isLiked);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [bookmarked, setBookmarked] = useState(post.isBookmarked);
@@ -32,6 +39,7 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
 
   // 스와이프 상태
   const [swipeX, setSwipeX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
   const isDraggingRef = useRef(false);
   const isSwipingRef = useRef(false);
@@ -45,7 +53,9 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
         : await feedApi.toggleLike(post.id);
       setLiked(res.liked);
       setLikeCount((prev) => (res.liked ? prev + 1 : prev - 1));
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   };
 
   const handleBookmark = async () => {
@@ -54,17 +64,23 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
         ? await feedApi.toggleWeddingBookmark(weddingId, post.id)
         : await feedApi.toggleBookmark(post.id);
       setBookmarked(res.bookmarked);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   };
 
   const handleDelete = async () => {
-    if (!confirm("게시글을 삭제하시겠습니까?")) return;
+    if (!window.confirm("게시글을 삭제하시겠습니까?")) return;
     try {
-      weddingId
-        ? await feedApi.deleteWeddingPost(weddingId, post.id)
-        : await feedApi.deletePost(post.id);
+      if (weddingId) {
+        await feedApi.deleteWeddingPost(weddingId, post.id);
+      } else {
+        await feedApi.deletePost(post.id);
+      }
       onPostDeleted?.();
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   };
 
   const formatTime = (dateStr: string) => {
@@ -85,6 +101,7 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
   const handleImageTouchStart = (e: React.TouchEvent) => {
     startXRef.current = e.touches[0].clientX;
     isDraggingRef.current = true;
+    setIsDragging(true);
     isSwipingRef.current = false;
     setSwipeX(0);
   };
@@ -113,6 +130,7 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
   const handleImageTouchEnd = () => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
+    setIsDragging(false);
 
     const threshold = 50;
     if (swipeX < -threshold && imageIndex < post.imageUrls.length - 1) {
@@ -149,25 +167,38 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
             )}
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-800">{post.author.nickname}</p>
-            <p className="text-[10px] text-gray-400">{formatTime(post.createdAt)}</p>
+            <p className="text-sm font-semibold text-gray-800">
+              {post.author.nickname}
+            </p>
+            <p className="text-[10px] text-gray-400">
+              {formatTime(post.createdAt)}
+            </p>
           </div>
         </div>
         {isOwner && (
           <div className="relative">
-            <button onClick={() => setShowMenu(!showMenu)} className="p-1 text-gray-400">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-1 text-gray-400"
+            >
               <IoEllipsisHorizontal size={18} />
             </button>
             {showMenu && (
               <div className="absolute right-0 top-8 bg-white shadow-lg rounded-xl py-1 z-10 min-w-[100px]">
                 <button
-                  onClick={() => { setShowMenu(false); onPostUpdated?.(post); }}
+                  onClick={() => {
+                    setShowMenu(false);
+                    onPostUpdated?.(post);
+                  }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-gray-600 hover:bg-gray-50"
                 >
                   <IoPencil size={14} /> 수정
                 </button>
                 <button
-                  onClick={() => { setShowMenu(false); handleDelete(); }}
+                  onClick={() => {
+                    setShowMenu(false);
+                    handleDelete();
+                  }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-red-500 hover:bg-gray-50"
                 >
                   <IoTrash size={14} /> 삭제
@@ -179,7 +210,9 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
       </div>
 
       {/* Content */}
-      <p className="px-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+      <p className="px-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+        {post.content}
+      </p>
 
       {/* Images */}
       {post.imageUrls.length > 0 && (
@@ -194,7 +227,9 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
               className="flex h-full"
               style={{
                 transform: `translateX(calc(-${imageIndex * 100}% + ${swipeX}px))`,
-                transition: isDraggingRef.current ? "none" : "transform 300ms ease-out",
+                transition: isDragging
+                  ? "none"
+                  : "transform 300ms ease-out",
               }}
             >
               {post.imageUrls.map((url, i) => (
@@ -234,7 +269,9 @@ const PostCard: FC<Props> = ({ post, currentUserId, weddingId, onPostDeleted, on
             ) : (
               <IoHeartOutline size={20} className="text-gray-500" />
             )}
-            {likeCount > 0 && <span className="text-xs text-gray-500">{likeCount}</span>}
+            {likeCount > 0 && (
+              <span className="text-xs text-gray-500">{likeCount}</span>
+            )}
           </button>
           <button
             onClick={() => onCommentClick?.(post.id)}

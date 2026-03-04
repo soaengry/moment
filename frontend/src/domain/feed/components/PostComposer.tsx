@@ -17,7 +17,13 @@ interface Props {
   weddingId?: number;
 }
 
-const PostComposer: FC<Props> = ({ onPostCreated, editingPost, onPostUpdated, onCancel, weddingId }) => {
+const PostComposer: FC<Props> = ({
+  onPostCreated,
+  editingPost,
+  onPostUpdated,
+  onCancel,
+  weddingId,
+}) => {
   const [content, setContent] = useState(editingPost?.content ?? "");
   const [images, setImages] = useState<ImageItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,8 +61,9 @@ const PostComposer: FC<Props> = ({ onPostCreated, editingPost, onPostUpdated, on
         newImages.push({ file, preview, url });
       }
       setImages((prev) => [...prev, ...newImages]);
-    } catch { /* silent */ }
-    finally {
+    } catch {
+      /* silent */
+    } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -101,8 +108,9 @@ const PostComposer: FC<Props> = ({ onPostCreated, editingPost, onPostUpdated, on
 
       setContent("");
       setImages([]);
-    } catch { /* silent */ }
-    finally {
+    } catch {
+      /* silent */
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -119,20 +127,28 @@ const PostComposer: FC<Props> = ({ onPostCreated, editingPost, onPostUpdated, on
 
       {/* Character count */}
       <div className="flex justify-end mb-2">
-        <span className={`text-[10px] ${content.length >= maxChars ? "text-red-400" : "text-gray-300"}`}>
+        <span
+          className={`text-[10px] ${content.length >= maxChars ? "text-red-400" : "text-gray-300"}`}
+        >
           {content.length}/{maxChars}
         </span>
       </div>
 
       {/* Image previews */}
       {images.length > 0 && (
-        <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+        <div className="flex gap-3 mb-3 overflow-x-auto pb-1 pt-2">
           {images.map((img, i) => (
-            <div key={i} className="relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
-              <img src={img.preview} alt="" className="w-full h-full object-cover" />
+            <div key={i} className="relative flex-shrink-0">
+              <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                <img
+                  src={img.preview}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <button
                 onClick={() => handleRemoveImage(i)}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
               >
                 <IoClose size={12} className="text-white" />
               </button>
