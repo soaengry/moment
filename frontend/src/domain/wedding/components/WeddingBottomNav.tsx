@@ -1,16 +1,14 @@
 import { type FC } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  IoInformationCircle,
-  IoInformationCircleOutline,
-  IoNewspaper,
-  IoNewspaperOutline,
+  IoHeartCircleOutline,
+  IoHeartCircle,
+  IoPizza,
+  IoPizzaOutline,
   IoBook,
   IoBookOutline,
   IoChatbubbles,
   IoChatbubblesOutline,
-  IoPerson,
-  IoPersonOutline,
 } from "react-icons/io5";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 
@@ -22,25 +20,31 @@ interface Props {
   activeTab: WeddingTab;
 }
 
-const WeddingBottomNav: FC<Props> = ({ weddingId, invitationId, activeTab }) => {
+const WeddingBottomNav: FC<Props> = ({
+  weddingId,
+  invitationId,
+  activeTab,
+}) => {
   const navigate = useNavigate();
   const isVisible = useScrollVisibility();
 
-  const basePath = invitationId ? `/wedding/${invitationId}` : `/wedding/${weddingId}`;
+  const basePath = invitationId
+    ? `/wedding/${invitationId}`
+    : `/wedding/${weddingId}`;
 
   const items = [
     {
       key: "info" as const,
       label: "정보",
-      icon: IoInformationCircleOutline,
-      activeIcon: IoInformationCircle,
+      icon: IoHeartCircleOutline,
+      activeIcon: IoHeartCircle,
       action: () => navigate(basePath),
     },
     {
       key: "feed" as const,
       label: "피드",
-      icon: IoNewspaperOutline,
-      activeIcon: IoNewspaper,
+      icon: IoPizzaOutline,
+      activeIcon: IoPizza,
       action: () => navigate(`${basePath}/feed`),
     },
     {
@@ -56,13 +60,6 @@ const WeddingBottomNav: FC<Props> = ({ weddingId, invitationId, activeTab }) => 
       icon: IoChatbubblesOutline,
       activeIcon: IoChatbubbles,
       action: () => navigate(`${basePath}/chat`),
-    },
-    {
-      key: "mypage" as const,
-      label: "마이페이지",
-      icon: IoPersonOutline,
-      activeIcon: IoPerson,
-      action: () => navigate("/my-page"),
     },
   ];
 

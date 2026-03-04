@@ -200,6 +200,10 @@ export const weddingApi = {
     return data;
   },
 
+  deleteGallery: async (galleryId: number): Promise<void> => {
+    await axiosInstance.delete(`/api/weddings/galleries/${galleryId}`);
+  },
+
   // File Upload
   uploadFile: async (file: File): Promise<string> => {
     const formData = new FormData();
