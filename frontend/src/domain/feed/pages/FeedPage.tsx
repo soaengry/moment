@@ -6,7 +6,8 @@ import PostComposer from "../components/PostComposer";
 import CommentSheet from "../components/CommentSheet";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
-import { IoBookmarkOutline } from "react-icons/io5";
+import { IoArrowBack, IoBookmarkOutline, IoClose } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 
 const FeedPage: FC = () => {
   const [posts, setPosts] = useState<PostResponse[]>([]);
@@ -17,6 +18,7 @@ const FeedPage: FC = () => {
   const [commentPostId, setCommentPostId] = useState<number | null>(null);
   const [editingPost, setEditingPost] = useState<PostResponse | null>(null);
 
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const headerVisible = useScrollVisibility();
 
@@ -69,7 +71,12 @@ const FeedPage: FC = () => {
         {/* Header */}
         <header className={`sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}>
           <div className="flex items-center justify-between px-4 py-3">
-            <h1 className="text-lg font-bold text-gray-800">피드</h1>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate(-1)} className="text-gray-600">
+                <IoArrowBack size={22} />
+              </button>
+              <h1 className="text-lg font-bold text-gray-800">피드</h1>
+            </div>
             <button
               onClick={() => setActiveTab(activeTab === "feed" ? "bookmarks" : "feed")}
               className={`p-1.5 rounded-lg ${activeTab === "bookmarks" ? "text-primary" : "text-gray-400"}`}
@@ -106,9 +113,6 @@ const FeedPage: FC = () => {
         {activeTab === "feed" && (
           <PostComposer
             onPostCreated={handlePostCreated}
-            editingPost={editingPost}
-            onPostUpdated={handlePostUpdated}
-            onCancel={() => setEditingPost(null)}
           />
         )}
 
@@ -148,6 +152,25 @@ const FeedPage: FC = () => {
         {/* Bottom space for nav */}
         <div className="h-20" />
       </div>
+
+      {/* Edit Modal */}
+      {editingPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100">
+              <h2 className="text-sm font-semibold text-gray-800">게시글 수정</h2>
+              <button onClick={() => setEditingPost(null)} className="p-1 text-gray-400">
+                <IoClose size={20} />
+              </button>
+            </div>
+            <PostComposer
+              editingPost={editingPost}
+              onPostUpdated={handlePostUpdated}
+              onCancel={() => setEditingPost(null)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Comment Sheet */}
       {commentPostId !== null && (

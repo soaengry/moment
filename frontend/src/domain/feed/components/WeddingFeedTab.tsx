@@ -5,6 +5,7 @@ import PostCard from "./PostCard";
 import PostComposer from "./PostComposer";
 import CommentSheet from "./CommentSheet";
 import { useAuthStore } from "../../auth/store/useAuthStore";
+import { IoClose } from "react-icons/io5";
 
 interface Props {
   weddingId: number;
@@ -59,10 +60,27 @@ const WeddingFeedTab: FC<Props> = ({ weddingId }) => {
         <PostComposer
           weddingId={weddingId}
           onPostCreated={handleRefresh}
-          editingPost={editingPost}
-          onPostUpdated={handleRefresh}
-          onCancel={() => setEditingPost(null)}
         />
+      )}
+
+      {/* Edit Modal */}
+      {editingPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100">
+              <h2 className="text-sm font-semibold text-gray-800">게시글 수정</h2>
+              <button onClick={() => setEditingPost(null)} className="p-1 text-gray-400">
+                <IoClose size={20} />
+              </button>
+            </div>
+            <PostComposer
+              weddingId={weddingId}
+              editingPost={editingPost}
+              onPostUpdated={handleRefresh}
+              onCancel={() => setEditingPost(null)}
+            />
+          </div>
+        </div>
       )}
 
       {/* Posts */}
