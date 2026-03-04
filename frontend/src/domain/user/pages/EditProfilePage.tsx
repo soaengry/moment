@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { IoArrowBack } from "react-icons/io5";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { authApi } from "../../auth/api/authApi";
 import { AUTH_VALIDATION } from "../../auth/auth.constants";
@@ -10,6 +11,7 @@ import { isAxiosError } from "axios";
 import axiosInstance from "../../../global/api/axiosInstance";
 import { USER_API } from "../../auth/auth.constants";
 import type { UserResponse } from "../../auth/types";
+import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
@@ -200,14 +202,25 @@ const EditProfilePage: FC = () => {
     }
   };
 
+  const headerVisible = useScrollVisibility();
+
   if (!user) return null;
 
   return (
-    <div className="max-w-lg mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-primary">프로필 수정</h2>
+    <div className="min-h-screen bg-[#faf9f6]">
+      <div className="max-w-lg mx-auto">
+        <header className={`sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}>
+          <div className="flex items-center gap-3 px-4 py-3">
+            <button onClick={() => navigate(-1)} className="text-gray-600">
+              <IoArrowBack size={22} />
+            </button>
+            <h1 className="text-base font-semibold text-gray-800">프로필 수정</h1>
+          </div>
+        </header>
 
+      <div className="px-4 py-4 space-y-4">
       {/* 프로필 수정 섹션 */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100">
+      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
         {serverError && (
           <div className="mb-4 p-3 rounded-lg text-sm bg-bgError text-error">
             {serverError}
@@ -309,7 +322,7 @@ const EditProfilePage: FC = () => {
 
       {/* 비밀번호 변경 섹션 — LOCAL 사용자만 */}
       {user.authProvider === "LOCAL" && (
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 mt-4">
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">비밀번호 변경</h3>
 
           <div className="mb-4 p-3 rounded-lg text-sm bg-yellow-50 text-yellow-700">
@@ -398,13 +411,17 @@ const EditProfilePage: FC = () => {
       )}
 
       {/* 회원 탈퇴 */}
-      <div className="mt-6 mb-8 text-center">
+      <div className="text-center">
         <button
           onClick={() => navigate("/delete-account")}
           className="text-sm text-gray-400 hover:text-red-400 transition-colors"
         >
           회원 탈퇴
         </button>
+      </div>
+      </div>
+
+        <div className="h-20" />
       </div>
     </div>
   );
