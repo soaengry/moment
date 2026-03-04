@@ -1,6 +1,10 @@
 import { type FC, useState } from "react";
 import { toast } from "react-toastify";
-import type { AccountGroupWithAccounts, AccountResponse, AccountSide } from "../types";
+import type {
+  AccountGroupWithAccounts,
+  AccountResponse,
+  AccountSide,
+} from "../types";
 
 interface Props {
   accountGroups: AccountGroupWithAccounts[];
@@ -21,8 +25,12 @@ const AccountCard: FC<{ account: AccountResponse }> = ({ account }) => {
     try {
       const text = isToss ? account.accountNumber : account.accountNumber;
       await navigator.clipboard.writeText(text);
-      toast.success(isToss ? "휴대폰 번호가 복사되었습니다" : "계좌번호가 복사되었습니다");
-    } catch { toast.error("복사에 실패했습니다"); }
+      toast.success(
+        isToss ? "휴대폰 번호가 복사되었습니다" : "계좌번호가 복사되었습니다",
+      );
+    } catch {
+      toast.error("복사에 실패했습니다");
+    }
   };
 
   if (isKakaoPay) {
@@ -68,7 +76,9 @@ const AccountSection: FC<Props> = ({ accountGroups }) => {
 
   if (accountGroups.length === 0) return null;
 
-  const sorted = [...accountGroups].sort((a, b) => a.group.orderIndex - b.group.orderIndex);
+  const sorted = [...accountGroups].sort(
+    (a, b) => a.group.orderIndex - b.group.orderIndex,
+  );
 
   return (
     <section className="py-10 px-6">
@@ -82,19 +92,22 @@ const AccountSection: FC<Props> = ({ accountGroups }) => {
       <div className="space-y-3 max-w-sm mx-auto">
         {sorted.map(({ group, accounts }) => {
           const isOpen = openSide === group.side;
-          const sortedAccounts = [...accounts].sort((a, b) => a.orderIndex - b.orderIndex);
+          const sortedAccounts = [...accounts].sort(
+            (a, b) => a.orderIndex - b.orderIndex,
+          );
 
           return (
             <div key={group.id}>
               <button
-                onClick={() => setOpenSide((prev) => (prev === group.side ? null : group.side))}
+                onClick={() =>
+                  setOpenSide((prev) =>
+                    prev === group.side ? null : group.side,
+                  )
+                }
                 className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white hover:bg-gray-50 transition-colors"
               >
                 <span className="text-sm font-medium text-gray-700">
                   {SIDE_LABEL[group.side]}
-                  {group.groupName && (
-                    <span className="font-normal text-gray-400 ml-1.5">{group.groupName}</span>
-                  )}
                 </span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -102,11 +115,15 @@ const AccountSection: FC<Props> = ({ accountGroups }) => {
                   fill="currentColor"
                   className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 >
-                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </button>
               {isOpen && (
-                <div className="mt-2 space-y-2">
+                <div>
                   {sortedAccounts.map((account) => (
                     <AccountCard key={account.id} account={account} />
                   ))}

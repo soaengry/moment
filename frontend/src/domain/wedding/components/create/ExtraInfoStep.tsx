@@ -19,6 +19,7 @@ interface Props {
   onSubmit: (data: ExtraInfoFormData) => void;
   onBack: () => void;
   isSubmitting: boolean;
+  submitLabel?: string;
 }
 
 const TRANSPORT_TYPE_OPTIONS: { value: TransportType; label: string }[] = [
@@ -45,6 +46,7 @@ const ExtraInfoStep: FC<Props> = ({
   onSubmit,
   onBack,
   isSubmitting,
+  submitLabel = "초대장 생성",
 }) => {
   const [dressCode, setDressCode] = useState(initialData.dressCode);
   const [notice, setNotice] = useState(initialData.notice);
@@ -306,7 +308,7 @@ const ExtraInfoStep: FC<Props> = ({
           disabled={isSubmitting}
           className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primaryHover transition-colors disabled:opacity-50"
         >
-          {isSubmitting ? "생성 중..." : "초대장 생성"}
+          {isSubmitting ? "저장 중..." : submitLabel}
         </button>
       </div>
     </div>
