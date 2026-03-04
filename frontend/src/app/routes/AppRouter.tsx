@@ -87,9 +87,7 @@ const AppRouter: FC = () => {
           path="/my-schedule"
           element={
             <ProtectedRoute>
-              <Layout>
-                <MySchedulePage />
-              </Layout>
+              <MySchedulePage />
             </ProtectedRoute>
           }
         />
@@ -145,9 +143,7 @@ const AppRouter: FC = () => {
           path="/edit-profile"
           element={
             <ProtectedRoute>
-              <Layout>
-                <EditProfilePage />
-              </Layout>
+              <EditProfilePage />
             </ProtectedRoute>
           }
         />
@@ -155,9 +151,7 @@ const AppRouter: FC = () => {
           path="/delete-account"
           element={
             <ProtectedRoute>
-              <Layout>
-                <DeleteAccountPage />
-              </Layout>
+              <DeleteAccountPage />
             </ProtectedRoute>
           }
         />

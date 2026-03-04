@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { IoHomeOutline, IoHome } from "react-icons/io5";
 import { IoPersonOutline, IoPerson } from "react-icons/io5";
 import { IoAddCircleOutline, IoAddCircle } from "react-icons/io5";
-import { IoNewspaperOutline, IoNewspaper } from "react-icons/io5";
+// import { IoNewspaperOutline, IoNewspaper } from "react-icons/io5";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
 import { useScrollVisibility } from "../hooks/useScrollVisibility";
 
@@ -22,12 +22,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: IoHomeOutline,
     activeIcon: IoHome,
   },
-  {
-    path: "/feed",
-    label: "피드",
-    icon: IoNewspaperOutline,
-    activeIcon: IoNewspaper,
-  },
+  // {
+  //   path: "/feed",
+  //   label: "피드",
+  //   icon: IoNewspaperOutline,
+  //   activeIcon: IoNewspaper,
+  // },
   {
     path: "/wedding/create",
     label: "초대장 만들기",
@@ -76,6 +76,12 @@ const BottomNav: FC = () => {
 
   // 마이페이지 하위 페이지 (자체 헤더 사용)
   if (/^\/my-page\/.+$/.test(location.pathname)) {
+    return null;
+  }
+
+  // 개별 페이지 (자체 헤더 사용)
+  const selfHeaderPaths = ["/my-schedule", "/edit-profile", "/delete-account"];
+  if (selfHeaderPaths.includes(location.pathname)) {
     return null;
   }
 
