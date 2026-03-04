@@ -12,6 +12,7 @@ import {
   IoCalendar,
 } from "react-icons/io5";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
+import type { UserResponse } from "../../domain/auth/types";
 import { scheduleApi } from "../../domain/schedule/api/scheduleApi";
 import { feedApi } from "../../domain/feed/api/feedApi";
 import type { AttendanceResponse } from "../../domain/schedule/types";
@@ -29,7 +30,7 @@ const HomePage = () => {
   }
 
   if (isAuthenticated) {
-    return <Dashboard user={user} />;
+    return <Dashboard user={user!} />;
   }
 
   return <Landing />;
@@ -112,7 +113,7 @@ const Landing = () => {
 // ─── 대시보드 (로그인) ────────────────────────────────────────
 
 interface DashboardProps {
-  user: ReturnType<typeof useAuthStore>["user"];
+  user: UserResponse;
 }
 
 const Dashboard = ({ user }: DashboardProps) => {
