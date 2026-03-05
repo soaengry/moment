@@ -63,20 +63,6 @@ const Landing = () => {
       <div className="bg-gradient-to-br from-primary to-primaryHover rounded-2xl p-8 text-center text-white">
         <h1 className="text-3xl font-bold mb-2">Moment</h1>
         <p className="text-white/90 mb-6">소중한 순간을 함께 나누세요</p>
-        <div className="flex gap-3 justify-center">
-          <Link
-            to="/login"
-            className="px-6 py-2.5 bg-white text-primary font-semibold rounded-xl hover:bg-gray-50 transition-colors"
-          >
-            로그인
-          </Link>
-          <Link
-            to="/signup"
-            className="px-6 py-2.5 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-colors"
-          >
-            회원가입
-          </Link>
-        </div>
       </div>
 
       {/* 기능 소개 */}
@@ -195,9 +181,7 @@ const Dashboard = ({ user }: DashboardProps) => {
             className="bg-white rounded-2xl shadow-sm border border-gray-100 py-4 flex flex-col items-center gap-2 text-primary hover:bg-primary/5 transition-colors"
           >
             {m.icon}
-            <span className="text-xs font-medium text-gray-600">
-              {m.label}
-            </span>
+            <span className="text-xs font-medium text-gray-600">{m.label}</span>
           </Link>
         ))}
       </div>

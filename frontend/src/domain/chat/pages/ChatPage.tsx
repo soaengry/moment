@@ -9,7 +9,6 @@ import { useAuthStore } from "../../auth/store/useAuthStore";
 import { tokenStorage } from "../../auth/auth.utils";
 import { ENV } from "../../../global/config/env";
 import { weddingApi } from "../../wedding/api/weddingApi";
-import WeddingBottomNav from "../../wedding/components/WeddingBottomNav";
 import ImageViewer from "../../feed/components/ImageViewer";
 
 const ChatPage: FC = () => {
@@ -298,14 +297,6 @@ const ChatPage: FC = () => {
           </button>
         </div>
       )}
-
-      {/* Bottom space for nav */}
-      <div className="h-16" />
-      <WeddingBottomNav
-        weddingId={weddingId}
-        invitationId={invitationId}
-        activeTab="chat"
-      />
 
       {/* Image Viewer */}
       {viewerImage && (
