@@ -229,7 +229,7 @@ const GuestbookSection: FC<Props> = ({
     (isLoggedIn || password.trim() !== "");
 
   return (
-    <section className="px-4">
+    <section>
       {/* 작성 폼 */}
       <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
         <input
