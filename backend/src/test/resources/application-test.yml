@@ -2,10 +2,11 @@ spring:
   config:
     activate:
       on-profile: test
+
   datasource:
     url: jdbc:mysql://localhost:3306/moment_test?serverTimezone=Asia/Seoul
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -25,6 +26,10 @@ spring:
       port: ${REDIS_PORT}
       username: ${REDIS_USERNAME}
       password: ${REDIS_PASSWORD}
+    mongodb:
+      host: 127.0.0.1
+      port: 27017
+      database: moment_test
 
   mail:
     host: ${MAIL_HOST}
@@ -47,14 +52,27 @@ spring:
       s3:
         bucket: merry-moment
       credentials:
-        access-key: ${AWS_ACCESS_KEY:}
-        secret-key: ${AWS_SECRET_KEY:}
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
       region:
         static: ${AWS_REGION}
       stack:
         auto: false
 
+server:
+  port: 8080
+  name: test_server
+
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 86400000  # 1일 (밀리초)
   refresh-token-expiration: 604800000  # 7일 (밀리초)
+
+app:
+  email:
+    verification-url: "http://localhost:8080/api/auth/verify-email"
+    password-reset-url: "http://localhost:8080/api/auth/reset-password"
+  oauth2:
+    redirect-uri: "http://localhost:3000/oauth2/callback"
+  cors:
+    allowed-origins: "http://localhost:3000"
