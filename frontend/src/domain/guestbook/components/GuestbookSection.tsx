@@ -265,7 +265,6 @@ const GuestbookSection: FC<Props> = ({
                 className="w-3.5 h-3.5 accent-primary"
               />
               <IoLockClosed size={12} />
-              비밀글
             </label>
           </div>
           <button

@@ -26,7 +26,7 @@ const LandingSection: FC<Props> = ({
 
   useEffect(() => {
     if (images.length <= 1) return;
-    const timer = setInterval(next, 2000);
+    const timer = setInterval(next, 3000);
     return () => clearInterval(timer);
   }, [images.length, next]);
 
