@@ -49,7 +49,7 @@ class AccountGroupRepositoryTest {
         // given
         accountGroupRepository.save(AccountGroup.create(1L, AccountGroup.Side.BRIDE, "신부측", 2));
         accountGroupRepository.save(AccountGroup.create(1L, AccountGroup.Side.GROOM, "신랑측", 1));
-        accountGroupRepository.save(AccountGroup.create(1L, AccountGroup.Side.BOTH, "양가", 3));
+        accountGroupRepository.save(AccountGroup.create(1L, AccountGroup.Side.GROOM_FAMILY, "신랑 가족", 3));
 
         // when
         List<AccountGroup> groups = accountGroupRepository.findByWeddingIdOrderByOrderIndex(1L);
@@ -58,7 +58,7 @@ class AccountGroupRepositoryTest {
         assertThat(groups).hasSize(3);
         assertThat(groups.get(0).getGroupName()).isEqualTo("신랑측");
         assertThat(groups.get(1).getGroupName()).isEqualTo("신부측");
-        assertThat(groups.get(2).getGroupName()).isEqualTo("양가");
+        assertThat(groups.get(2).getGroupName()).isEqualTo("신랑 가족");
     }
 
     @Test
@@ -84,12 +84,12 @@ class AccountGroupRepositoryTest {
         AccountGroup saved = accountGroupRepository.save(group);
 
         // when
-        saved.update(AccountGroup.Side.BOTH, "양가 공동", 5);
+        saved.update(AccountGroup.Side.BRIDE_FAMILY, "신부 가족", 5);
         AccountGroup updated = accountGroupRepository.save(saved);
 
         // then
-        assertThat(updated.getSide()).isEqualTo(AccountGroup.Side.BOTH);
-        assertThat(updated.getGroupName()).isEqualTo("양가 공동");
+        assertThat(updated.getSide()).isEqualTo(AccountGroup.Side.BRIDE_FAMILY);
+        assertThat(updated.getGroupName()).isEqualTo("신부 가족");
         assertThat(updated.getOrderIndex()).isEqualTo(5);
     }
 }
