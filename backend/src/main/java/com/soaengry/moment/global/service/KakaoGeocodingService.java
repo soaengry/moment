@@ -12,17 +12,14 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@EnableConfigurationProperties(KakaoProperties.class)
 public class KakaoGeocodingService {
 
     private static final String GEOCODING_URL = "https://dapi.kakao.com/v2/local/search/address.json";
 
     private final RestClient restClient;
 
-    public KakaoGeocodingService(KakaoProperties kakaoProperties) {
-        this.restClient = RestClient.builder()
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + kakaoProperties.restApiKey())
-                .build();
+    public KakaoGeocodingService(RestClient kakaoRestClient) {
+        this.restClient = kakaoRestClient;
     }
 
     public record Coordinate(double lat, double lng) {}
