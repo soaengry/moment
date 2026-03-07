@@ -1,4 +1,6 @@
 import { type FC, useEffect, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { slideUp } from "../../../global/constants/animations";
 import { toast } from "react-toastify";
 import type { WeddingResponse } from "../types";
 import { ENV } from "../../../global/config/env";
@@ -22,6 +24,8 @@ const loadKakaoMapSdk = (): Promise<void> => {
 };
 
 const LocationSection: FC<Props> = ({ wedding }) => {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
   const mapRef = useRef<HTMLDivElement>(null);
   const hasMap = wedding.venueLat != null && wedding.venueLng != null;
 
@@ -64,7 +68,13 @@ const LocationSection: FC<Props> = ({ wedding }) => {
   };
 
   return (
-    <section className="py-10 px-6">
+    <motion.section
+      ref={sectionRef}
+      variants={slideUp}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="py-10 px-6"
+    >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-8 uppercase font-medium text-center">
         Location
       </p>
@@ -97,7 +107,7 @@ const LocationSection: FC<Props> = ({ wedding }) => {
           주소 복사
         </button>
       </div>
-    </section>
+    </motion.section>
   );
 };
 

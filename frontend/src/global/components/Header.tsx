@@ -1,4 +1,6 @@
 import { type FC, useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { buttonTap } from "../constants/animations";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
 import { authApi } from "../../domain/auth/api/authApi";
@@ -42,10 +44,11 @@ const Header: FC = () => {
   }, [lastScrollY]);
 
   return (
-    <header
-      className={`fixed top-0 left-0 w-full bg-white shadow-sm border-b border-green-100 transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
-      }`}
+    <motion.header
+      initial={{ y: 0 }}
+      animate={{ y: isVisible ? 0 : "-100%" }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="fixed top-0 left-0 w-full bg-white shadow-sm border-b border-green-100 z-50"
     >
       <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link
@@ -58,7 +61,8 @@ const Header: FC = () => {
         <div className="flex items-center gap-4">
           {user && (
             <>
-              <div
+              <motion.div
+                whileTap={buttonTap}
                 className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition"
                 onClick={() => navigate("/my-page")}
               >
@@ -70,13 +74,14 @@ const Header: FC = () => {
                 <span className="text-sm text-gray-600">
                   <span className="font-semibold mr-1">{user.nickname}</span>님
                 </span>
-              </div>{" "}
-              <button
+              </motion.div>
+              <motion.button
                 onClick={handleLogout}
+                whileTap={buttonTap}
                 className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 로그아웃
-              </button>
+              </motion.button>
             </>
           )}
           {!user && (
@@ -89,7 +94,7 @@ const Header: FC = () => {
           )}
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 };
 

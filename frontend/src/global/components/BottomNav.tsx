@@ -1,4 +1,6 @@
 import { type FC } from "react";
+import { motion } from "framer-motion";
+import { buttonTap } from "../constants/animations";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoHomeOutline, IoHome } from "react-icons/io5";
 import { IoPersonOutline, IoPerson } from "react-icons/io5";
@@ -86,10 +88,11 @@ const BottomNav: FC = () => {
   }
 
   return (
-    <nav
-      className={`fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50 transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "translate-y-full"
-      }`}
+    <motion.nav
+      initial={{ y: 0 }}
+      animate={{ y: isVisible ? 0 : "100%" }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50"
     >
       <div className="max-w-lg mx-auto flex items-center justify-around py-2">
         {visibleItems.map((item) => {
@@ -97,9 +100,10 @@ const BottomNav: FC = () => {
           const Icon = isActive ? item.activeIcon : item.icon;
 
           return (
-            <button
+            <motion.button
               key={item.path}
               onClick={() => navigate(item.path)}
+              whileTap={buttonTap}
               className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px]"
             >
               <Icon
@@ -110,13 +114,13 @@ const BottomNav: FC = () => {
               >
                 {item.label}
               </span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
       {/* Safe area for iOS */}
       <div className="pb-[env(safe-area-inset-bottom)]" />
-    </nav>
+    </motion.nav>
   );
 };
 

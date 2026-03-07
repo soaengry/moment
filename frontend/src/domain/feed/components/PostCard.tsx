@@ -1,4 +1,6 @@
 import { type FC, useState, useRef } from "react";
+import { motion } from "framer-motion";
+import { iconScale, buttonTap } from "../../../global/constants/animations";
 import {
   IoHeart,
   IoHeartOutline,
@@ -263,33 +265,42 @@ const PostCard: FC<Props> = ({
       {/* Actions */}
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-5">
-          <button onClick={handleLike} className="flex items-center gap-1.5">
-            {liked ? (
-              <IoHeart size={20} className="text-red-500" />
-            ) : (
-              <IoHeartOutline size={20} className="text-gray-500" />
-            )}
+          <motion.button
+            onClick={handleLike}
+            whileTap={buttonTap}
+            className="flex items-center gap-1.5"
+          >
+            <motion.div animate={liked ? iconScale : {}}>
+              {liked ? (
+                <IoHeart size={20} className="text-red-500" />
+              ) : (
+                <IoHeartOutline size={20} className="text-gray-500" />
+              )}
+            </motion.div>
             {likeCount > 0 && (
               <span className="text-xs text-gray-500">{likeCount}</span>
             )}
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => onCommentClick?.(post.id)}
+            whileTap={buttonTap}
             className="flex items-center gap-1.5"
           >
             <IoChatbubbleOutline size={19} className="text-gray-500" />
             {post.commentCount > 0 && (
               <span className="text-xs text-gray-500">{post.commentCount}</span>
             )}
-          </button>
+          </motion.button>
         </div>
-        <button onClick={handleBookmark}>
-          {bookmarked ? (
-            <IoBookmark size={19} className="text-primary" />
-          ) : (
-            <IoBookmarkOutline size={19} className="text-gray-500" />
-          )}
-        </button>
+        <motion.button onClick={handleBookmark} whileTap={buttonTap}>
+          <motion.div animate={bookmarked ? iconScale : {}}>
+            {bookmarked ? (
+              <IoBookmark size={19} className="text-primary" />
+            ) : (
+              <IoBookmarkOutline size={19} className="text-gray-500" />
+            )}
+          </motion.div>
+        </motion.button>
       </div>
 
       {/* Image Viewer Modal */}
