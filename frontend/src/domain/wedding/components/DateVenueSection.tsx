@@ -1,4 +1,6 @@
-import { type FC } from "react";
+import { type FC, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { slideUp } from "../../../global/constants/animations";
 import type { WeddingResponse } from "../types";
 
 interface Props {
@@ -8,6 +10,9 @@ interface Props {
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 const DateVenueSection: FC<Props> = ({ wedding }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
+
   const date = new Date(wedding.weddingDate);
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
@@ -26,7 +31,13 @@ const DateVenueSection: FC<Props> = ({ wedding }) => {
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
   return (
-    <section className="py-10 px-6 text-center">
+    <motion.section
+      ref={ref}
+      variants={slideUp}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="py-10 px-6 text-center"
+    >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-6 uppercase font-medium">
         Wedding Day
       </p>
@@ -93,7 +104,7 @@ const DateVenueSection: FC<Props> = ({ wedding }) => {
           {wedding.venuePhone}
         </a>
       )}
-    </section>
+    </motion.section>
   );
 };
 

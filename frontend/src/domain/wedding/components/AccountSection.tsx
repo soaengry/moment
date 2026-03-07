@@ -1,4 +1,6 @@
-import { type FC, useState } from "react";
+import { type FC, useState, useRef } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import { slideUp, staggerContainer, staggerItem } from "../../../global/constants/animations";
 import { toast } from "react-toastify";
 import type {
   AccountGroupWithAccounts,
@@ -72,6 +74,8 @@ const AccountCard: FC<{ account: AccountResponse }> = ({ account }) => {
 };
 
 const AccountSection: FC<Props> = ({ accountGroups }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
   const [openSide, setOpenSide] = useState<AccountSide | null>(null);
 
   if (accountGroups.length === 0) return null;
@@ -81,7 +85,13 @@ const AccountSection: FC<Props> = ({ accountGroups }) => {
   );
 
   return (
-    <section className="py-10 px-6">
+    <motion.section
+      ref={ref}
+      variants={slideUp}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="py-10 px-6"
+    >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-2 uppercase font-medium text-center">
         Account
       </p>
@@ -122,18 +132,28 @@ const AccountSection: FC<Props> = ({ accountGroups }) => {
                   />
                 </svg>
               </button>
-              {isOpen && (
-                <div>
-                  {sortedAccounts.map((account) => (
-                    <AccountCard key={account.id} account={account} />
-                  ))}
-                </div>
-              )}
+              <AnimatePresence>
+                {isOpen && (
+                  <motion.div
+                    variants={staggerContainer}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    className="mt-3 space-y-2"
+                  >
+                    {sortedAccounts.map((account) => (
+                      <motion.div key={account.id} variants={staggerItem}>
+                        <AccountCard account={account} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}
       </div>
-    </section>
+    </motion.section>
   );
 };
 

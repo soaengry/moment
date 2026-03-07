@@ -1,4 +1,6 @@
 import { type FC, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { bottomSheet, modalBackdrop, staggerContainer, staggerItem } from "../../../global/constants/animations";
 import { IoClose, IoSend, IoTrash } from "react-icons/io5";
 import { feedApi } from "../api/feedApi";
 import type { CommentResponse } from "../types";
@@ -67,12 +69,25 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId, weddi
     return `${d.getMonth() + 1}/${d.getDate()}`;
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-white rounded-t-2xl max-h-[70vh] flex flex-col">
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <motion.div
+            variants={modalBackdrop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="absolute inset-0 bg-black/40"
+            onClick={onClose}
+          />
+          <motion.div
+            variants={bottomSheet}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="relative w-full max-w-lg bg-white rounded-t-2xl max-h-[70vh] flex flex-col"
+          >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
           <h3 className="text-sm font-semibold text-gray-700">댓글</h3>
@@ -82,16 +97,26 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId, weddi
         </div>
 
         {/* Comments list */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 py-3">
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full mx-auto"
+              />
             </div>
           ) : comments.length === 0 ? (
             <p className="text-center text-sm text-gray-300 py-8">첫 번째 댓글을 남겨보세요</p>
           ) : (
-            comments.map((comment) => (
-              <div key={comment.id} className="flex gap-3">
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+              className="space-y-4"
+            >
+              {comments.map((comment) => (
+                <motion.div key={comment.id} variants={staggerItem} className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
                   {comment.author.profileImageUrl ? (
                     <img src={comment.author.profileImageUrl} alt="" className="w-full h-full object-cover" />
@@ -114,8 +139,9 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId, weddi
                     <IoTrash size={14} />
                   </button>
                 )}
-              </div>
-            ))
+              </motion.div>
+              ))}
+            </motion.div>
           )}
         </div>
 
@@ -138,8 +164,10 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId, weddi
             <IoSend size={18} />
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
+      )}
+    </AnimatePresence>
   );
 };
 

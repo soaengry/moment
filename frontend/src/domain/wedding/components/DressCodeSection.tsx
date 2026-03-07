@@ -1,4 +1,6 @@
-import { type FC } from "react";
+import { type FC, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { slideUp } from "../../../global/constants/animations";
 import type { WeddingResponse, TransportationResponse } from "../types";
 
 interface Props {
@@ -7,6 +9,9 @@ interface Props {
 }
 
 const DressCodeSection: FC<Props> = ({ wedding, transportation = [] }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
+
   const { dressCode, notice, parkingInfo, mealInfo } = wedding;
   const hasContent = dressCode || notice || parkingInfo || mealInfo || transportation.length > 0;
 
@@ -21,7 +26,13 @@ const DressCodeSection: FC<Props> = ({ wedding, transportation = [] }) => {
   const sorted = [...transportation].sort((a, b) => a.orderIndex - b.orderIndex);
 
   return (
-    <section className="py-10 px-6">
+    <motion.section
+      ref={ref}
+      variants={slideUp}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="py-10 px-6"
+    >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-8 uppercase font-medium text-center">
         Information
       </p>
@@ -51,7 +62,7 @@ const DressCodeSection: FC<Props> = ({ wedding, transportation = [] }) => {
           </div>
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 };
 

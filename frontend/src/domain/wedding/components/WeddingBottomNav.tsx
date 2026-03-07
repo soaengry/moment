@@ -1,4 +1,6 @@
 import { type FC } from "react";
+import { motion } from "framer-motion";
+import { buttonTap } from "../../../global/constants/animations";
 import { useNavigate } from "react-router-dom";
 import {
   IoHeartCircleOutline,
@@ -64,10 +66,11 @@ const WeddingBottomNav: FC<Props> = ({
   ];
 
   return (
-    <nav
-      className={`fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50 transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "translate-y-full"
-      }`}
+    <motion.nav
+      initial={{ y: 0 }}
+      animate={{ y: isVisible ? 0 : "100%" }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50"
     >
       <div className="max-w-lg mx-auto flex items-center justify-around py-2">
         {items.map((item) => {
@@ -75,9 +78,10 @@ const WeddingBottomNav: FC<Props> = ({
           const Icon = isActive ? item.activeIcon : item.icon;
 
           return (
-            <button
+            <motion.button
               key={item.key}
               onClick={item.action}
+              whileTap={buttonTap}
               className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px]"
             >
               <Icon
@@ -88,12 +92,12 @@ const WeddingBottomNav: FC<Props> = ({
               >
                 {item.label}
               </span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
       <div className="pb-[env(safe-area-inset-bottom)]" />
-    </nav>
+    </motion.nav>
   );
 };
 

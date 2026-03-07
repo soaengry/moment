@@ -1,4 +1,6 @@
 import { type FC, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { staggerContainer, staggerItem, modalBackdrop, modalContent } from "../../../global/constants/animations";
 import { feedApi } from "../api/feedApi";
 import type { PostResponse } from "../types";
 import PostCard from "../components/PostCard";
@@ -117,18 +119,23 @@ const FeedPage: FC = () => {
         )}
 
         {/* Posts */}
-        <div>
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              currentUserId={user?.id}
-              onPostDeleted={handlePostDeleted}
-              onCommentClick={setCommentPostId}
-              onPostUpdated={setEditingPost}
-            />
+            <motion.div key={post.id} variants={staggerItem}>
+              <PostCard
+                post={post}
+                currentUserId={user?.id}
+                onPostDeleted={handlePostDeleted}
+                onCommentClick={setCommentPostId}
+                onPostUpdated={setEditingPost}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Load more */}
         {hasMore && (
@@ -154,9 +161,22 @@ const FeedPage: FC = () => {
       </div>
 
       {/* Edit Modal */}
-      {editingPost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl">
+      <AnimatePresence>
+        {editingPost && (
+          <motion.div
+            variants={modalBackdrop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          >
+            <motion.div
+              variants={modalContent}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="w-full max-w-lg bg-white rounded-2xl shadow-xl"
+            >
             <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100">
               <h2 className="text-sm font-semibold text-gray-800">게시글 수정</h2>
               <button onClick={() => setEditingPost(null)} className="p-1 text-gray-400">
@@ -168,9 +188,10 @@ const FeedPage: FC = () => {
               onPostUpdated={handlePostUpdated}
               onCancel={() => setEditingPost(null)}
             />
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Comment Sheet */}
       {commentPostId !== null && (

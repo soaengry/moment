@@ -1,4 +1,13 @@
 import { type FC, useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  staggerContainer,
+  staggerItem,
+  modalBackdrop,
+  modalContent,
+  buttonHover,
+  buttonTap,
+} from "../../../global/constants/animations";
 import {
   IoSend,
   IoLockClosed,
@@ -267,25 +276,45 @@ const GuestbookSection: FC<Props> = ({
               <IoLockClosed size={12} />
             </label>
           </div>
-          <button
+          <motion.button
             onClick={handleSubmit}
             disabled={isSubmitting || !canSubmit}
+            whileHover={!isSubmitting && canSubmit ? buttonHover : {}}
+            whileTap={!isSubmitting && canSubmit ? buttonTap : {}}
             className="flex items-center gap-1 bg-primary text-white text-xs px-4 py-2 rounded-full disabled:opacity-40"
           >
-            <IoSend size={12} />
-            등록
-          </button>
+            {isSubmitting ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <IoSend size={12} />
+              </motion.div>
+            ) : (
+              <IoSend size={12} />
+            )}
+            {isSubmitting ? "등록 중..." : "등록"}
+          </motion.button>
         </div>
       </div>
 
       {/* 방명록 목록 */}
-      <div className="space-y-3">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="space-y-3"
+      >
         {entries.map((entry) => {
           const secretMasked =
             entry.isSecret && entry.content === "비밀 메시지입니다";
 
           return (
-            <div key={entry.id} className="bg-white rounded-xl p-4 shadow-sm">
+            <motion.div
+              key={entry.id}
+              variants={staggerItem}
+              className="bg-white rounded-xl p-4 shadow-sm"
+            >
               {editingId === entry.id ? (
                 /* 수정 모드 */
                 <div>
@@ -400,10 +429,10 @@ const GuestbookSection: FC<Props> = ({
                   )}
                 </>
               )}
-            </div>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* 더보기 */}
       {hasMore && (
@@ -423,50 +452,64 @@ const GuestbookSection: FC<Props> = ({
       )}
 
       {/* 비밀번호 모달 */}
-      {passwordModalAction && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm shadow-xl">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">
-              {passwordModalAction.action === "edit" ? "수정" : "삭제"}하려면
-              비밀번호를 입력해주세요
-            </h3>
-            <input
-              type="password"
-              placeholder="비밀번호"
-              value={modalPassword}
-              onChange={(e) => {
-                setModalPassword(e.target.value);
-                setModalError("");
-              }}
-              onKeyDown={(e) => e.key === "Enter" && handleModalConfirm()}
-              autoFocus
-              className={`w-full text-sm border rounded-lg px-3 py-2 outline-none ${modalError ? "border-error" : "border-gray-200"}`}
-            />
-            {modalError && (
-              <p className="text-xs text-error mt-1.5">{modalError}</p>
-            )}
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => {
-                  setPasswordModalAction(null);
-                  setModalPassword("");
+      <AnimatePresence>
+        {passwordModalAction && (
+          <motion.div
+            variants={modalBackdrop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center"
+          >
+            <motion.div
+              variants={modalContent}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm shadow-xl"
+            >
+              <h3 className="text-sm font-medium text-gray-700 mb-4">
+                {passwordModalAction.action === "edit" ? "수정" : "삭제"}하려면
+                비밀번호를 입력해주세요
+              </h3>
+              <input
+                type="password"
+                placeholder="비밀번호"
+                value={modalPassword}
+                onChange={(e) => {
+                  setModalPassword(e.target.value);
                   setModalError("");
                 }}
-                className="text-xs text-gray-400 px-3 py-1.5"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleModalConfirm}
-                disabled={!modalPassword.trim() || modalVerifying}
-                className="text-xs text-white bg-primary px-4 py-1.5 rounded-full disabled:opacity-40"
-              >
-                {modalVerifying ? "확인 중..." : "확인"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                onKeyDown={(e) => e.key === "Enter" && handleModalConfirm()}
+                autoFocus
+                className={`w-full text-sm border rounded-lg px-3 py-2 outline-none ${modalError ? "border-error" : "border-gray-200"}`}
+              />
+              {modalError && (
+                <p className="text-xs text-error mt-1.5">{modalError}</p>
+              )}
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => {
+                    setPasswordModalAction(null);
+                    setModalPassword("");
+                    setModalError("");
+                  }}
+                  className="text-xs text-gray-400 px-3 py-1.5"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleModalConfirm}
+                  disabled={!modalPassword.trim() || modalVerifying}
+                  className="text-xs text-white bg-primary px-4 py-1.5 rounded-full disabled:opacity-40"
+                >
+                  {modalVerifying ? "확인 중..." : "확인"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };

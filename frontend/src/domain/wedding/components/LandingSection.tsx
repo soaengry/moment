@@ -1,4 +1,6 @@
 import { type FC, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { kenBurns } from "../../../global/constants/animations";
 import type { GalleryResponse } from "../types";
 
 interface Props {
@@ -48,21 +50,23 @@ const LandingSection: FC<Props> = ({
       {/* 슬라이드 이미지 */}
       {images.length > 0 ? (
         <div className="relative w-full h-full" style={{ minHeight: "85vh" }}>
-          {images.map((img, i) => (
-            <div
-              key={img.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ${
-                i === current ? "opacity-100" : "opacity-0"
-              }`}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current}
+              variants={kenBurns}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="absolute inset-0"
             >
               <img
-                src={img.imageUrl}
-                alt={img.caption ?? `슬라이드 ${i + 1}`}
+                src={images[current].imageUrl}
+                alt={images[current].caption ?? `슬라이드 ${current + 1}`}
                 className="w-full h-full object-cover"
                 style={{ minHeight: "85vh" }}
               />
-            </div>
-          ))}
+            </motion.div>
+          </AnimatePresence>
           {/* 하단 그라데이션 오버레이 */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
         </div>

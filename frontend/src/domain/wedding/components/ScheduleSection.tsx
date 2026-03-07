@@ -1,4 +1,6 @@
-import { type FC } from "react";
+import { type FC, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { slideUp } from "../../../global/constants/animations";
 import type { ScheduleResponse } from "../types";
 
 interface Props {
@@ -8,12 +10,21 @@ interface Props {
 const formatTime = (time: string) => time.slice(0, 5);
 
 const ScheduleSection: FC<Props> = ({ schedules }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
+
   if (schedules.length === 0) return null;
 
   const sorted = [...schedules].sort((a, b) => a.orderIndex - b.orderIndex);
 
   return (
-    <section className="py-10 px-6">
+    <motion.section
+      ref={ref}
+      variants={slideUp}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="py-10 px-6"
+    >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-8 uppercase font-medium text-center">
         Ceremony
       </p>
@@ -51,7 +62,7 @@ const ScheduleSection: FC<Props> = ({ schedules }) => {
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 };
 

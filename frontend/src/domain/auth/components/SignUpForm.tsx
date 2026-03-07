@@ -1,4 +1,10 @@
 import { type FC, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  shake,
+  buttonHover,
+  buttonTap,
+} from "../../../global/constants/animations";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -139,11 +145,16 @@ const SignUpForm: FC = () => {
           새로운 계정을 만들어보세요
         </p>
 
-        {serverError && (
-          <div className="mb-4 p-3 rounded-lg text-sm bg-bgError text-error">
-            {serverError}
-          </div>
-        )}
+        <AnimatePresence>
+          {serverError && (
+            <motion.div
+              animate={shake}
+              className="mb-4 p-3 rounded-lg text-sm bg-bgError text-error"
+            >
+              {serverError}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
@@ -234,13 +245,30 @@ const SignUpForm: FC = () => {
             )}
           </div>
 
-          <button
+          <motion.button
             type="submit"
             disabled={isSubmitting || !!emailDupError || !!nicknameDupError}
-            className="w-full py-3 rounded-lg text-white font-medium bg-primary hover:bg-primaryHover transition-colors disabled:opacity-50"
+            whileHover={
+              !isSubmitting && !emailDupError && !nicknameDupError
+                ? buttonHover
+                : {}
+            }
+            whileTap={
+              !isSubmitting && !emailDupError && !nicknameDupError
+                ? buttonTap
+                : {}
+            }
+            className="w-full py-3 rounded-lg text-white font-medium bg-primary hover:bg-primaryHover transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
+            {isSubmitting && (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+              />
+            )}
             {isSubmitting ? "가입 중..." : "회원가입"}
-          </button>
+          </motion.button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500">

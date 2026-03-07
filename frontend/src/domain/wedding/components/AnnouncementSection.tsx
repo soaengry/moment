@@ -1,4 +1,6 @@
 import { type FC, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { modalBackdrop, modalContent, staggerContainer, staggerItem, buttonHover, buttonTap } from "../../../global/constants/animations";
 import type { AnnouncementResponse } from "../types";
 
 interface Props {
@@ -25,26 +27,37 @@ const AnnouncementSection: FC<Props> = ({ announcements }) => {
   return (
     <>
       {/* FAB 버튼 */}
-      <button
+      <motion.button
         onClick={() => setIsOpen(true)}
+        whileHover={buttonHover}
+        whileTap={buttonTap}
         className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-primary text-white shadow-lg hover:bg-primaryHover transition-colors flex items-center justify-center"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
           <path d="M5.85 3.5a.75.75 0 00-1.117-1 9.719 9.719 0 00-2.348 4.876.75.75 0 001.479.248A8.219 8.219 0 015.85 3.5zM19.267 2.5a.75.75 0 10-1.118 1 8.22 8.22 0 011.987 4.124.75.75 0 001.48-.248A9.72 9.72 0 0019.266 2.5z" />
           <path fillRule="evenodd" d="M12 2.25A6.75 6.75 0 005.25 9v.75a8.217 8.217 0 01-2.119 5.52.75.75 0 00.298 1.206c1.544.57 3.16.99 4.831 1.243a3.75 3.75 0 107.48 0 24.583 24.583 0 004.83-1.244.75.75 0 00.298-1.205 8.217 8.217 0 01-2.118-5.52V9A6.75 6.75 0 0012 2.25zM9.75 18c0-.034 0-.067.002-.1a25.05 25.05 0 004.496 0l.002.1a2.25 2.25 0 01-4.5 0z" clipRule="evenodd" />
         </svg>
-      </button>
+      </motion.button>
 
       {/* 중앙 모달 */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={() => setIsOpen(false)}
-        >
-          <div
-            className="w-full max-w-sm bg-white rounded-2xl max-h-[80vh] flex flex-col shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            variants={modalBackdrop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            onClick={() => setIsOpen(false)}
           >
+            <motion.div
+              variants={modalContent}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="w-full max-w-sm bg-white rounded-2xl max-h-[80vh] flex flex-col shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-800">공지사항</h3>
               <button
@@ -56,10 +69,16 @@ const AnnouncementSection: FC<Props> = ({ announcements }) => {
                 </svg>
               </button>
             </div>
-            <div className="overflow-y-auto p-5 space-y-3">
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+              className="overflow-y-auto p-5 space-y-3"
+            >
               {sorted.map((a) => (
-                <div
+                <motion.div
                   key={a.id}
+                  variants={staggerItem}
                   className={`p-4 rounded-xl ${
                     a.isPinned ? "bg-bgPrimary border border-primary/20" : "bg-gray-50"
                   }`}
@@ -72,12 +91,13 @@ const AnnouncementSection: FC<Props> = ({ announcements }) => {
                   </div>
                   <p className="text-sm text-gray-500 whitespace-pre-line mb-2">{a.content}</p>
                   <p className="text-[10px] text-gray-300">{formatDate(a.createdAt)}</p>
-                </div>
+                </motion.div>
               ))}
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

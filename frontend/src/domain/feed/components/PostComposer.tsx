@@ -1,4 +1,6 @@
 import { type FC, useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { scaleIn, buttonHover } from "../../../global/constants/animations";
 import { IoImageOutline, IoClose } from "react-icons/io5";
 import { feedApi } from "../api/feedApi";
 import type { PostResponse, PostRequest } from "../types";
@@ -135,27 +137,37 @@ const PostComposer: FC<Props> = ({
       </div>
 
       {/* Image previews */}
-      {images.length > 0 && (
-        <div className="flex gap-3 mb-3 overflow-x-auto pb-1 pt-2">
-          {images.map((img, i) => (
-            <div key={i} className="relative flex-shrink-0">
-              <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
-                <img
-                  src={img.preview}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <button
-                onClick={() => handleRemoveImage(i)}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
+      <AnimatePresence>
+        {images.length > 0 && (
+          <div className="flex gap-3 mb-3 overflow-x-auto pb-1 pt-2">
+            {images.map((img, i) => (
+              <motion.div
+                key={i}
+                variants={scaleIn}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                className="relative flex-shrink-0"
               >
-                <IoClose size={12} className="text-white" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                  <img
+                    src={img.preview}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <motion.button
+                  onClick={() => handleRemoveImage(i)}
+                  whileHover={buttonHover}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
+                >
+                  <IoClose size={12} className="text-white" />
+                </motion.button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Upload indicator */}
       {isUploading && (

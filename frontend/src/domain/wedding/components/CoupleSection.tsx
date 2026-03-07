@@ -1,4 +1,6 @@
-import { type FC } from "react";
+import { type FC, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { slideUp } from "../../../global/constants/animations";
 import type { CoupleResponse } from "../types";
 
 interface Props {
@@ -6,6 +8,9 @@ interface Props {
 }
 
 const CoupleSection: FC<Props> = ({ couples }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
+
   const groom = couples.find((c) => c.role === "GROOM");
   const bride = couples.find((c) => c.role === "BRIDE");
 
@@ -66,7 +71,13 @@ const CoupleSection: FC<Props> = ({ couples }) => {
   );
 
   return (
-    <section className="py-10 px-6 text-center">
+    <motion.section
+      ref={ref}
+      variants={slideUp}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="py-10 px-6 text-center"
+    >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-8 uppercase font-medium">
         Invitation
       </p>
@@ -78,7 +89,7 @@ const CoupleSection: FC<Props> = ({ couples }) => {
         </div>
         {bride && renderPerson(bride, "Bride")}
       </div>
-    </section>
+    </motion.section>
   );
 };
 
