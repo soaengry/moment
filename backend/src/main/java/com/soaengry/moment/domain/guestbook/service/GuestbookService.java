@@ -50,18 +50,15 @@ public class GuestbookService {
     }
 
     public Page<GuestbookResponse> getEntries(Long weddingId, Pageable pageable) {
+        // ADMIN 또는 웨딩 호스트: 모든 비밀 글 열람 가능
+        if (isCurrentUserAdmin() || isCurrentUserHostOfWedding(weddingId)) {
+            return guestbookEntryRepository.findByWeddingIdOrderByCreatedAtDesc(weddingId, pageable)
+                    .map(GuestbookResponse::from);
+        }
+        // 그 외: DB에서 본인 비밀 글만 포함하여 조회 — 타인의 비밀 글은 로드 자체를 차단
         Long currentUserId = getCurrentUserId();
-        boolean canSeeSecret = isCurrentUserAdmin() || isCurrentUserHostOfWedding(weddingId);
-
-        return guestbookEntryRepository.findByWeddingIdOrderByCreatedAtDesc(weddingId, pageable)
-                .map(entry -> {
-                    if (entry.getIsSecret() && !canSeeSecret
-                            && (currentUserId == null || !currentUserId.equals(
-                            entry.getUser() != null ? entry.getUser().getId() : null))) {
-                        return GuestbookResponse.secretFrom(entry);
-                    }
-                    return GuestbookResponse.from(entry);
-                });
+        return guestbookEntryRepository.findVisibleEntriesForUser(weddingId, currentUserId, pageable)
+                .map(GuestbookResponse::from);
     }
 
     @Transactional
