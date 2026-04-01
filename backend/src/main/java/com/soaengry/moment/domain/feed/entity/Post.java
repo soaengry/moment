@@ -13,7 +13,10 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "posts")
+@Table(name = "posts", indexes = {
+        @Index(name = "idx_post_wedding_created", columnList = "weddingId, createdAt"),
+        @Index(name = "idx_post_user_created", columnList = "user_id, createdAt")
+})
 public class Post {
 
     @Id
