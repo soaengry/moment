@@ -12,9 +12,12 @@ import com.soaengry.moment.domain.user.dto.response.LogoutResponse;
 import com.soaengry.moment.domain.user.dto.response.ResendVerificationResponse;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.dto.response.TokenResponse;
-
+import com.soaengry.moment.domain.user.exception.UserErrorCode;
+import com.soaengry.moment.domain.user.exception.UserException;
+import com.soaengry.moment.domain.user.repository.OAuth2CodeRepository;
 import com.soaengry.moment.domain.user.service.AuthService;
 import com.soaengry.moment.domain.user.service.UserService;
+import com.soaengry.moment.global.config.JwtProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,8 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final OAuth2CodeRepository oAuth2CodeRepository;
+    private final JwtProperties jwtProperties;
 
     /**
      * 회원가입
@@ -110,6 +115,18 @@ public class AuthController {
         );
 
         return ResponseEntity.ok(html);
+    }
+
+    /**
+     * OAuth2 로그인 후 일회용 코드로 토큰 교환
+     */
+    @GetMapping("/oauth2/token")
+    public ResponseEntity<TokenResponse> exchangeOAuth2Token(@RequestParam("code") String code) {
+        String[] tokens = oAuth2CodeRepository.getAndDelete(code);
+        if (tokens == null || tokens.length < 2) {
+            throw new UserException(UserErrorCode.AUTH_INVALID_CREDENTIALS, "유효하지 않거나 만료된 OAuth2 코드입니다");
+        }
+        return ResponseEntity.ok(TokenResponse.of(tokens[0], tokens[1], jwtProperties.accessTokenExpiration() / 1000));
     }
 
     /**

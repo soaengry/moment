@@ -11,5 +11,7 @@ public interface CoupleRepository extends JpaRepository<Couple, Long> {
 
     List<Couple> findByWeddingId(Long weddingId);
 
+    List<Couple> findByWeddingIdIn(List<Long> weddingIds);
+
     boolean existsByWeddingIdAndEmail(Long weddingId, String email);
 }

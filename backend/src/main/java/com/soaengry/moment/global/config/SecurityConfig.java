@@ -48,6 +48,7 @@ public class SecurityConfig {
                                 "/api/auth/resend-verification",
                                 "/api/auth/check-email",
                                 "/api/auth/check-nickname",
+                                "/api/auth/oauth2/token",
                                 "/api/users/restore",
                                 "/api/weddings/*/info",
                                 "/api/banks/**",
