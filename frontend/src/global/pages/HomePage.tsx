@@ -42,13 +42,13 @@ const Landing = () => {
   const features = [
     {
       icon: <IoSparkles className="w-7 h-7 text-primary" />,
-      title: "웨딩 초대장",
+      title: "초대장",
       description: "나만의 초대장을 만들고 소중한 분들에게 공유하세요",
     },
     {
       icon: <IoChatbubblesOutline className="w-7 h-7 text-primary" />,
       title: "실시간 소통",
-      description: "채팅과 피드로 축하 메시지를 전달하세요",
+      description: "채팅과 피드로 메시지를 전달하세요",
     },
     {
       icon: <IoCalendar className="w-7 h-7 text-primary" />,
