@@ -84,6 +84,14 @@ export const authApi = {
     return data;
   },
 
+  exchangeOAuth2Token: async (code: string): Promise<TokenResponse> => {
+    const { data } = await axiosInstance.get<TokenResponse>(
+      AUTH_API.OAUTH2_TOKEN,
+      { params: { code } },
+    );
+    return data;
+  },
+
   // ─── User ───
 
   getMe: async (): Promise<UserResponse> => {

@@ -11,9 +11,7 @@ const OAuth2CallbackPage: FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const accessToken = searchParams.get("accessToken");
-    const refreshToken = searchParams.get("refreshToken");
-    const expiresIn = searchParams.get("expiresIn");
+    const code = searchParams.get("code");
     const errorParam = searchParams.get("error");
     const errorDescription = searchParams.get("error_description");
 
@@ -34,13 +32,15 @@ const OAuth2CallbackPage: FC = () => {
       return;
     }
 
-    if (!accessToken || !refreshToken) {
+    if (!code) {
       setTimeout(() => setError("인증 정보를 받지 못했습니다."), 0);
       return;
     }
 
     const processLogin = async () => {
       try {
+        const { accessToken, refreshToken, expiresIn } =
+          await authApi.exchangeOAuth2Token(code);
         tokenStorage.setTokens(accessToken, refreshToken);
         const user = await authApi.getMe();
         setAuth(

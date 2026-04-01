@@ -7,6 +7,7 @@ export const AUTH_API = {
   LOGOUT: "/api/auth/logout",
   CHECK_EMAIL: "/api/auth/check-email",
   CHECK_NICKNAME: "/api/auth/check-nickname",
+  OAUTH2_TOKEN: "/api/auth/oauth2/token",
 } as const;
 
 export const USER_API = {
