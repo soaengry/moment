@@ -2,7 +2,7 @@ package com.soaengry.moment.domain.wedding.controller;
 
 import com.soaengry.moment.domain.wedding.dto.request.*;
 import com.soaengry.moment.domain.wedding.dto.response.*;
-import com.soaengry.moment.domain.wedding.service.WeddingService;
+import com.soaengry.moment.domain.wedding.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +18,13 @@ import java.util.List;
 public class WeddingController {
 
     private final WeddingService weddingService;
+    private final CoupleService coupleService;
+    private final ScheduleService scheduleService;
+    private final AccountService accountService;
+    private final GalleryService galleryService;
+    private final TransportationService transportationService;
+    private final AccommodationService accommodationService;
+    private final AnnouncementService announcementService;
 
     // ==================== Wedding ====================
 
@@ -76,13 +83,13 @@ public class WeddingController {
             @RequestBody CoupleRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        CoupleResponse response = weddingService.createCouple(weddingId, userId, request);
+        CoupleResponse response = coupleService.createCouple(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{weddingId}/couples")
     public ResponseEntity<List<CoupleResponse>> getCouplesByWedding(@PathVariable Long weddingId) {
-        List<CoupleResponse> responses = weddingService.getCouplesByWedding(weddingId);
+        List<CoupleResponse> responses = coupleService.getCouplesByWedding(weddingId);
         return ResponseEntity.ok(responses);
     }
 
@@ -92,7 +99,7 @@ public class WeddingController {
             @RequestBody CoupleRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        CoupleResponse response = weddingService.updateCouple(coupleId, userId, request);
+        CoupleResponse response = coupleService.updateCouple(coupleId, userId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -101,7 +108,7 @@ public class WeddingController {
             @PathVariable Long coupleId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteCouple(coupleId, userId);
+        coupleService.deleteCouple(coupleId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -113,13 +120,13 @@ public class WeddingController {
             @RequestBody ScheduleRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        ScheduleResponse response = weddingService.createSchedule(weddingId, userId, request);
+        ScheduleResponse response = scheduleService.createSchedule(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{weddingId}/schedules")
     public ResponseEntity<List<ScheduleResponse>> getSchedulesByWedding(@PathVariable Long weddingId) {
-        List<ScheduleResponse> responses = weddingService.getSchedulesByWedding(weddingId);
+        List<ScheduleResponse> responses = scheduleService.getSchedulesByWedding(weddingId);
         return ResponseEntity.ok(responses);
     }
 
@@ -129,7 +136,7 @@ public class WeddingController {
             @RequestBody ScheduleRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        ScheduleResponse response = weddingService.updateSchedule(scheduleId, userId, request);
+        ScheduleResponse response = scheduleService.updateSchedule(scheduleId, userId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -138,7 +145,7 @@ public class WeddingController {
             @PathVariable Long scheduleId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteSchedule(scheduleId, userId);
+        scheduleService.deleteSchedule(scheduleId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -150,13 +157,13 @@ public class WeddingController {
             @RequestBody AccountGroupRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccountGroupResponse response = weddingService.createAccountGroup(weddingId, userId, request);
+        AccountGroupResponse response = accountService.createAccountGroup(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{weddingId}/account-groups")
     public ResponseEntity<List<AccountGroupResponse>> getAccountGroupsByWedding(@PathVariable Long weddingId) {
-        List<AccountGroupResponse> responses = weddingService.getAccountGroupsByWedding(weddingId);
+        List<AccountGroupResponse> responses = accountService.getAccountGroupsByWedding(weddingId);
         return ResponseEntity.ok(responses);
     }
 
@@ -166,7 +173,7 @@ public class WeddingController {
             @RequestBody AccountGroupRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccountGroupResponse response = weddingService.updateAccountGroup(accountGroupId, userId, request);
+        AccountGroupResponse response = accountService.updateAccountGroup(accountGroupId, userId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -175,7 +182,7 @@ public class WeddingController {
             @PathVariable Long accountGroupId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteAccountGroup(accountGroupId, userId);
+        accountService.deleteAccountGroup(accountGroupId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -187,13 +194,13 @@ public class WeddingController {
             @RequestBody AccountRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccountResponse response = weddingService.createAccount(accountGroupId, userId, request);
+        AccountResponse response = accountService.createAccount(accountGroupId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/account-groups/{accountGroupId}/accounts")
     public ResponseEntity<List<AccountResponse>> getAccountsByGroup(@PathVariable Long accountGroupId) {
-        List<AccountResponse> responses = weddingService.getAccountsByGroup(accountGroupId);
+        List<AccountResponse> responses = accountService.getAccountsByGroup(accountGroupId);
         return ResponseEntity.ok(responses);
     }
 
@@ -203,7 +210,7 @@ public class WeddingController {
             @RequestBody AccountRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccountResponse response = weddingService.updateAccount(accountId, userId, request);
+        AccountResponse response = accountService.updateAccount(accountId, userId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -212,7 +219,7 @@ public class WeddingController {
             @PathVariable Long accountId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteAccount(accountId, userId);
+        accountService.deleteAccount(accountId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -224,13 +231,13 @@ public class WeddingController {
             @RequestBody GalleryRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        GalleryResponse response = weddingService.createGallery(weddingId, userId, request);
+        GalleryResponse response = galleryService.createGallery(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{weddingId}/galleries")
     public ResponseEntity<List<GalleryResponse>> getGalleriesByWedding(@PathVariable Long weddingId) {
-        List<GalleryResponse> responses = weddingService.getGalleriesByWedding(weddingId);
+        List<GalleryResponse> responses = galleryService.getGalleriesByWedding(weddingId);
         return ResponseEntity.ok(responses);
     }
 
@@ -240,7 +247,7 @@ public class WeddingController {
             @RequestBody GalleryRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        GalleryResponse response = weddingService.updateGallery(galleryId, userId, request);
+        GalleryResponse response = galleryService.updateGallery(galleryId, userId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -249,7 +256,7 @@ public class WeddingController {
             @PathVariable Long galleryId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteGallery(galleryId, userId);
+        galleryService.deleteGallery(galleryId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -261,13 +268,13 @@ public class WeddingController {
             @RequestBody TransportationRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        TransportationResponse response = weddingService.createTransportation(weddingId, userId, request);
+        TransportationResponse response = transportationService.createTransportation(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{weddingId}/transportation")
     public ResponseEntity<List<TransportationResponse>> getTransportationsByWedding(@PathVariable Long weddingId) {
-        List<TransportationResponse> responses = weddingService.getTransportationsByWedding(weddingId);
+        List<TransportationResponse> responses = transportationService.getTransportationsByWedding(weddingId);
         return ResponseEntity.ok(responses);
     }
 
@@ -277,7 +284,7 @@ public class WeddingController {
             @RequestBody TransportationRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        TransportationResponse response = weddingService.updateTransportation(transportationId, userId, request);
+        TransportationResponse response = transportationService.updateTransportation(transportationId, userId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -286,7 +293,7 @@ public class WeddingController {
             @PathVariable Long transportationId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteTransportation(transportationId, userId);
+        transportationService.deleteTransportation(transportationId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -298,13 +305,13 @@ public class WeddingController {
             @RequestBody AccommodationRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccommodationResponse response = weddingService.createAccommodation(weddingId, userId, request);
+        AccommodationResponse response = accommodationService.createAccommodation(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{weddingId}/accommodations")
     public ResponseEntity<List<AccommodationResponse>> getAccommodationsByWedding(@PathVariable Long weddingId) {
-        List<AccommodationResponse> responses = weddingService.getAccommodationsByWedding(weddingId);
+        List<AccommodationResponse> responses = accommodationService.getAccommodationsByWedding(weddingId);
         return ResponseEntity.ok(responses);
     }
 
@@ -314,7 +321,7 @@ public class WeddingController {
             @RequestBody AccommodationRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccommodationResponse response = weddingService.updateAccommodation(accommodationId, userId, request);
+        AccommodationResponse response = accommodationService.updateAccommodation(accommodationId, userId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -323,7 +330,7 @@ public class WeddingController {
             @PathVariable Long accommodationId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteAccommodation(accommodationId, userId);
+        accommodationService.deleteAccommodation(accommodationId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -335,13 +342,13 @@ public class WeddingController {
             @RequestBody AnnouncementRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AnnouncementResponse response = weddingService.createAnnouncement(weddingId, userId, request);
+        AnnouncementResponse response = announcementService.createAnnouncement(weddingId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{weddingId}/announcements")
     public ResponseEntity<List<AnnouncementResponse>> getAnnouncementsByWedding(@PathVariable Long weddingId) {
-        List<AnnouncementResponse> responses = weddingService.getAnnouncementsByWedding(weddingId);
+        List<AnnouncementResponse> responses = announcementService.getAnnouncementsByWedding(weddingId);
         return ResponseEntity.ok(responses);
     }
 
@@ -351,7 +358,7 @@ public class WeddingController {
             @RequestBody AnnouncementRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AnnouncementResponse response = weddingService.updateAnnouncement(announcementId, userId, request);
+        AnnouncementResponse response = announcementService.updateAnnouncement(announcementId, userId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -360,7 +367,7 @@ public class WeddingController {
             @PathVariable Long announcementId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteAnnouncement(announcementId, userId);
+        announcementService.deleteAnnouncement(announcementId, userId);
         return ResponseEntity.noContent().build();
     }
 }
