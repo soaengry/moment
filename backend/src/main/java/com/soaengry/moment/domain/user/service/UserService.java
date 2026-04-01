@@ -80,7 +80,7 @@ public class UserService {
         // 모든 RefreshToken 삭제 (재로그인 필요)
         refreshTokenRepository.deleteAllByUserId(userId);
 
-        log.info("비밀번호 변경 완료 - 사용자 ID: {}", userId);
+        log.info("AUDIT | event=PASSWORD_CHANGED userId={}", userId);
     }
 
     /**
@@ -97,7 +97,7 @@ public class UserService {
         // 모든 RefreshToken 삭제
         refreshTokenRepository.deleteAllByUserId(userId);
 
-        log.info("회원 탈퇴 완료 - 사용자 ID: {}", userId);
+        log.info("AUDIT | event=ACCOUNT_DELETED userId={}", userId);
     }
 
     /**
@@ -118,7 +118,7 @@ public class UserService {
         // 계정 복구
         user.restore();
 
-        log.info("계정 복구 완료 - 사용자 ID: {}", user.getId());
+        log.info("AUDIT | event=ACCOUNT_RESTORED userId={}", user.getId());
     }
 
     /**

@@ -1,5 +1,12 @@
 package com.soaengry.moment.wedding.service;
 
+import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
+import com.soaengry.moment.domain.feed.repository.BookmarkRepository;
+import com.soaengry.moment.domain.feed.repository.CommentRepository;
+import com.soaengry.moment.domain.feed.repository.PostImageRepository;
+import com.soaengry.moment.domain.feed.repository.PostLikeRepository;
+import com.soaengry.moment.domain.feed.repository.PostRepository;
+import com.soaengry.moment.domain.guestbook.repository.GuestbookEntryRepository;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.wedding.dto.request.*;
@@ -8,6 +15,13 @@ import com.soaengry.moment.domain.wedding.entity.*;
 import com.soaengry.moment.domain.wedding.exception.WeddingErrorCode;
 import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import com.soaengry.moment.domain.wedding.repository.*;
+import com.soaengry.moment.domain.wedding.service.AccommodationService;
+import com.soaengry.moment.domain.wedding.service.AccountService;
+import com.soaengry.moment.domain.wedding.service.AnnouncementService;
+import com.soaengry.moment.domain.wedding.service.CoupleService;
+import com.soaengry.moment.domain.wedding.service.GalleryService;
+import com.soaengry.moment.domain.wedding.service.ScheduleService;
+import com.soaengry.moment.domain.wedding.service.TransportationService;
 import com.soaengry.moment.domain.wedding.service.WeddingService;
 import com.soaengry.moment.global.service.KakaoGeocodingService;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +49,27 @@ class WeddingServiceTest {
 
     @Autowired
     private WeddingService weddingService;
+
+    @Autowired
+    private CoupleService coupleService;
+
+    @Autowired
+    private ScheduleService scheduleService;
+
+    @Autowired
+    private AccountService accountService;
+
+    @Autowired
+    private GalleryService galleryService;
+
+    @Autowired
+    private TransportationService transportationService;
+
+    @Autowired
+    private AccommodationService accommodationService;
+
+    @Autowired
+    private AnnouncementService announcementService;
 
     @Autowired
     private WeddingRepository weddingRepository;
@@ -66,6 +101,27 @@ class WeddingServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AttendanceRepository attendanceRepository;
+
+    @Autowired
+    private GuestbookEntryRepository guestbookEntryRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private PostLikeRepository postLikeRepository;
+
+    @Autowired
+    private BookmarkRepository bookmarkRepository;
+
+    @Autowired
+    private PostImageRepository postImageRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
     @MockitoBean
     private KakaoGeocodingService kakaoGeocodingService;
 
@@ -74,9 +130,24 @@ class WeddingServiceTest {
 
     @BeforeEach
     void setUp() {
-        // 데이터 정리
-        weddingRepository.deleteAll();
-        userRepository.deleteAll();
+        // 데이터 정리 (FK 제약 조건 순서 고려, deleteAllInBatch로 즉시 실행)
+        announcementRepository.deleteAllInBatch();
+        accommodationRepository.deleteAllInBatch();
+        transportationRepository.deleteAllInBatch();
+        galleryRepository.deleteAllInBatch();
+        accountRepository.deleteAllInBatch();
+        accountGroupRepository.deleteAllInBatch();
+        scheduleRepository.deleteAllInBatch();
+        coupleRepository.deleteAllInBatch();
+        attendanceRepository.deleteAllInBatch();
+        commentRepository.deleteAllInBatch();
+        postLikeRepository.deleteAllInBatch();
+        bookmarkRepository.deleteAllInBatch();
+        postImageRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
+        guestbookEntryRepository.deleteAllInBatch();
+        weddingRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
 
         // Mock Kakao Geocoding Service
         when(kakaoGeocodingService.geocode(anyString()))
@@ -401,7 +472,7 @@ class WeddingServiceTest {
         );
 
         // when
-        CoupleResponse response = weddingService.createCouple(wedding.getId(), testUser.getId(), request);
+        CoupleResponse response = coupleService.createCouple(wedding.getId(), testUser.getId(), request);
 
         // then
         assertThat(response.id()).isNotNull();
@@ -434,13 +505,13 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        weddingService.createCouple(wedding.getId(), testUser.getId(), new CoupleRequest(
+        coupleService.createCouple(wedding.getId(), testUser.getId(), new CoupleRequest(
                 Couple.CoupleRole.BRIDE, "이영희", "bride@example.com", "이아버지", "최어머니",
                 true, false, "010-2222-2222", null, "신부입니다"
         ));
 
         // when
-        List<CoupleResponse> couples = weddingService.getCouplesByWedding(wedding.getId());
+        List<CoupleResponse> couples = coupleService.getCouplesByWedding(wedding.getId());
 
         // then
         assertThat(couples).hasSize(2);
@@ -487,7 +558,7 @@ class WeddingServiceTest {
         );
 
         // when
-        CoupleResponse response = weddingService.updateCouple(couple.getId(), testUser.getId(), updateRequest);
+        CoupleResponse response = coupleService.updateCouple(couple.getId(), testUser.getId(), updateRequest);
 
         // then
         assertThat(response.name()).isEqualTo("김철수 수정");
@@ -521,7 +592,7 @@ class WeddingServiceTest {
                 .build());
 
         // when
-        weddingService.deleteCouple(couple.getId(), testUser.getId());
+        coupleService.deleteCouple(couple.getId(), testUser.getId());
 
         // then
         assertThat(coupleRepository.findById(couple.getId())).isEmpty();
@@ -562,7 +633,7 @@ class WeddingServiceTest {
         );
 
         // when
-        ScheduleResponse response = weddingService.createSchedule(wedding.getId(), testUser.getId(), request);
+        ScheduleResponse response = scheduleService.createSchedule(wedding.getId(), testUser.getId(), request);
 
         // then
         assertThat(response.id()).isNotNull();
@@ -595,13 +666,13 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        weddingService.createSchedule(wedding.getId(), testUser.getId(),
+        scheduleService.createSchedule(wedding.getId(), testUser.getId(),
                 new ScheduleRequest(LocalTime.of(14, 0), "입장", "설명1", 1));
-        weddingService.createSchedule(wedding.getId(), testUser.getId(),
+        scheduleService.createSchedule(wedding.getId(), testUser.getId(),
                 new ScheduleRequest(LocalTime.of(15, 0), "식사", "설명2", 2));
 
         // when
-        List<ScheduleResponse> schedules = weddingService.getSchedulesByWedding(wedding.getId());
+        List<ScheduleResponse> schedules = scheduleService.getSchedulesByWedding(wedding.getId());
 
         // then
         assertThat(schedules).hasSize(2);
@@ -634,7 +705,7 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        ScheduleResponse created = weddingService.createSchedule(wedding.getId(), testUser.getId(),
+        ScheduleResponse created = scheduleService.createSchedule(wedding.getId(), testUser.getId(),
                 new ScheduleRequest(LocalTime.of(14, 0), "입장", "설명", 1));
 
         ScheduleRequest updateRequest = new ScheduleRequest(
@@ -645,7 +716,7 @@ class WeddingServiceTest {
         );
 
         // when
-        ScheduleResponse response = weddingService.updateSchedule(created.id(), testUser.getId(), updateRequest);
+        ScheduleResponse response = scheduleService.updateSchedule(created.id(), testUser.getId(), updateRequest);
 
         // then
         assertThat(response.title()).isEqualTo("수정된 제목");
@@ -678,11 +749,11 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        ScheduleResponse created = weddingService.createSchedule(wedding.getId(), testUser.getId(),
+        ScheduleResponse created = scheduleService.createSchedule(wedding.getId(), testUser.getId(),
                 new ScheduleRequest(LocalTime.of(14, 0), "입장", "설명", 1));
 
         // when
-        weddingService.deleteSchedule(created.id(), testUser.getId());
+        scheduleService.deleteSchedule(created.id(), testUser.getId());
 
         // then
         assertThat(scheduleRepository.findById(created.id())).isEmpty();
@@ -722,7 +793,7 @@ class WeddingServiceTest {
         );
 
         // when
-        AccountGroupResponse response = weddingService.createAccountGroup(wedding.getId(), testUser.getId(), request);
+        AccountGroupResponse response = accountService.createAccountGroup(wedding.getId(), testUser.getId(), request);
 
         // then
         assertThat(response.id()).isNotNull();
@@ -765,7 +836,7 @@ class WeddingServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> weddingService.createAccountGroup(wedding.getId(), testUser.getId(), request))
+        assertThatThrownBy(() -> accountService.createAccountGroup(wedding.getId(), testUser.getId(), request))
                 .isInstanceOf(WeddingException.class)
                 .hasMessage(WeddingErrorCode.ACCOUNT_GROUP_LIMIT_EXCEEDED.getMessage());
     }
@@ -795,13 +866,13 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.GROOM, "신랑측", 1));
-        weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.BRIDE, "신부측", 2));
 
         // when
-        List<AccountGroupResponse> groups = weddingService.getAccountGroupsByWedding(wedding.getId());
+        List<AccountGroupResponse> groups = accountService.getAccountGroupsByWedding(wedding.getId());
 
         // then
         assertThat(groups).hasSize(2);
@@ -834,7 +905,7 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AccountGroupResponse created = weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        AccountGroupResponse created = accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.GROOM, "신랑측", 1));
 
         AccountGroupRequest updateRequest = new AccountGroupRequest(
@@ -844,7 +915,7 @@ class WeddingServiceTest {
         );
 
         // when
-        AccountGroupResponse response = weddingService.updateAccountGroup(created.id(), testUser.getId(), updateRequest);
+        AccountGroupResponse response = accountService.updateAccountGroup(created.id(), testUser.getId(), updateRequest);
 
         // then
         assertThat(response.side()).isEqualTo(AccountGroup.Side.BRIDE);
@@ -877,11 +948,11 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AccountGroupResponse created = weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        AccountGroupResponse created = accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.GROOM, "신랑측", 1));
 
         // when
-        weddingService.deleteAccountGroup(created.id(), testUser.getId());
+        accountService.deleteAccountGroup(created.id(), testUser.getId());
 
         // then
         assertThat(accountGroupRepository.findById(created.id())).isEmpty();
@@ -914,7 +985,7 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AccountGroupResponse group = weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        AccountGroupResponse group = accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.GROOM, "신랑측", 1));
 
         AccountRequest request = new AccountRequest(
@@ -927,7 +998,7 @@ class WeddingServiceTest {
         );
 
         // when
-        AccountResponse response = weddingService.createAccount(group.id(), testUser.getId(), request);
+        AccountResponse response = accountService.createAccount(group.id(), testUser.getId(), request);
 
         // then
         assertThat(response.id()).isNotNull();
@@ -973,7 +1044,7 @@ class WeddingServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> weddingService.createAccount(group.getId(), testUser.getId(), request))
+        assertThatThrownBy(() -> accountService.createAccount(group.getId(), testUser.getId(), request))
                 .isInstanceOf(WeddingException.class)
                 .hasMessage(WeddingErrorCode.ACCOUNT_LIMIT_EXCEEDED.getMessage());
     }
@@ -1003,16 +1074,16 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AccountGroupResponse group = weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        AccountGroupResponse group = accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.GROOM, "신랑측", 1));
 
-        weddingService.createAccount(group.id(), testUser.getId(),
+        accountService.createAccount(group.id(), testUser.getId(),
                 new AccountRequest("신한은행", "088", "111-111-111111", "김철수", null, 1));
-        weddingService.createAccount(group.id(), testUser.getId(),
+        accountService.createAccount(group.id(), testUser.getId(),
                 new AccountRequest("국민은행", "004", "222-222-222222", "박철수", null, 2));
 
         // when
-        List<AccountResponse> accounts = weddingService.getAccountsByGroup(group.id());
+        List<AccountResponse> accounts = accountService.getAccountsByGroup(group.id());
 
         // then
         assertThat(accounts).hasSize(2);
@@ -1045,10 +1116,10 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AccountGroupResponse group = weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        AccountGroupResponse group = accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.GROOM, "신랑측", 1));
 
-        AccountResponse created = weddingService.createAccount(group.id(), testUser.getId(),
+        AccountResponse created = accountService.createAccount(group.id(), testUser.getId(),
                 new AccountRequest("신한은행", "088", "111-111-111111", "김철수", null, 1));
 
         AccountRequest updateRequest = new AccountRequest(
@@ -1061,7 +1132,7 @@ class WeddingServiceTest {
         );
 
         // when
-        AccountResponse response = weddingService.updateAccount(created.id(), testUser.getId(), updateRequest);
+        AccountResponse response = accountService.updateAccount(created.id(), testUser.getId(), updateRequest);
 
         // then
         assertThat(response.bankName()).isEqualTo("국민은행");
@@ -1095,14 +1166,14 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AccountGroupResponse group = weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        AccountGroupResponse group = accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.GROOM, "신랑측", 1));
 
-        AccountResponse created = weddingService.createAccount(group.id(), testUser.getId(),
+        AccountResponse created = accountService.createAccount(group.id(), testUser.getId(),
                 new AccountRequest("신한은행", "088", "111-111-111111", "김철수", null, 1));
 
         // when
-        weddingService.deleteAccount(created.id(), testUser.getId());
+        accountService.deleteAccount(created.id(), testUser.getId());
 
         // then
         assertThat(accountRepository.findById(created.id())).isEmpty();
@@ -1143,7 +1214,7 @@ class WeddingServiceTest {
         );
 
         // when
-        GalleryResponse response = weddingService.createGallery(wedding.getId(), testUser.getId(), request);
+        GalleryResponse response = galleryService.createGallery(wedding.getId(), testUser.getId(), request);
 
         // then
         assertThat(response.id()).isNotNull();
@@ -1176,13 +1247,13 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        weddingService.createGallery(wedding.getId(), testUser.getId(),
+        galleryService.createGallery(wedding.getId(), testUser.getId(),
                 new GalleryRequest("https://example.com/1.jpg", null, "첫번째", 1));
-        weddingService.createGallery(wedding.getId(), testUser.getId(),
+        galleryService.createGallery(wedding.getId(), testUser.getId(),
                 new GalleryRequest("https://example.com/2.jpg", null, "두번째", 2));
 
         // when
-        List<GalleryResponse> galleries = weddingService.getGalleriesByWedding(wedding.getId());
+        List<GalleryResponse> galleries = galleryService.getGalleriesByWedding(wedding.getId());
 
         // then
         assertThat(galleries).hasSize(2);
@@ -1215,7 +1286,7 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        GalleryResponse created = weddingService.createGallery(wedding.getId(), testUser.getId(),
+        GalleryResponse created = galleryService.createGallery(wedding.getId(), testUser.getId(),
                 new GalleryRequest("https://example.com/1.jpg", null, "첫번째", 1));
 
         GalleryRequest updateRequest = new GalleryRequest(
@@ -1226,7 +1297,7 @@ class WeddingServiceTest {
         );
 
         // when
-        GalleryResponse response = weddingService.updateGallery(created.id(), testUser.getId(), updateRequest);
+        GalleryResponse response = galleryService.updateGallery(created.id(), testUser.getId(), updateRequest);
 
         // then
         assertThat(response.caption()).isEqualTo("수정된 캡션");
@@ -1258,11 +1329,11 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        GalleryResponse created = weddingService.createGallery(wedding.getId(), testUser.getId(),
+        GalleryResponse created = galleryService.createGallery(wedding.getId(), testUser.getId(),
                 new GalleryRequest("https://example.com/1.jpg", null, "첫번째", 1));
 
         // when
-        weddingService.deleteGallery(created.id(), testUser.getId());
+        galleryService.deleteGallery(created.id(), testUser.getId());
 
         // then
         assertThat(galleryRepository.findById(created.id())).isEmpty();
@@ -1303,7 +1374,7 @@ class WeddingServiceTest {
         );
 
         // when
-        TransportationResponse response = weddingService.createTransportation(wedding.getId(), testUser.getId(), request);
+        TransportationResponse response = transportationService.createTransportation(wedding.getId(), testUser.getId(), request);
 
         // then
         assertThat(response.id()).isNotNull();
@@ -1336,13 +1407,13 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        weddingService.createTransportation(wedding.getId(), testUser.getId(),
+        transportationService.createTransportation(wedding.getId(), testUser.getId(),
                 new TransportationRequest(Transportation.TransportType.SUBWAY, "지하철", "설명1", 1));
-        weddingService.createTransportation(wedding.getId(), testUser.getId(),
+        transportationService.createTransportation(wedding.getId(), testUser.getId(),
                 new TransportationRequest(Transportation.TransportType.BUS, "버스", "설명2", 2));
 
         // when
-        List<TransportationResponse> transportations = weddingService.getTransportationsByWedding(wedding.getId());
+        List<TransportationResponse> transportations = transportationService.getTransportationsByWedding(wedding.getId());
 
         // then
         assertThat(transportations).hasSize(2);
@@ -1375,7 +1446,7 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        TransportationResponse created = weddingService.createTransportation(wedding.getId(), testUser.getId(),
+        TransportationResponse created = transportationService.createTransportation(wedding.getId(), testUser.getId(),
                 new TransportationRequest(Transportation.TransportType.SUBWAY, "지하철", "설명", 1));
 
         TransportationRequest updateRequest = new TransportationRequest(
@@ -1386,7 +1457,7 @@ class WeddingServiceTest {
         );
 
         // when
-        TransportationResponse response = weddingService.updateTransportation(created.id(), testUser.getId(), updateRequest);
+        TransportationResponse response = transportationService.updateTransportation(created.id(), testUser.getId(), updateRequest);
 
         // then
         assertThat(response.type()).isEqualTo(Transportation.TransportType.BUS);
@@ -1419,11 +1490,11 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        TransportationResponse created = weddingService.createTransportation(wedding.getId(), testUser.getId(),
+        TransportationResponse created = transportationService.createTransportation(wedding.getId(), testUser.getId(),
                 new TransportationRequest(Transportation.TransportType.SUBWAY, "지하철", "설명", 1));
 
         // when
-        weddingService.deleteTransportation(created.id(), testUser.getId());
+        transportationService.deleteTransportation(created.id(), testUser.getId());
 
         // then
         assertThat(transportationRepository.findById(created.id())).isEmpty();
@@ -1466,7 +1537,7 @@ class WeddingServiceTest {
         );
 
         // when
-        AccommodationResponse response = weddingService.createAccommodation(wedding.getId(), testUser.getId(), request);
+        AccommodationResponse response = accommodationService.createAccommodation(wedding.getId(), testUser.getId(), request);
 
         // then
         assertThat(response.id()).isNotNull();
@@ -1499,13 +1570,13 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        weddingService.createAccommodation(wedding.getId(), testUser.getId(),
+        accommodationService.createAccommodation(wedding.getId(), testUser.getId(),
                 new AccommodationRequest("호텔A", "주소A", "02-1111-1111", "5분", "10만원", 1));
-        weddingService.createAccommodation(wedding.getId(), testUser.getId(),
+        accommodationService.createAccommodation(wedding.getId(), testUser.getId(),
                 new AccommodationRequest("호텔B", "주소B", "02-2222-2222", "10분", "20만원", 2));
 
         // when
-        List<AccommodationResponse> accommodations = weddingService.getAccommodationsByWedding(wedding.getId());
+        List<AccommodationResponse> accommodations = accommodationService.getAccommodationsByWedding(wedding.getId());
 
         // then
         assertThat(accommodations).hasSize(2);
@@ -1538,7 +1609,7 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AccommodationResponse created = weddingService.createAccommodation(wedding.getId(), testUser.getId(),
+        AccommodationResponse created = accommodationService.createAccommodation(wedding.getId(), testUser.getId(),
                 new AccommodationRequest("호텔A", "주소A", "02-1111-1111", "5분", "10만원", 1));
 
         AccommodationRequest updateRequest = new AccommodationRequest(
@@ -1551,7 +1622,7 @@ class WeddingServiceTest {
         );
 
         // when
-        AccommodationResponse response = weddingService.updateAccommodation(created.id(), testUser.getId(), updateRequest);
+        AccommodationResponse response = accommodationService.updateAccommodation(created.id(), testUser.getId(), updateRequest);
 
         // then
         assertThat(response.name()).isEqualTo("수정된 호텔");
@@ -1584,11 +1655,11 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AccommodationResponse created = weddingService.createAccommodation(wedding.getId(), testUser.getId(),
+        AccommodationResponse created = accommodationService.createAccommodation(wedding.getId(), testUser.getId(),
                 new AccommodationRequest("호텔A", "주소A", "02-1111-1111", "5분", "10만원", 1));
 
         // when
-        weddingService.deleteAccommodation(created.id(), testUser.getId());
+        accommodationService.deleteAccommodation(created.id(), testUser.getId());
 
         // then
         assertThat(accommodationRepository.findById(created.id())).isEmpty();
@@ -1628,7 +1699,7 @@ class WeddingServiceTest {
         );
 
         // when
-        AnnouncementResponse response = weddingService.createAnnouncement(wedding.getId(), testUser.getId(), request);
+        AnnouncementResponse response = announcementService.createAnnouncement(wedding.getId(), testUser.getId(), request);
 
         // then
         assertThat(response.id()).isNotNull();
@@ -1661,13 +1732,13 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        weddingService.createAnnouncement(wedding.getId(), testUser.getId(),
+        announcementService.createAnnouncement(wedding.getId(), testUser.getId(),
                 new AnnouncementRequest("공지1", "내용1", false));
-        weddingService.createAnnouncement(wedding.getId(), testUser.getId(),
+        announcementService.createAnnouncement(wedding.getId(), testUser.getId(),
                 new AnnouncementRequest("공지2", "내용2", true));
 
         // when
-        List<AnnouncementResponse> announcements = weddingService.getAnnouncementsByWedding(wedding.getId());
+        List<AnnouncementResponse> announcements = announcementService.getAnnouncementsByWedding(wedding.getId());
 
         // then
         assertThat(announcements).hasSize(2);
@@ -1698,7 +1769,7 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AnnouncementResponse created = weddingService.createAnnouncement(wedding.getId(), testUser.getId(),
+        AnnouncementResponse created = announcementService.createAnnouncement(wedding.getId(), testUser.getId(),
                 new AnnouncementRequest("공지", "내용", false));
 
         AnnouncementRequest updateRequest = new AnnouncementRequest(
@@ -1708,7 +1779,7 @@ class WeddingServiceTest {
         );
 
         // when
-        AnnouncementResponse response = weddingService.updateAnnouncement(created.id(), testUser.getId(), updateRequest);
+        AnnouncementResponse response = announcementService.updateAnnouncement(created.id(), testUser.getId(), updateRequest);
 
         // then
         assertThat(response.title()).isEqualTo("수정된 공지");
@@ -1741,11 +1812,11 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        AnnouncementResponse created = weddingService.createAnnouncement(wedding.getId(), testUser.getId(),
+        AnnouncementResponse created = announcementService.createAnnouncement(wedding.getId(), testUser.getId(),
                 new AnnouncementRequest("공지", "내용", false));
 
         // when
-        weddingService.deleteAnnouncement(created.id(), testUser.getId());
+        announcementService.deleteAnnouncement(created.id(), testUser.getId());
 
         // then
         assertThat(announcementRepository.findById(created.id())).isEmpty();
@@ -1778,20 +1849,20 @@ class WeddingServiceTest {
                 .isMotherAlive(true)
                 .build());
 
-        weddingService.createCouple(wedding.getId(), testUser.getId(), new CoupleRequest(
+        coupleService.createCouple(wedding.getId(), testUser.getId(), new CoupleRequest(
                 Couple.CoupleRole.BRIDE, "이영희", "bride2@example.com", "이아버지", "박어머니",
                 true, true, "010-1111-1111", null, "신부입니다"
         ));
 
-        weddingService.createSchedule(wedding.getId(), testUser.getId(), new ScheduleRequest(
+        scheduleService.createSchedule(wedding.getId(), testUser.getId(), new ScheduleRequest(
                 LocalTime.of(14, 0), "입장", "설명", 1
         ));
 
-        AccountGroupResponse group = weddingService.createAccountGroup(wedding.getId(), testUser.getId(),
+        AccountGroupResponse group = accountService.createAccountGroup(wedding.getId(), testUser.getId(),
                 new AccountGroupRequest(AccountGroup.Side.GROOM, "신랑측", 1)
         );
 
-        weddingService.createAccount(group.id(), testUser.getId(),
+        accountService.createAccount(group.id(), testUser.getId(),
                 new AccountRequest("신한은행", "088", "111-111-111111", "김철수", null, 1)
         );
 

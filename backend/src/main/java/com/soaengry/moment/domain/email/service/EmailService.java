@@ -52,8 +52,8 @@ public class EmailService {
     @Async
     public void sendPasswordResetEmail(String toEmail, String resetToken) {
         try {
-            String link = verificationUrl + "?token=" + resetToken;
-            String subject = "[MOMENT] 이메일 인증 코드";
+            String link = passwordResetUrl + "?token=" + resetToken;
+            String subject = "[MOMENT] 비밀번호 재설정";
             String content = buildPasswordResetEmailContent(link);
 
             sendEmail(toEmail, subject, content);
