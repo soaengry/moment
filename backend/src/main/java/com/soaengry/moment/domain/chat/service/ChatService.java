@@ -1,5 +1,6 @@
 package com.soaengry.moment.domain.chat.service;
 
+import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
 import com.soaengry.moment.domain.chat.dto.request.ChatMessageRequest;
 import com.soaengry.moment.domain.chat.dto.response.ChatMessageResponse;
 import com.soaengry.moment.domain.chat.entity.ChatMessage;
@@ -23,6 +24,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final WeddingRepository weddingRepository;
     private final UserRepository userRepository;
+    private final AttendanceRepository attendanceRepository;
     private final S3Service s3Service;
 
     public Page<ChatMessageResponse> getMessages(Long weddingId, Pageable pageable) {
@@ -39,6 +41,10 @@ public class ChatService {
 
         if (!weddingRepository.existsById(request.weddingId())) {
             throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
+        }
+
+        if (!attendanceRepository.existsByUserIdAndWeddingId(userId, request.weddingId())) {
+            throw new ChatException(ChatErrorCode.UNAUTHORIZED_ACCESS);
         }
 
         ChatMessage.MessageType type = request.type() != null

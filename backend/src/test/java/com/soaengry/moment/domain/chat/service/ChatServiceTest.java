@@ -1,5 +1,6 @@
 package com.soaengry.moment.domain.chat.service;
 
+import com.soaengry.moment.domain.attendance.entity.Attendance;
 import com.soaengry.moment.domain.chat.dto.request.ChatMessageRequest;
 import com.soaengry.moment.domain.chat.dto.response.ChatMessageResponse;
 import com.soaengry.moment.domain.chat.entity.ChatMessage;
@@ -113,6 +114,9 @@ class ChatServiceTest {
                 .venuePhone("02-1234-5678")
                 .build();
         testWedding = weddingRepository.saveAndFlush(testWedding);
+
+        // testUser 참석 등록 (saveMessage 권한 검증에 필요)
+        attendanceRepository.saveAndFlush(Attendance.create(testUser.getId(), testWedding.getId()));
     }
 
     @Test
