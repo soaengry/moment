@@ -251,28 +251,25 @@ class GuestbookServiceTest {
     }
 
     @Test
-    @DisplayName("공개 방명록만 조회")
+    @DisplayName("공개 방명록만 조회 - 타인의 비밀 글은 노출되지 않음")
     void getEntries_PublicOnly_Success() {
         // given
         setSecurityContext(testUser.getId(), "ROLE_USER");
         guestbookService.createEntry(testWedding.getId(), new GuestbookRequest("작성자1", "공개 메시지", null, false));
         guestbookService.createEntry(testWedding.getId(), new GuestbookRequest("작성자2", "비밀 메시지", null, true));
 
-        // 다른 사용자로 조회
-        setSecurityContext(adminUser.getId(), "ROLE_USER"); // ADMIN 권한 제외
+        // 다른 사용자로 조회 (ADMIN 권한 없음)
+        setSecurityContext(adminUser.getId(), "ROLE_USER");
 
         // when
         Page<GuestbookResponse> result = guestbookService.getEntries(testWedding.getId(), PageRequest.of(0, 10));
 
-        // then
-        assertThat(result.getContent()).hasSize(2);
-        GuestbookResponse secretEntry = result.getContent().stream()
-                .filter(GuestbookResponse::isSecret)
-                .findFirst()
-                .orElseThrow();
-        assertThat(secretEntry.content()).isEqualTo("비밀 메시지입니다");
+        // then: 타인의 비밀 글은 DB 레벨에서 제외 → 공개 글만 반환
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).isSecret()).isFalse();
+        assertThat(result.getContent().get(0).content()).isEqualTo("공개 메시지");
 
-        System.out.println("✅ 공개 방명록만 조회 (비밀 메시지 마스킹됨)");
+        System.out.println("✅ 공개 방명록만 조회 (타인의 비밀 글은 노출 안 됨)");
     }
 
     @Test
@@ -318,8 +315,8 @@ class GuestbookServiceTest {
     }
 
     @Test
-    @DisplayName("비밀 방명록 조회 - 타인은 마스킹된 내용")
-    void getEntries_Other_SecretMasked() {
+    @DisplayName("비밀 방명록 조회 - 타인에게는 노출되지 않음")
+    void getEntries_Other_SecretNotVisible() {
         // given
         setSecurityContext(testUser.getId(), "ROLE_USER");
         guestbookService.createEntry(testWedding.getId(), new GuestbookRequest("작성자", "비밀 메시지", null, true));
@@ -336,12 +333,10 @@ class GuestbookServiceTest {
         // when
         Page<GuestbookResponse> result = guestbookService.getEntries(testWedding.getId(), PageRequest.of(0, 10));
 
-        // then
-        GuestbookResponse entry = result.getContent().get(0);
-        assertThat(entry.isSecret()).isTrue();
-        assertThat(entry.content()).isEqualTo("비밀 메시지입니다"); // 마스킹됨
+        // then: 타인의 비밀 글은 DB 레벨에서 필터링 → 빈 결과
+        assertThat(result.getContent()).isEmpty();
 
-        System.out.println("✅ 타인은 비밀 방명록 마스킹됨");
+        System.out.println("✅ 타인은 비밀 방명록을 볼 수 없음 (DB 레벨 필터링)");
     }
 
     @Test
