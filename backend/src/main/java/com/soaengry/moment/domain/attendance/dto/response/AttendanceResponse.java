@@ -1,8 +1,8 @@
 package com.soaengry.moment.domain.attendance.dto.response;
 
 import com.soaengry.moment.domain.attendance.entity.Attendance;
-import com.soaengry.moment.domain.wedding.entity.Couple;
-import com.soaengry.moment.domain.wedding.entity.Wedding;
+import com.soaengry.moment.domain.invitation.entity.Couple;
+import com.soaengry.moment.domain.invitation.entity.Invitation;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +12,7 @@ public record AttendanceResponse(
         Long weddingId,
         String invitationId,
         String title,
-        LocalDateTime weddingDate,
+        LocalDateTime eventDate,
         String venueName,
         String venueAddress,
         String groomName,
@@ -22,7 +22,7 @@ public record AttendanceResponse(
         LocalDateTime createdAt
 ) {
 
-    public static AttendanceResponse from(Attendance attendance, Wedding wedding, List<Couple> couples) {
+    public static AttendanceResponse from(Attendance attendance, Invitation wedding, List<Couple> couples) {
         String groomName = null;
         String brideName = null;
         String groomProfileImageUrl = null;
@@ -43,7 +43,7 @@ public record AttendanceResponse(
                 wedding.getId(),
                 wedding.getInvitationId(),
                 wedding.getTitle(),
-                wedding.getWeddingDate(),
+                wedding.getEventDate(),
                 wedding.getVenueName(),
                 wedding.getVenueAddress(),
                 groomName,

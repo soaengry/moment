@@ -17,7 +17,7 @@ public record GuestbookResponse(
     public static GuestbookResponse from(GuestbookEntry entry) {
         return new GuestbookResponse(
                 entry.getId(),
-                entry.getWedding().getId(),
+                entry.getInvitation().getId(),
                 entry.getUser() != null ? entry.getUser().getId() : null,
                 entry.getAuthorName(),
                 entry.getContent(),
@@ -30,7 +30,7 @@ public record GuestbookResponse(
     public static GuestbookResponse secretFrom(GuestbookEntry entry) {
         return new GuestbookResponse(
                 entry.getId(),
-                entry.getWedding().getId(),
+                entry.getInvitation().getId(),
                 entry.getUser() != null ? entry.getUser().getId() : null,
                 entry.getAuthorName(),
                 "비밀 메시지입니다",

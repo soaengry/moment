@@ -21,8 +21,8 @@ const PastSchedulesPage: FC = () => {
         const all = await scheduleApi.getMyAttendances();
         const now = new Date();
         const past = all
-          .filter((s) => new Date(s.weddingDate) < now)
-          .sort((a, b) => new Date(b.weddingDate).getTime() - new Date(a.weddingDate).getTime());
+          .filter((s) => new Date(s.eventDate) < now)
+          .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());
         setAllSchedules(past);
       } catch { /* silent */ }
       finally { setIsLoading(false); }
@@ -84,7 +84,7 @@ const PastSchedulesPage: FC = () => {
             <div className="text-left">
               <p className="text-sm font-medium text-gray-700">{schedule.title}</p>
               <p className="text-[11px] text-gray-400 mt-0.5">
-                {formatDate(schedule.weddingDate)} · {schedule.venueName}
+                {formatDate(schedule.eventDate)} · {schedule.venueName}
               </p>
             </div>
             <IoChevronForward size={16} className="text-gray-300 flex-shrink-0" />

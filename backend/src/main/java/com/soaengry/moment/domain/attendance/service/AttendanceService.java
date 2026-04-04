@@ -7,12 +7,12 @@ import com.soaengry.moment.domain.attendance.exception.AttendanceErrorCode;
 import com.soaengry.moment.domain.attendance.exception.AttendanceException;
 import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import com.soaengry.moment.domain.wedding.entity.Couple;
-import com.soaengry.moment.domain.wedding.entity.Wedding;
-import com.soaengry.moment.domain.wedding.exception.WeddingErrorCode;
-import com.soaengry.moment.domain.wedding.exception.WeddingException;
-import com.soaengry.moment.domain.wedding.repository.CoupleRepository;
-import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
+import com.soaengry.moment.domain.invitation.entity.Couple;
+import com.soaengry.moment.domain.invitation.entity.Invitation;
+import com.soaengry.moment.domain.invitation.exception.InvitationErrorCode;
+import com.soaengry.moment.domain.invitation.exception.InvitationException;
+import com.soaengry.moment.domain.invitation.repository.CoupleRepository;
+import com.soaengry.moment.domain.invitation.repository.InvitationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
-    private final WeddingRepository weddingRepository;
+    private final InvitationRepository invitationRepository;
     private final CoupleRepository coupleRepository;
 
     @Transactional(readOnly = true)
@@ -41,11 +41,11 @@ public class AttendanceService {
                 .map(Attendance::getWeddingId)
                 .toList();
 
-        Map<Long, Wedding> weddingMap = weddingRepository.findAllById(weddingIds).stream()
-                .collect(Collectors.toMap(Wedding::getId, w -> w));
+        Map<Long, Invitation> weddingMap = invitationRepository.findAllById(weddingIds).stream()
+                .collect(Collectors.toMap(Invitation::getId, w -> w));
 
-        Map<Long, List<Couple>> coupleMap = coupleRepository.findByWeddingIdIn(weddingIds).stream()
-                .collect(Collectors.groupingBy(c -> c.getWedding().getId()));
+        Map<Long, List<Couple>> coupleMap = coupleRepository.findByInvitationIdIn(weddingIds).stream()
+                .collect(Collectors.groupingBy(c -> c.getInvitation().getId()));
 
         return attendances.stream()
                 .filter(a -> weddingMap.containsKey(a.getWeddingId()))
@@ -59,8 +59,8 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceResponse addAttendance(Long userId, AddAttendanceRequest request) {
-        Wedding wedding = weddingRepository.findByInvitationId(request.invitationId())
-                .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
+        Invitation wedding = invitationRepository.findByInvitationId(request.invitationId())
+                .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_NOT_FOUND));
 
         Attendance attendance;
         try {
@@ -69,7 +69,7 @@ public class AttendanceService {
             throw new AttendanceException(AttendanceErrorCode.DUPLICATE_ATTENDANCE);
         }
 
-        List<Couple> couples = coupleRepository.findByWeddingId(wedding.getId());
+        List<Couple> couples = coupleRepository.findByInvitationId(wedding.getId());
 
         return AttendanceResponse.from(attendance, wedding, couples);
     }

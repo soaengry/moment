@@ -56,7 +56,7 @@ const WeddingEditPage: FC = () => {
     }
   };
 
-  const id = originalData?.wedding.id;
+  const id = originalData?.invitation.id;
 
   useEffect(() => {
     const load = async () => {
@@ -66,7 +66,7 @@ const WeddingEditPage: FC = () => {
         setOriginalData(info);
 
         const {
-          wedding,
+          invitation: wedding,
           couples,
           schedules,
           accountGroups,
@@ -78,7 +78,7 @@ const WeddingEditPage: FC = () => {
         const basic: WeddingRequest = {
           title: wedding.title,
           invitationId: wedding.invitationId,
-          weddingDate: wedding.weddingDate,
+          eventDate: wedding.eventDate,
           venueName: wedding.venueName,
           venueAddress: wedding.venueAddress,
           venueDetail: wedding.venueDetail ?? undefined,
@@ -111,7 +111,6 @@ const WeddingEditPage: FC = () => {
         const accountGroupData: AccountGroupFormData[] = accountGroups
           .sort((a, b) => a.group.orderIndex - b.group.orderIndex)
           .map((ag) => ({
-            side: ag.group.side,
             groupName: ag.group.groupName,
             orderIndex: ag.group.orderIndex,
             accounts: ag.accounts
@@ -255,7 +254,6 @@ const WeddingEditPage: FC = () => {
       }
       for (const groupData of state.accountGroups) {
         const group = await weddingApi.createAccountGroup(id, {
-          side: groupData.side,
           groupName: groupData.groupName,
           orderIndex: groupData.orderIndex,
         });

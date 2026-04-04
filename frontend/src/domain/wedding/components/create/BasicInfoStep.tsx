@@ -28,7 +28,7 @@ const weddingSchema = z.object({
       WEDDING_VALIDATION.INVITATION_PATTERN,
       "영문 소문자, 숫자, '-'만 사용할 수 있습니다.",
     ),
-  weddingDate: z.string().min(1, "날짜를 입력해주세요."),
+  eventDate: z.string().min(1, "날짜를 입력해주세요."),
   weddingTime: z.string().min(1, "시간을 입력해주세요."),
   venueName: z.string().min(1, "예식장 이름을 입력해주세요."),
   venueAddress: z.string().min(1, "주소를 입력해주세요."),
@@ -39,8 +39,8 @@ const weddingSchema = z.object({
 type FormValues = z.infer<typeof weddingSchema>;
 
 const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
-  const dateFromISO = initialData?.weddingDate
-    ? new Date(initialData.weddingDate)
+  const dateFromISO = initialData?.eventDate
+    ? new Date(initialData.eventDate)
     : null;
 
   const {
@@ -54,7 +54,7 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
     defaultValues: {
       title: initialData?.title ?? "",
       invitationId: initialData?.invitationId ?? "",
-      weddingDate: dateFromISO ? dateFromISO.toISOString().slice(0, 10) : "",
+      eventDate: dateFromISO ? dateFromISO.toISOString().slice(0, 10) : "",
       weddingTime: dateFromISO ? dateFromISO.toTimeString().slice(0, 5) : "",
       venueName: initialData?.venueName ?? "",
       venueAddress: initialData?.venueAddress ?? "",
@@ -101,12 +101,12 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
     if (invitationIdDupError) return; // 중복이면 제출 막기
 
     // LocalDateTime 형식으로 전송 (타임존 변환 없이 KST 그대로)
-    const weddingDate = `${values.weddingDate}T${values.weddingTime || "00:00"}:00`;
+    const eventDate = `${values.eventDate}T${values.weddingTime || "00:00"}:00`;
 
     const request: WeddingRequest = {
       title: values.title,
       invitationId: values.invitationId,
-      weddingDate,
+      eventDate,
       venueName: values.venueName,
       venueAddress: values.venueAddress,
       venueDetail: values.venueDetail || undefined,
@@ -152,11 +152,11 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
             <label className={labelClass}>예식 날짜 *</label>
             <input
               type="date"
-              {...register("weddingDate", { required: "날짜를 선택해주세요" })}
+              {...register("eventDate", { required: "날짜를 선택해주세요" })}
               className={inputClass}
             />
-            {errors.weddingDate && (
-              <p className={errorClass}>{errors.weddingDate.message}</p>
+            {errors.eventDate && (
+              <p className={errorClass}>{errors.eventDate.message}</p>
             )}
           </div>
           <div>

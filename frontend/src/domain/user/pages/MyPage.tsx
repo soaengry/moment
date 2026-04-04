@@ -51,11 +51,11 @@ const MyPage: FC = () => {
         const all = await scheduleApi.getMyAttendances();
         const now = new Date();
         const upcoming = all
-          .filter((s) => new Date(s.weddingDate) >= now)
+          .filter((s) => new Date(s.eventDate) >= now)
           .sort(
             (a, b) =>
-              new Date(a.weddingDate).getTime() -
-              new Date(b.weddingDate).getTime(),
+              new Date(a.eventDate).getTime() -
+              new Date(b.eventDate).getTime(),
           )
           .slice(0, 3);
         setUpcomingSchedules(upcoming);
@@ -215,7 +215,7 @@ const MyPage: FC = () => {
                       {schedule.title}
                     </p>
                     <p className="text-[11px] text-gray-400 mt-0.5">
-                      {formatDate(schedule.weddingDate)} · {schedule.venueName}
+                      {formatDate(schedule.eventDate)} · {schedule.venueName}
                     </p>
                   </div>
                   <IoChevronForward size={16} className="text-gray-300" />

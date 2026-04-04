@@ -13,7 +13,7 @@ const DateVenueSection: FC<Props> = ({ wedding }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-  const date = new Date(wedding.weddingDate);
+  const date = new Date(wedding.eventDate);
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();

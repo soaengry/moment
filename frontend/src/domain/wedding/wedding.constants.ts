@@ -1,19 +1,20 @@
 export const WEDDING_API = {
-  BASE: "/api/weddings",
-  DETAIL: (id: number) => `/api/weddings/${id}`,
-  INFO: (invitationId: string) => `/api/weddings/${invitationId}/info`,
-  CHECK_INVITATION: "/api/weddings/check-invitation",
-  COUPLES: (weddingId: number) => `/api/weddings/${weddingId}/couples`,
-  SCHEDULES: (weddingId: number) => `/api/weddings/${weddingId}/schedules`,
+  BASE: "/api/invitations",
+  DETAIL: (id: number) => `/api/invitations/${id}`,
+  INFO: (invitationId: string) => `/api/invitations/${invitationId}/info`,
+  CHECK_INVITATION: "/api/invitations/check-invitation",
+  TEMPLATES: "/api/invitations/templates",
+  COUPLES: (weddingId: number) => `/api/invitations/${weddingId}/couples`,
+  SCHEDULES: (weddingId: number) => `/api/invitations/${weddingId}/schedules`,
   ACCOUNT_GROUPS: (weddingId: number) =>
-    `/api/weddings/${weddingId}/account-groups`,
+    `/api/invitations/${weddingId}/account-groups`,
   ACCOUNTS: (groupId: number) =>
-    `/api/weddings/account-groups/${groupId}/accounts`,
+    `/api/invitations/account-groups/${groupId}/accounts`,
   TRANSPORTATION: (weddingId: number) =>
-    `/api/weddings/${weddingId}/transportation`,
+    `/api/invitations/${weddingId}/transportation`,
   ANNOUNCEMENTS: (weddingId: number) =>
-    `/api/weddings/${weddingId}/announcements`,
-  GALLERIES: (weddingId: number) => `/api/weddings/${weddingId}/galleries`,
+    `/api/invitations/${weddingId}/announcements`,
+  GALLERIES: (weddingId: number) => `/api/invitations/${weddingId}/galleries`,
 } as const;
 
 export const WEDDING_VALIDATION = {

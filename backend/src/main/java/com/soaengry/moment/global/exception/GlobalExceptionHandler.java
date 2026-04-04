@@ -6,7 +6,7 @@ import com.soaengry.moment.domain.email.exception.EmailException;
 import com.soaengry.moment.domain.feed.exception.FeedException;
 import com.soaengry.moment.domain.guestbook.exception.GuestbookException;
 import com.soaengry.moment.domain.user.exception.UserException;
-import com.soaengry.moment.domain.wedding.exception.WeddingException;
+import com.soaengry.moment.domain.invitation.exception.InvitationException;
 import com.soaengry.moment.global.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,11 +37,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * WeddingException 처리
+     * InvitationException 처리
      */
-    @ExceptionHandler(WeddingException.class)
-    public ResponseEntity<ApiResponse<?>> handleWeddingException(WeddingException e) {
-        log.warn("Wedding Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+    @ExceptionHandler(InvitationException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvitationException(InvitationException e) {
+        log.warn("Invitation Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
         HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
         ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);

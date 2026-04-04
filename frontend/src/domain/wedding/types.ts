@@ -1,7 +1,7 @@
 // ─── Enums ───
 
 export type CoupleRole = "GROOM" | "BRIDE";
-export type AccountSide = "GROOM" | "GROOM_FAMILY" | "BRIDE" | "BRIDE_FAMILY";
+export type TemplateType = "WEDDING" | "REUNION" | "GATHERING";
 export type TransportType = "SUBWAY" | "BUS" | "SHUTTLE";
 
 // ─── Response ───
@@ -10,7 +10,8 @@ export interface WeddingResponse {
   id: number;
   title: string;
   invitationId: string;
-  weddingDate: string;
+  templateType: TemplateType;
+  eventDate: string;
   venueName: string;
   venueAddress: string;
   venueDetail: string | null;
@@ -28,7 +29,7 @@ export interface WeddingResponse {
 
 export interface CoupleResponse {
   id: number;
-  weddingId: number;
+  invitationId: number;
   userId: number | null;
   role: CoupleRole;
   name: string;
@@ -44,7 +45,7 @@ export interface CoupleResponse {
 
 export interface ScheduleResponse {
   id: number;
-  weddingId: number;
+  invitationId: number;
   time: string;
   title: string;
   description: string | null;
@@ -53,8 +54,7 @@ export interface ScheduleResponse {
 
 export interface AccountGroupResponse {
   id: number;
-  weddingId: number;
-  side: AccountSide;
+  invitationId: number;
   groupName: string;
   orderIndex: number;
 }
@@ -77,7 +77,7 @@ export interface AccountGroupWithAccounts {
 
 export interface GalleryResponse {
   id: number;
-  weddingId: number;
+  invitationId: number;
   imageUrl: string;
   thumbnailUrl: string | null;
   caption: string | null;
@@ -87,7 +87,7 @@ export interface GalleryResponse {
 
 export interface TransportationResponse {
   id: number;
-  weddingId: number;
+  invitationId: number;
   type: TransportType;
   title: string;
   description: string | null;
@@ -96,7 +96,7 @@ export interface TransportationResponse {
 
 export interface AccommodationResponse {
   id: number;
-  weddingId: number;
+  invitationId: number;
   name: string;
   address: string | null;
   phone: string | null;
@@ -107,7 +107,7 @@ export interface AccommodationResponse {
 
 export interface AnnouncementResponse {
   id: number;
-  weddingId: number;
+  invitationId: number;
   title: string;
   content: string;
   isPinned: boolean;
@@ -119,12 +119,20 @@ export interface CheckResponse {
   exists: boolean;
 }
 
+export interface TemplateResponse {
+  type: TemplateType;
+  displayName: string;
+  description: string | null;
+  previewImageUrl: string | null;
+}
+
 // ─── Request ───
 
 export interface WeddingRequest {
   title: string;
   invitationId: string;
-  weddingDate: string;
+  templateType?: TemplateType;
+  eventDate: string;
   venueName: string;
   venueAddress: string;
   venueDetail?: string;
@@ -157,7 +165,6 @@ export interface ScheduleRequest {
 }
 
 export interface AccountGroupRequest {
-  side: AccountSide;
   groupName: string;
   orderIndex: number;
 }
@@ -187,7 +194,7 @@ export interface AnnouncementRequest {
 // ─── Aggregated ───
 
 export interface WeddingInfoResponse {
-  wedding: WeddingResponse;
+  invitation: WeddingResponse;
   couples: CoupleResponse[];
   schedules: ScheduleResponse[];
   accountGroups: AccountGroupWithAccounts[];

@@ -50,33 +50,33 @@ public class SecurityConfig {
                                 "/api/auth/check-nickname",
                                 "/api/auth/oauth2/token",
                                 "/api/users/restore",
-                                "/api/weddings/*/info",
+                                "/api/invitations/*/info",
                                 "/api/banks/**",
                                 "/ws/**",
                                 "/login/oauth2/**",
                                 "/oauth2/**"
                         ).permitAll()
                         // 방명록: GET은 공개, POST/PUT/DELETE는 인증 필요 (서비스에서 처리)
-                        .requestMatchers(HttpMethod.GET, "/api/weddings/*/guestbook/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/weddings/*/guestbook/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/weddings/*/guestbook/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/*/guestbook/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/invitations/*/guestbook/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/invitations/*/guestbook/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/invitations/*/guestbook/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/invitations/*/guestbook/**").permitAll()
                         // 채팅 메시지 조회는 공개
-                        .requestMatchers(HttpMethod.GET, "/api/weddings/*/chat/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/invitations/*/chat/**").permitAll()
                         // 웨딩 피드: GET은 공개, CUD는 인증 필요
-                        .requestMatchers(HttpMethod.GET, "/api/weddings/*/feed/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/weddings/*/feed/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/weddings/*/feed/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/*/feed/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/invitations/*/feed/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/invitations/*/feed/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/invitations/*/feed/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/invitations/*/feed/**").authenticated()
                         // 피드 조회는 인증 필요
                         .requestMatchers(HttpMethod.GET, "/api/feed/**").authenticated()
                         // 채팅 이미지 업로드는 인증 사용자
-                        .requestMatchers(HttpMethod.POST, "/api/weddings/*/chat/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/invitations/*/chat/**").authenticated()
                         // 웨딩 생성은 ADMIN만, 하위 리소스 CUD는 인증 사용자 (서비스에서 권한 검증)
-                        .requestMatchers(HttpMethod.POST, "/api/weddings").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/weddings/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/weddings/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/weddings/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/invitations").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/invitations/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/invitations/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/invitations/**").authenticated()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/weddings/{weddingId}/feed")
+@RequestMapping("/api/invitations/{weddingId}/feed")
 @RequiredArgsConstructor
 public class WeddingFeedController {
 

@@ -5,7 +5,7 @@ export interface AttendanceResponse {
   weddingId: number;
   invitationId: string;
   title: string;
-  weddingDate: string;
+  eventDate: string;
   venueName: string;
   venueAddress: string;
   groomName: string | null;

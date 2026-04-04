@@ -9,7 +9,7 @@ import com.soaengry.moment.domain.chat.exception.ChatException;
 import com.soaengry.moment.domain.chat.repository.ChatMessageRepository;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
-import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
+import com.soaengry.moment.domain.invitation.repository.InvitationRepository;
 import com.soaengry.moment.global.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,13 +22,13 @@ import org.springframework.web.multipart.MultipartFile;
 public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
-    private final WeddingRepository weddingRepository;
+    private final InvitationRepository invitationRepository;
     private final UserRepository userRepository;
     private final AttendanceRepository attendanceRepository;
     private final S3Service s3Service;
 
     public Page<ChatMessageResponse> getMessages(Long weddingId, Pageable pageable) {
-        if (!weddingRepository.existsById(weddingId)) {
+        if (!invitationRepository.existsById(weddingId)) {
             throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
         }
         return chatMessageRepository.findByWeddingIdOrderByCreatedAtDesc(weddingId, pageable)
@@ -39,7 +39,7 @@ public class ChatService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ChatException(ChatErrorCode.UNAUTHORIZED_ACCESS));
 
-        if (!weddingRepository.existsById(request.weddingId())) {
+        if (!invitationRepository.existsById(request.weddingId())) {
             throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
         }
 
@@ -65,7 +65,7 @@ public class ChatService {
     }
 
     public String uploadChatImage(Long weddingId, Long userId, MultipartFile file) {
-        if (!weddingRepository.existsById(weddingId)) {
+        if (!invitationRepository.existsById(weddingId)) {
             throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
         }
         if (!userRepository.existsById(userId)) {

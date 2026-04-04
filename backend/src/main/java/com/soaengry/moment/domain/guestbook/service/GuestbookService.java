@@ -8,11 +8,11 @@ import com.soaengry.moment.domain.guestbook.exception.GuestbookException;
 import com.soaengry.moment.domain.guestbook.repository.GuestbookEntryRepository;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
-import com.soaengry.moment.domain.wedding.entity.Wedding;
-import com.soaengry.moment.domain.wedding.exception.WeddingErrorCode;
-import com.soaengry.moment.domain.wedding.exception.WeddingException;
-import com.soaengry.moment.domain.wedding.repository.CoupleRepository;
-import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
+import com.soaengry.moment.domain.invitation.entity.Invitation;
+import com.soaengry.moment.domain.invitation.exception.InvitationErrorCode;
+import com.soaengry.moment.domain.invitation.exception.InvitationException;
+import com.soaengry.moment.domain.invitation.repository.CoupleRepository;
+import com.soaengry.moment.domain.invitation.repository.InvitationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,21 +28,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class GuestbookService {
 
     private final GuestbookEntryRepository guestbookEntryRepository;
-    private final WeddingRepository weddingRepository;
+    private final InvitationRepository invitationRepository;
     private final CoupleRepository coupleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public GuestbookResponse createEntry(Long weddingId, GuestbookRequest request) {
-        Wedding wedding = weddingRepository.findById(weddingId)
-                .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
+        Invitation invitation = invitationRepository.findById(weddingId)
+                .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_NOT_FOUND));
 
         User user = getCurrentUser();
         String encodedPassword = request.password() != null ? passwordEncoder.encode(request.password()) : null;
 
         GuestbookEntry entry = GuestbookEntry.create(
-                wedding, user, request.authorName(), request.content(),
+                invitation, user, request.authorName(), request.content(),
                 encodedPassword, request.isSecret()
         );
 
@@ -152,7 +152,7 @@ public class GuestbookService {
         if (user == null) return false;
         String email = user.getEmail();
         if (email == null) return false;
-        return coupleRepository.existsByWeddingIdAndEmail(weddingId, email);
+        return coupleRepository.existsByInvitationIdAndEmail(weddingId, email);
     }
 
     private User getCurrentUser() {

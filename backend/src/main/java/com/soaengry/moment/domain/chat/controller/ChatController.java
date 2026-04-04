@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/weddings/{weddingId}/chat")
+@RequestMapping("/api/invitations/{weddingId}/chat")
 @RequiredArgsConstructor
 public class ChatController {
 

@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/weddings/{weddingId}/guestbook")
+@RequestMapping("/api/invitations/{weddingId}/guestbook")
 @RequiredArgsConstructor
 public class GuestbookController {
 

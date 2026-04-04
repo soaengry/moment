@@ -85,7 +85,7 @@ const WeddingInfoPage: FC = () => {
   }
 
   const {
-    wedding,
+    invitation: wedding,
     couples,
     schedules,
     accountGroups,
@@ -129,7 +129,7 @@ const WeddingInfoPage: FC = () => {
             <LandingSection
               gallery={gallery}
               title={wedding.title}
-              weddingDate={wedding.weddingDate}
+              eventDate={wedding.eventDate}
               groomName={groom?.name}
               brideName={bride?.name}
             />

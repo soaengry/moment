@@ -11,7 +11,7 @@ import java.util.TimeZone;
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = {
         "com.soaengry.moment.domain.user.repository",
-        "com.soaengry.moment.domain.wedding.repository",
+        "com.soaengry.moment.domain.invitation.repository",
         "com.soaengry.moment.domain.email.repository",
         "com.soaengry.moment.domain.guestbook.repository",
         "com.soaengry.moment.domain.feed.repository",

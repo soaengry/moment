@@ -1,7 +1,7 @@
 package com.soaengry.moment.domain.guestbook.entity;
 
+import com.soaengry.moment.domain.invitation.entity.Invitation;
 import com.soaengry.moment.domain.user.entity.User;
-import com.soaengry.moment.domain.wedding.entity.Wedding;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,8 +20,8 @@ public class GuestbookEntry {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "wedding_id", nullable = false)
-    private Wedding wedding;
+    @JoinColumn(name = "invitation_id", nullable = false)
+    private Invitation invitation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -45,9 +45,9 @@ public class GuestbookEntry {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    private GuestbookEntry(Wedding wedding, User user, String authorName, String content,
+    private GuestbookEntry(Invitation invitation, User user, String authorName, String content,
                            String password, Boolean isSecret) {
-        this.wedding = wedding;
+        this.invitation = invitation;
         this.user = user;
         this.authorName = authorName;
         this.content = content;
@@ -55,9 +55,9 @@ public class GuestbookEntry {
         this.isSecret = isSecret != null ? isSecret : false;
     }
 
-    public static GuestbookEntry create(Wedding wedding, User user, String authorName,
+    public static GuestbookEntry create(Invitation invitation, User user, String authorName,
                                          String content, String password, Boolean isSecret) {
-        return new GuestbookEntry(wedding, user, authorName, content, password, isSecret);
+        return new GuestbookEntry(invitation, user, authorName, content, password, isSecret);
     }
 
     @PrePersist

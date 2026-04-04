@@ -1,11 +1,10 @@
 import { type FC, useState, useRef } from "react";
-import type { AccountRequest, AccountSide } from "../../types";
+import type { AccountRequest } from "../../types";
 import axiosInstance from "../../../../global/api/axiosInstance";
 
 export type PaymentMethod = "BANK" | "KAKAOPAY" | "TOSS";
 
 export interface AccountGroupFormData {
-  side: AccountSide;
   groupName: string;
   orderIndex: number;
   accounts: (AccountRequest & { type?: PaymentMethod })[];
@@ -16,13 +15,6 @@ interface Props {
   onSubmit: (groups: AccountGroupFormData[]) => void;
   onBack: () => void;
 }
-
-const SIDE_OPTIONS: { value: AccountSide; label: string }[] = [
-  { value: "GROOM", label: "신랑측" },
-  { value: "GROOM_FAMILY", label: "신랑 혼주측" },
-  { value: "BRIDE", label: "신부측" },
-  { value: "BRIDE_FAMILY", label: "신부 혼주측" },
-];
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: string }[] =
   [
@@ -90,7 +82,6 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     setGroups((prev) => [
       ...prev,
       {
-        side: "GROOM",
         groupName: "",
         orderIndex: newIndex,
         accounts: [createAccount("BANK", 0)],
@@ -235,10 +226,7 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
       .map((g, i) => ({
         ...g,
         orderIndex: i,
-        groupName:
-          g.groupName ||
-          SIDE_OPTIONS.find((s) => s.value === g.side)?.label ||
-          "",
+        groupName: g.groupName || `그룹 ${i + 1}`,
         accounts: g.accounts.map((a, ai) => {
           const { type, ...rest } = a as AccountRequest & {
             type?: PaymentMethod;
@@ -419,22 +407,15 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
                 ✕
               </button>
 
-              {/* Side selector */}
+              {/* Group name */}
               <div>
-                <label className={labelClass}>측</label>
-                <select
-                  value={group.side}
-                  onChange={(e) =>
-                    updateGroup(gi, "side", e.target.value as AccountSide)
-                  }
+                <label className={labelClass}>그룹 이름</label>
+                <input
+                  value={group.groupName}
+                  onChange={(e) => updateGroup(gi, "groupName", e.target.value)}
+                  placeholder="예: 신랑측, 신부측"
                   className={inputClass}
-                >
-                  {SIDE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Account list */}

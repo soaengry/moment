@@ -125,7 +125,6 @@ const WeddingCreatePage: FC = () => {
       // 4. 계좌 그룹 + 계좌
       for (const groupData of state.accountGroups) {
         const group = await weddingApi.createAccountGroup(weddingId, {
-          side: groupData.side,
           groupName: groupData.groupName,
           orderIndex: groupData.orderIndex,
         });

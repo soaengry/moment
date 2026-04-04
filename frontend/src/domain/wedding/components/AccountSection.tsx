@@ -5,19 +5,11 @@ import { toast } from "react-toastify";
 import type {
   AccountGroupWithAccounts,
   AccountResponse,
-  AccountSide,
 } from "../types";
 
 interface Props {
   accountGroups: AccountGroupWithAccounts[];
 }
-
-const SIDE_LABEL: Record<AccountSide, string> = {
-  GROOM: "신랑측",
-  GROOM_FAMILY: "신랑 혼주측",
-  BRIDE: "신부측",
-  BRIDE_FAMILY: "신부 혼주측",
-};
 
 const AccountCard: FC<{ account: AccountResponse }> = ({ account }) => {
   const isKakaoPay = account.bankCode === "KAKAOPAY";
@@ -76,7 +68,7 @@ const AccountCard: FC<{ account: AccountResponse }> = ({ account }) => {
 const AccountSection: FC<Props> = ({ accountGroups }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
-  const [openSide, setOpenSide] = useState<AccountSide | null>(null);
+  const [openGroupId, setOpenGroupId] = useState<number | null>(null);
 
   if (accountGroups.length === 0) return null;
 
@@ -101,7 +93,7 @@ const AccountSection: FC<Props> = ({ accountGroups }) => {
 
       <div className="space-y-3 max-w-sm mx-auto">
         {sorted.map(({ group, accounts }) => {
-          const isOpen = openSide === group.side;
+          const isOpen = openGroupId === group.id;
           const sortedAccounts = [...accounts].sort(
             (a, b) => a.orderIndex - b.orderIndex,
           );
@@ -110,14 +102,14 @@ const AccountSection: FC<Props> = ({ accountGroups }) => {
             <div key={group.id}>
               <button
                 onClick={() =>
-                  setOpenSide((prev) =>
-                    prev === group.side ? null : group.side,
+                  setOpenGroupId((prev) =>
+                    prev === group.id ? null : group.id,
                   )
                 }
                 className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white hover:bg-gray-50 transition-colors"
               >
                 <span className="text-sm font-medium text-gray-700">
-                  {SIDE_LABEL[group.side]}
+                  {group.groupName}
                 </span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

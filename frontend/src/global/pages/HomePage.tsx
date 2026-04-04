@@ -114,11 +114,11 @@ const Dashboard = ({ user }: DashboardProps) => {
       .then((data) => {
         const now = new Date();
         const upcoming = data
-          .filter((s) => new Date(s.weddingDate) >= now)
+          .filter((s) => new Date(s.eventDate) >= now)
           .sort(
             (a, b) =>
-              new Date(a.weddingDate).getTime() -
-              new Date(b.weddingDate).getTime(),
+              new Date(a.eventDate).getTime() -
+              new Date(b.eventDate).getTime(),
           )
           .slice(0, 3);
         setSchedules(upcoming);
@@ -210,7 +210,7 @@ const Dashboard = ({ user }: DashboardProps) => {
                     {s.title}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {formatScheduleDate(s.weddingDate)}
+                    {formatScheduleDate(s.eventDate)}
                     {s.venueName && ` · ${s.venueName}`}
                   </p>
                 </div>

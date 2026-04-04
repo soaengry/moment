@@ -35,7 +35,7 @@ const ChatPage: FC = () => {
     if (!invitationId) return;
     weddingApi
       .getWeddingInfo(invitationId)
-      .then((info) => setWeddingId(Number(info.wedding.id)))
+      .then((info) => setWeddingId(Number(info.invitation.id)))
       .catch(() => {
         /* silent */
       });

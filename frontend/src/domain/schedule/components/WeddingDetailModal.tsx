@@ -16,14 +16,14 @@ const WeddingDetailModal: FC<WeddingDetailModalProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const weddingDate = new Date(attendance.weddingDate);
-  const dateStr = weddingDate.toLocaleDateString("ko-KR", {
+  const eventDate = new Date(attendance.eventDate);
+  const dateStr = eventDate.toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
     day: "numeric",
     weekday: "short",
   });
-  const timeStr = weddingDate.toLocaleTimeString("ko-KR", {
+  const timeStr = eventDate.toLocaleTimeString("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
   });

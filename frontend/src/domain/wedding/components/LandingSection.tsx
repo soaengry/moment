@@ -6,7 +6,7 @@ import type { GalleryResponse } from "../types";
 interface Props {
   gallery: GalleryResponse[];
   title: string;
-  weddingDate: string;
+  eventDate: string;
   groomName?: string;
   brideName?: string;
 }
@@ -14,7 +14,7 @@ interface Props {
 const LandingSection: FC<Props> = ({
   gallery,
   title,
-  weddingDate,
+  eventDate,
   groomName,
   brideName,
 }) => {
@@ -89,7 +89,7 @@ const LandingSection: FC<Props> = ({
           {title}
         </h1>
         <p className="text-sm tracking-[0.15em] text-white/80 drop-shadow">
-          {formatDate(weddingDate)}
+          {formatDate(eventDate)}
         </p>
 
         {/* 슬라이드 인디케이터 */}

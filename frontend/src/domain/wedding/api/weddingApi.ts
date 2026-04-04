@@ -128,14 +128,14 @@ export const weddingApi = {
     request: CoupleRequest,
   ): Promise<CoupleResponse> => {
     const { data } = await axiosInstance.put<CoupleResponse>(
-      `/api/weddings/couples/${coupleId}`,
+      `/api/invitations/couples/${coupleId}`,
       request,
     );
     return data;
   },
 
   deleteCouple: async (coupleId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/weddings/couples/${coupleId}`);
+    await axiosInstance.delete(`/api/invitations/couples/${coupleId}`);
   },
 
   updateSchedule: async (
@@ -143,32 +143,32 @@ export const weddingApi = {
     request: ScheduleRequest,
   ): Promise<ScheduleResponse> => {
     const { data } = await axiosInstance.put<ScheduleResponse>(
-      `/api/weddings/schedules/${scheduleId}`,
+      `/api/invitations/schedules/${scheduleId}`,
       request,
     );
     return data;
   },
 
   deleteSchedule: async (scheduleId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/weddings/schedules/${scheduleId}`);
+    await axiosInstance.delete(`/api/invitations/schedules/${scheduleId}`);
   },
 
   deleteAccountGroup: async (groupId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/weddings/account-groups/${groupId}`);
+    await axiosInstance.delete(`/api/invitations/account-groups/${groupId}`);
   },
 
   deleteAccount: async (accountId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/weddings/accounts/${accountId}`);
+    await axiosInstance.delete(`/api/invitations/accounts/${accountId}`);
   },
 
   deleteTransportation: async (transportationId: number): Promise<void> => {
     await axiosInstance.delete(
-      `/api/weddings/transportation/${transportationId}`,
+      `/api/invitations/transportation/${transportationId}`,
     );
   },
 
   deleteAnnouncement: async (announcementId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/weddings/announcements/${announcementId}`);
+    await axiosInstance.delete(`/api/invitations/announcements/${announcementId}`);
   },
 
   // Announcement
@@ -201,7 +201,7 @@ export const weddingApi = {
   },
 
   deleteGallery: async (galleryId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/weddings/galleries/${galleryId}`);
+    await axiosInstance.delete(`/api/invitations/galleries/${galleryId}`);
   },
 
   // File Upload
