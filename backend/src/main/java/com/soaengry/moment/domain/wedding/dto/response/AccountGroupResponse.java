@@ -5,17 +5,15 @@ import com.soaengry.moment.domain.wedding.entity.AccountGroup;
 public record AccountGroupResponse(
         Long id,
         Long weddingId,
-        AccountGroup.Side side,
         String groupName,
         Integer orderIndex
 ) {
-    public static AccountGroupResponse from(AccountGroup accountGroup) {
+    public static AccountGroupResponse from(AccountGroup group) {
         return new AccountGroupResponse(
-                accountGroup.getId(),
-                accountGroup.getWeddingId(),
-                accountGroup.getSide(),
-                accountGroup.getGroupName(),
-                accountGroup.getOrderIndex()
+                group.getId(),
+                group.getWeddingId(),
+                group.getGroupName(),
+                group.getOrderIndex()
         );
     }
 }

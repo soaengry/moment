@@ -1,111 +1,52 @@
 package com.soaengry.moment.domain.wedding.entity;
 
-import com.soaengry.moment.global.common.BaseTimeEntity;
+import com.soaengry.moment.domain.event.entity.Event;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "weddings", indexes = {@Index(name = "idx_invitationId", columnList = "invitationId")})
-public class Wedding extends BaseTimeEntity {
+@Table(name = "weddings")
+public class Wedding {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;                    // wedding id
+    private Long id;
 
-    @Column(nullable = false)
-    private String title;               // 초대장 제목
-
-    @Column(nullable = false, unique = true)
-    private String invitationId;        // 초대장 id
-
-    @Column(nullable = false)
-    private LocalDateTime weddingDate;  // 결혼식 일시
-
-    @Column(nullable = false)
-    private String venueName;           // 예식장 이름
-
-    @Column(nullable = false)
-    private String venueAddress;        // 예식장 주소
-
-    private String venueDetail;         // 예식장 상세 주소
-
-    @Column(nullable = false)
-    private Double venueLat;            // 예식장 위도
-
-    @Column(nullable = false)
-    private Double venueLng;            // 예식장 경도
-
-    private String venuePhone;          // 예식장 번호
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id", nullable = false, unique = true,
+            foreignKey = @ForeignKey(name = "fk_weddings_events_event_id"))
+    private Event event;
 
     @Column(columnDefinition = "TEXT")
-    private String dressCode;           // 드레스 코드
+    private String notice;
 
     @Column(columnDefinition = "TEXT")
-    private String notice;              // 유의사항
+    private String parkingInfo;
 
     @Column(columnDefinition = "TEXT")
-    private String parkingInfo;         // 주차장 정보
+    private String mealInfo;
 
     @Column(columnDefinition = "TEXT")
-    private String mealInfo;            // 식사 정보
+    private String greeting;
+
+    @Version
+    private Integer version = 0;
 
     @Builder
-    private Wedding(String title, String invitationId, LocalDateTime weddingDate, String venueName, String venueAddress,
-                    String venueDetail, Double venueLat, Double venueLng, String venuePhone,
-                    String dressCode, String notice, String parkingInfo, String mealInfo) {
-        this.title = title;
-        this.invitationId = invitationId;
-        this.weddingDate = weddingDate;
-        this.venueName = venueName;
-        this.venueAddress = venueAddress;
-        this.venueDetail = venueDetail;
-        this.venueLat = venueLat;
-        this.venueLng = venueLng;
-        this.venuePhone = venuePhone;
-        this.dressCode = dressCode;
+    private Wedding(Event event, String notice, String parkingInfo, String mealInfo, String greeting) {
+        this.event = event;
         this.notice = notice;
         this.parkingInfo = parkingInfo;
         this.mealInfo = mealInfo;
+        this.greeting = greeting;
     }
 
-    public void updateTitle(String title) {
-        this.title = title;
-    }
-
-    public void updateWeddingDate(LocalDateTime weddingDate) {
-        this.weddingDate = weddingDate;
-    }
-
-    public void updateVenue(String venueName, String venueAddress, String venueDetail, Double venueLat, Double venueLng, String venuePhone) {
-        this.venueName = venueName;
-        this.venueAddress = venueAddress;
-        this.venueDetail = venueDetail;
-        this.venueLat = venueLat;
-        this.venueLng = venueLng;
-        this.venuePhone = venuePhone;
-    }
-
-    public void updateDressCode(String dressCode) {
-        this.dressCode = dressCode;
-    }
-
-    public void updateNotice(String notice) {
+    public void update(String notice, String parkingInfo, String mealInfo, String greeting) {
         this.notice = notice;
-    }
-
-    public void updateParkingInfo(String parkingInfo) {
         this.parkingInfo = parkingInfo;
-    }
-
-    public void updateMealInfo(String mealInfo) {
         this.mealInfo = mealInfo;
+        this.greeting = greeting;
     }
-
 }

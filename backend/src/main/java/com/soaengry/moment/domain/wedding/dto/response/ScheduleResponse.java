@@ -1,7 +1,6 @@
 package com.soaengry.moment.domain.wedding.dto.response;
 
 import com.soaengry.moment.domain.wedding.entity.Schedule;
-
 import java.time.LocalTime;
 
 public record ScheduleResponse(

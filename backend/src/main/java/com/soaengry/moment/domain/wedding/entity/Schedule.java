@@ -1,10 +1,7 @@
 package com.soaengry.moment.domain.wedding.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.time.LocalTime;
 
 @Entity

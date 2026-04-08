@@ -1,9 +1,14 @@
 package com.soaengry.moment.domain.wedding.controller;
 
-import com.soaengry.moment.domain.wedding.dto.request.*;
-import com.soaengry.moment.domain.wedding.dto.response.*;
-import com.soaengry.moment.domain.wedding.service.*;
-import jakarta.validation.Valid;
+import com.soaengry.moment.domain.wedding.dto.request.AccountGroupRequest;
+import com.soaengry.moment.domain.wedding.dto.request.AccountRequest;
+import com.soaengry.moment.domain.wedding.dto.request.ScheduleRequest;
+import com.soaengry.moment.domain.wedding.dto.request.WeddingRequest;
+import com.soaengry.moment.domain.wedding.dto.response.AccountGroupResponse;
+import com.soaengry.moment.domain.wedding.dto.response.AccountResponse;
+import com.soaengry.moment.domain.wedding.dto.response.ScheduleResponse;
+import com.soaengry.moment.domain.wedding.dto.response.WeddingResponse;
+import com.soaengry.moment.domain.wedding.service.WeddingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,26 +23,20 @@ import java.util.List;
 public class WeddingController {
 
     private final WeddingService weddingService;
-    private final CoupleService coupleService;
-    private final ScheduleService scheduleService;
-    private final AccountService accountService;
-    private final GalleryService galleryService;
-    private final TransportationService transportationService;
-    private final AccommodationService accommodationService;
-    private final AnnouncementService announcementService;
 
-    // ==================== Wedding ====================
+    // ─── Wedding ───
 
     @PostMapping
-    public ResponseEntity<WeddingResponse> createWedding(@RequestBody WeddingRequest request) {
-        WeddingResponse response = weddingService.createWedding(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<WeddingResponse> createWedding(
+            @RequestBody WeddingRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        return ResponseEntity.status(HttpStatus.CREATED).body(weddingService.createWedding(userId, request));
     }
 
     @GetMapping("/{weddingId}")
     public ResponseEntity<WeddingResponse> getWedding(@PathVariable Long weddingId) {
-        WeddingResponse response = weddingService.getWedding(weddingId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(weddingService.getWedding(weddingId));
     }
 
     @PutMapping("/{weddingId}")
@@ -46,73 +45,10 @@ public class WeddingController {
             @RequestBody WeddingRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        WeddingResponse response = weddingService.updateWedding(weddingId, userId, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(weddingService.updateWedding(weddingId, userId, request));
     }
 
-    @DeleteMapping("/{weddingId}")
-    public ResponseEntity<Void> deleteWedding(
-            @PathVariable Long weddingId,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        weddingService.deleteWedding(weddingId, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/check-invitation")
-    public ResponseEntity<CheckInvitationResponse> checkNickname(
-            @Valid @RequestBody CheckInvitationRequest request
-    ) {
-        boolean exists = weddingService.checkInvitationIdExists(request.invitationId());
-        return ResponseEntity.ok(new CheckInvitationResponse(exists));
-    }
-
-    // ==================== 전체 정보 조회 ====================
-
-    @GetMapping("/{invitationId}/info")
-    public ResponseEntity<WeddingInfoResponse> getWeddingInfo(@PathVariable String invitationId) {
-        WeddingInfoResponse response = weddingService.getWeddingInfo(invitationId);
-        return ResponseEntity.ok(response);
-    }
-
-    // ==================== Couple ====================
-
-    @PostMapping("/{weddingId}/couples")
-    public ResponseEntity<CoupleResponse> createCouple(
-            @PathVariable Long weddingId,
-            @RequestBody CoupleRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        CoupleResponse response = coupleService.createCouple(weddingId, userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @GetMapping("/{weddingId}/couples")
-    public ResponseEntity<List<CoupleResponse>> getCouplesByWedding(@PathVariable Long weddingId) {
-        List<CoupleResponse> responses = coupleService.getCouplesByWedding(weddingId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @PutMapping("/couples/{coupleId}")
-    public ResponseEntity<CoupleResponse> updateCouple(
-            @PathVariable Long coupleId,
-            @RequestBody CoupleRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        CoupleResponse response = coupleService.updateCouple(coupleId, userId, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/couples/{coupleId}")
-    public ResponseEntity<Void> deleteCouple(
-            @PathVariable Long coupleId,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        coupleService.deleteCouple(coupleId, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ==================== Schedule ====================
+    // ─── Schedule ───
 
     @PostMapping("/{weddingId}/schedules")
     public ResponseEntity<ScheduleResponse> createSchedule(
@@ -120,14 +56,12 @@ public class WeddingController {
             @RequestBody ScheduleRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        ScheduleResponse response = scheduleService.createSchedule(weddingId, userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(weddingService.createSchedule(weddingId, userId, request));
     }
 
     @GetMapping("/{weddingId}/schedules")
-    public ResponseEntity<List<ScheduleResponse>> getSchedulesByWedding(@PathVariable Long weddingId) {
-        List<ScheduleResponse> responses = scheduleService.getSchedulesByWedding(weddingId);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<List<ScheduleResponse>> getSchedules(@PathVariable Long weddingId) {
+        return ResponseEntity.ok(weddingService.getSchedules(weddingId));
     }
 
     @PutMapping("/schedules/{scheduleId}")
@@ -136,8 +70,7 @@ public class WeddingController {
             @RequestBody ScheduleRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        ScheduleResponse response = scheduleService.updateSchedule(scheduleId, userId, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(weddingService.updateSchedule(scheduleId, userId, request));
     }
 
     @DeleteMapping("/schedules/{scheduleId}")
@@ -145,11 +78,11 @@ public class WeddingController {
             @PathVariable Long scheduleId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        scheduleService.deleteSchedule(scheduleId, userId);
+        weddingService.deleteSchedule(scheduleId, userId);
         return ResponseEntity.noContent().build();
     }
 
-    // ==================== AccountGroup ====================
+    // ─── AccountGroup ───
 
     @PostMapping("/{weddingId}/account-groups")
     public ResponseEntity<AccountGroupResponse> createAccountGroup(
@@ -157,51 +90,46 @@ public class WeddingController {
             @RequestBody AccountGroupRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccountGroupResponse response = accountService.createAccountGroup(weddingId, userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(weddingService.createAccountGroup(weddingId, userId, request));
     }
 
     @GetMapping("/{weddingId}/account-groups")
-    public ResponseEntity<List<AccountGroupResponse>> getAccountGroupsByWedding(@PathVariable Long weddingId) {
-        List<AccountGroupResponse> responses = accountService.getAccountGroupsByWedding(weddingId);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<List<AccountGroupResponse>> getAccountGroups(@PathVariable Long weddingId) {
+        return ResponseEntity.ok(weddingService.getAccountGroups(weddingId));
     }
 
-    @PutMapping("/account-groups/{accountGroupId}")
+    @PutMapping("/account-groups/{groupId}")
     public ResponseEntity<AccountGroupResponse> updateAccountGroup(
-            @PathVariable Long accountGroupId,
+            @PathVariable Long groupId,
             @RequestBody AccountGroupRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccountGroupResponse response = accountService.updateAccountGroup(accountGroupId, userId, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(weddingService.updateAccountGroup(groupId, userId, request));
     }
 
-    @DeleteMapping("/account-groups/{accountGroupId}")
+    @DeleteMapping("/account-groups/{groupId}")
     public ResponseEntity<Void> deleteAccountGroup(
-            @PathVariable Long accountGroupId,
+            @PathVariable Long groupId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        accountService.deleteAccountGroup(accountGroupId, userId);
+        weddingService.deleteAccountGroup(groupId, userId);
         return ResponseEntity.noContent().build();
     }
 
-    // ==================== Account ====================
+    // ─── Account ───
 
-    @PostMapping("/account-groups/{accountGroupId}/accounts")
+    @PostMapping("/account-groups/{groupId}/accounts")
     public ResponseEntity<AccountResponse> createAccount(
-            @PathVariable Long accountGroupId,
+            @PathVariable Long groupId,
             @RequestBody AccountRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccountResponse response = accountService.createAccount(accountGroupId, userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(weddingService.createAccount(groupId, userId, request));
     }
 
-    @GetMapping("/account-groups/{accountGroupId}/accounts")
-    public ResponseEntity<List<AccountResponse>> getAccountsByGroup(@PathVariable Long accountGroupId) {
-        List<AccountResponse> responses = accountService.getAccountsByGroup(accountGroupId);
-        return ResponseEntity.ok(responses);
+    @GetMapping("/account-groups/{groupId}/accounts")
+    public ResponseEntity<List<AccountResponse>> getAccounts(@PathVariable Long groupId) {
+        return ResponseEntity.ok(weddingService.getAccounts(groupId));
     }
 
     @PutMapping("/accounts/{accountId}")
@@ -210,8 +138,7 @@ public class WeddingController {
             @RequestBody AccountRequest request,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        AccountResponse response = accountService.updateAccount(accountId, userId, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(weddingService.updateAccount(accountId, userId, request));
     }
 
     @DeleteMapping("/accounts/{accountId}")
@@ -219,155 +146,7 @@ public class WeddingController {
             @PathVariable Long accountId,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        accountService.deleteAccount(accountId, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ==================== Gallery ====================
-
-    @PostMapping("/{weddingId}/galleries")
-    public ResponseEntity<GalleryResponse> createGallery(
-            @PathVariable Long weddingId,
-            @RequestBody GalleryRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        GalleryResponse response = galleryService.createGallery(weddingId, userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @GetMapping("/{weddingId}/galleries")
-    public ResponseEntity<List<GalleryResponse>> getGalleriesByWedding(@PathVariable Long weddingId) {
-        List<GalleryResponse> responses = galleryService.getGalleriesByWedding(weddingId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @PutMapping("/galleries/{galleryId}")
-    public ResponseEntity<GalleryResponse> updateGallery(
-            @PathVariable Long galleryId,
-            @RequestBody GalleryRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        GalleryResponse response = galleryService.updateGallery(galleryId, userId, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/galleries/{galleryId}")
-    public ResponseEntity<Void> deleteGallery(
-            @PathVariable Long galleryId,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        galleryService.deleteGallery(galleryId, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ==================== Transportation ====================
-
-    @PostMapping("/{weddingId}/transportation")
-    public ResponseEntity<TransportationResponse> createTransportation(
-            @PathVariable Long weddingId,
-            @RequestBody TransportationRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        TransportationResponse response = transportationService.createTransportation(weddingId, userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @GetMapping("/{weddingId}/transportation")
-    public ResponseEntity<List<TransportationResponse>> getTransportationsByWedding(@PathVariable Long weddingId) {
-        List<TransportationResponse> responses = transportationService.getTransportationsByWedding(weddingId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @PutMapping("/transportation/{transportationId}")
-    public ResponseEntity<TransportationResponse> updateTransportation(
-            @PathVariable Long transportationId,
-            @RequestBody TransportationRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        TransportationResponse response = transportationService.updateTransportation(transportationId, userId, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/transportation/{transportationId}")
-    public ResponseEntity<Void> deleteTransportation(
-            @PathVariable Long transportationId,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        transportationService.deleteTransportation(transportationId, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ==================== Accommodation ====================
-
-    @PostMapping("/{weddingId}/accommodations")
-    public ResponseEntity<AccommodationResponse> createAccommodation(
-            @PathVariable Long weddingId,
-            @RequestBody AccommodationRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        AccommodationResponse response = accommodationService.createAccommodation(weddingId, userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @GetMapping("/{weddingId}/accommodations")
-    public ResponseEntity<List<AccommodationResponse>> getAccommodationsByWedding(@PathVariable Long weddingId) {
-        List<AccommodationResponse> responses = accommodationService.getAccommodationsByWedding(weddingId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @PutMapping("/accommodations/{accommodationId}")
-    public ResponseEntity<AccommodationResponse> updateAccommodation(
-            @PathVariable Long accommodationId,
-            @RequestBody AccommodationRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        AccommodationResponse response = accommodationService.updateAccommodation(accommodationId, userId, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/accommodations/{accommodationId}")
-    public ResponseEntity<Void> deleteAccommodation(
-            @PathVariable Long accommodationId,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        accommodationService.deleteAccommodation(accommodationId, userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ==================== Announcement ====================
-
-    @PostMapping("/{weddingId}/announcements")
-    public ResponseEntity<AnnouncementResponse> createAnnouncement(
-            @PathVariable Long weddingId,
-            @RequestBody AnnouncementRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        AnnouncementResponse response = announcementService.createAnnouncement(weddingId, userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @GetMapping("/{weddingId}/announcements")
-    public ResponseEntity<List<AnnouncementResponse>> getAnnouncementsByWedding(@PathVariable Long weddingId) {
-        List<AnnouncementResponse> responses = announcementService.getAnnouncementsByWedding(weddingId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @PutMapping("/announcements/{announcementId}")
-    public ResponseEntity<AnnouncementResponse> updateAnnouncement(
-            @PathVariable Long announcementId,
-            @RequestBody AnnouncementRequest request,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        AnnouncementResponse response = announcementService.updateAnnouncement(announcementId, userId, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/announcements/{announcementId}")
-    public ResponseEntity<Void> deleteAnnouncement(
-            @PathVariable Long announcementId,
-            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        announcementService.deleteAnnouncement(announcementId, userId);
+        weddingService.deleteAccount(accountId, userId);
         return ResponseEntity.noContent().build();
     }
 }
