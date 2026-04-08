@@ -10,7 +10,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     List<Attendance> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-    boolean existsByUserIdAndWeddingId(Long userId, Long weddingId);
+    boolean existsByUserIdAndEventId(Long userId, Long eventId);
 
     Optional<Attendance> findByIdAndUserId(Long id, Long userId);
 }

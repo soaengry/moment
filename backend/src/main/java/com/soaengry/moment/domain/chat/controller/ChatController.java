@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/weddings/{weddingId}/chat")
+@RequestMapping("/api/events/{eventId}/chat")
 @RequiredArgsConstructor
 public class ChatController {
 
@@ -22,18 +22,18 @@ public class ChatController {
 
     @GetMapping("/messages")
     public ResponseEntity<Page<ChatMessageResponse>> getMessages(
-            @PathVariable Long weddingId,
+            @PathVariable Long eventId,
             @PageableDefault(size = 50) Pageable pageable) {
-        Page<ChatMessageResponse> responses = chatService.getMessages(weddingId, pageable);
+        Page<ChatMessageResponse> responses = chatService.getMessages(eventId, pageable);
         return ResponseEntity.ok(responses);
     }
 
     @PostMapping("/images")
     public ResponseEntity<Map<String, String>> uploadChatImage(
-            @PathVariable Long weddingId,
+            @PathVariable Long eventId,
             @AuthenticationPrincipal Long userId,
             @RequestParam("file") MultipartFile file) {
-        String imageUrl = chatService.uploadChatImage(weddingId, userId, file);
+        String imageUrl = chatService.uploadChatImage(eventId, userId, file);
         return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
     }
 }

@@ -18,7 +18,7 @@ public class BankPrefix {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bank_id", nullable = false)
+    @JoinColumn(name = "bank_id", foreignKey = @ForeignKey(name = "fk_bank_prefixes_bank_id"), nullable = false)
     private Bank bank;
 
     @Column(nullable = false, length = 10)

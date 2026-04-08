@@ -1,20 +1,20 @@
 package com.soaengry.moment.domain.attendance.dto.response;
 
 import com.soaengry.moment.domain.attendance.entity.Attendance;
-import com.soaengry.moment.domain.wedding.entity.Couple;
-import com.soaengry.moment.domain.wedding.entity.Wedding;
+import com.soaengry.moment.domain.event.entity.Event;
+import com.soaengry.moment.domain.wedding.entity.Host;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record AttendanceResponse(
         Long id,
-        Long weddingId,
-        String invitationId,
+        Long eventId,
+        String slug,
         String title,
-        LocalDateTime weddingDate,
-        String venueName,
-        String venueAddress,
+        String date,
+        String locationName,
+        String locationAddress,
         String groomName,
         String brideName,
         String groomProfileImageUrl,
@@ -22,30 +22,30 @@ public record AttendanceResponse(
         LocalDateTime createdAt
 ) {
 
-    public static AttendanceResponse from(Attendance attendance, Wedding wedding, List<Couple> couples) {
+    public static AttendanceResponse from(Attendance attendance, Event event, List<Host> hosts) {
         String groomName = null;
         String brideName = null;
         String groomProfileImageUrl = null;
         String brideProfileImageUrl = null;
 
-        for (Couple couple : couples) {
-            if (couple.getRole() == Couple.CoupleRole.GROOM) {
-                groomName = couple.getName();
-                groomProfileImageUrl = couple.getProfileImageUrl();
-            } else if (couple.getRole() == Couple.CoupleRole.BRIDE) {
-                brideName = couple.getName();
-                brideProfileImageUrl = couple.getProfileImageUrl();
+        for (Host host : hosts) {
+            if (host.getRole() == Host.HostRole.GROOM || host.getRole() == Host.HostRole.HOST) {
+                groomName = host.getName();
+                groomProfileImageUrl = host.getProfileImageUrl();
+            } else if (host.getRole() == Host.HostRole.BRIDE) {
+                brideName = host.getName();
+                brideProfileImageUrl = host.getProfileImageUrl();
             }
         }
 
         return new AttendanceResponse(
                 attendance.getId(),
-                wedding.getId(),
-                wedding.getInvitationId(),
-                wedding.getTitle(),
-                wedding.getWeddingDate(),
-                wedding.getVenueName(),
-                wedding.getVenueAddress(),
+                event.getId(),
+                event.getSlug(),
+                event.getTitle(),
+                event.getDate() != null ? event.getDate().toString() : null,
+                event.getLocationName(),
+                event.getLocationAddress(),
                 groomName,
                 brideName,
                 groomProfileImageUrl,
