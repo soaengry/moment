@@ -6,7 +6,6 @@ import { IoHomeOutline, IoHome } from "react-icons/io5";
 import { IoPersonOutline, IoPerson } from "react-icons/io5";
 import { IoAddCircleOutline, IoAddCircle } from "react-icons/io5";
 // import { IoNewspaperOutline, IoNewspaper } from "react-icons/io5";
-import { useAuthStore } from "../../domain/auth/store/useAuthStore";
 import { useScrollVisibility } from "../hooks/useScrollVisibility";
 
 interface NavItem {
@@ -14,7 +13,6 @@ interface NavItem {
   label: string;
   icon: FC<{ className?: string }>;
   activeIcon: FC<{ className?: string }>;
-  adminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -31,11 +29,10 @@ const NAV_ITEMS: NavItem[] = [
   //   activeIcon: IoNewspaper,
   // },
   {
-    path: "/wedding/create",
+    path: "/event/create",
     label: "초대장 만들기",
     icon: IoAddCircleOutline,
     activeIcon: IoAddCircle,
-    adminOnly: true,
   },
   {
     path: "/my-page",
@@ -48,11 +45,7 @@ const NAV_ITEMS: NavItem[] = [
 const BottomNav: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = useAuthStore((state) => state.user);
   const isVisible = useScrollVisibility();
-
-  const isAdmin = user?.role === "ADMIN";
-  const visibleItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
 
   // 특정 페이지에서는 BottomNav를 숨김 (로그인, 회원가입 등)
   const hiddenPaths = [
@@ -66,13 +59,13 @@ const BottomNav: FC = () => {
     return null;
   }
 
-  // wedding info 페이지에서도 숨김
-  if (/^\/wedding\/[^/]+$/.test(location.pathname)) {
+  // event 페이지에서도 숨김
+  if (/^\/event\/[^/]+$/.test(location.pathname)) {
     return null;
   }
 
-  // 웨딩 하위 페이지 (채팅, 피드, 방명록, 편집 포함) — WeddingBottomNav 사용
-  if (/^\/wedding\/[^/]+\/(chat|feed|guestbook|edit)/.test(location.pathname)) {
+  // event 하위 페이지 (채팅, 피드, 방명록, 편집 포함) — EventBottomNav 사용
+  if (/^\/event\/[^/]+\/(chat|feed|guestbook|edit)/.test(location.pathname)) {
     return null;
   }
 
@@ -95,7 +88,7 @@ const BottomNav: FC = () => {
       className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50"
     >
       <div className="max-w-lg mx-auto flex items-center justify-around py-2">
-        {visibleItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = isActive ? item.activeIcon : item.icon;
 

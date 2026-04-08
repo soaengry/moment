@@ -2,6 +2,7 @@ import { type FC, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoArrowBack, IoTrash } from "react-icons/io5";
 import { feedApi } from "../../feed/api/feedApi";
+import { formatRelativeTime } from "../../../global/utils/date";
 import type { CommentResponse } from "../../feed/types";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 
@@ -39,20 +40,6 @@ const MyCommentsPage: FC = () => {
     } catch { /* silent */ }
   };
 
-  const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - d.getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "방금";
-    if (mins < 60) return `${mins}분`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}시간`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}일`;
-    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
-  };
-
   return (
     <div className="max-w-lg mx-auto min-h-screen bg-[#faf9f6]">
       <header className={`sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}>
@@ -73,7 +60,7 @@ const MyCommentsPage: FC = () => {
                   {comment.author.nickname}
                 </span>
                 <span className="text-[10px] text-gray-300">
-                  {formatTime(comment.createdAt)}
+                  {formatRelativeTime(comment.createdAt)}
                 </span>
               </div>
               <button

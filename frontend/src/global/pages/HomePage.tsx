@@ -114,11 +114,11 @@ const Dashboard = ({ user }: DashboardProps) => {
       .then((data) => {
         const now = new Date();
         const upcoming = data
-          .filter((s) => new Date(s.weddingDate) >= now)
+          .filter((s) => new Date(s.date) >= now)
           .sort(
             (a, b) =>
-              new Date(a.weddingDate).getTime() -
-              new Date(b.weddingDate).getTime(),
+              new Date(a.date).getTime() -
+              new Date(b.date).getTime(),
           )
           .slice(0, 3);
         setSchedules(upcoming);
@@ -202,7 +202,7 @@ const Dashboard = ({ user }: DashboardProps) => {
             {schedules.map((s) => (
               <Link
                 key={s.id}
-                to={`/wedding/${s.invitationId}`}
+                to={`/event/${s.slug}`}
                 className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <div className="min-w-0">
@@ -210,8 +210,8 @@ const Dashboard = ({ user }: DashboardProps) => {
                     {s.title}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {formatScheduleDate(s.weddingDate)}
-                    {s.venueName && ` · ${s.venueName}`}
+                    {formatScheduleDate(s.date)}
+                    {s.locationName && ` · ${s.locationName}`}
                   </p>
                 </div>
                 <IoChevronForward className="w-4 h-4 text-gray-300 shrink-0 ml-2" />

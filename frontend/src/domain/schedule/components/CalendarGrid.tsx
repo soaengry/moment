@@ -29,7 +29,7 @@ const CalendarGrid: FC<CalendarGridProps> = ({
 
     const byDate = new Map<number, AttendanceResponse[]>();
     for (const a of attendances) {
-      const date = new Date(a.weddingDate);
+      const date = new Date(a.date);
       if (date.getFullYear() === year && date.getMonth() === month) {
         const day = date.getDate();
         if (!byDate.has(day)) byDate.set(day, []);
