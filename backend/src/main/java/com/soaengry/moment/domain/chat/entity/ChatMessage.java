@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
 @Document(collection = "chat_messages")
-@CompoundIndex(def = "{'weddingId': 1, 'createdAt': -1}")
+@CompoundIndex(def = "{'eventId': 1, 'createdAt': -1}")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessage {
@@ -18,7 +18,7 @@ public class ChatMessage {
     @Id
     private String id;
 
-    private Long weddingId;
+    private Long eventId;
 
     private Long userId;
 
@@ -34,9 +34,9 @@ public class ChatMessage {
 
     private LocalDateTime createdAt;
 
-    private ChatMessage(Long weddingId, Long userId, String nickname, String profileImageUrl,
+    private ChatMessage(Long eventId, Long userId, String nickname, String profileImageUrl,
                         String content, String imageUrl, MessageType type) {
-        this.weddingId = weddingId;
+        this.eventId = eventId;
         this.userId = userId;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
@@ -46,9 +46,9 @@ public class ChatMessage {
         this.createdAt = LocalDateTime.now();
     }
 
-    public static ChatMessage create(Long weddingId, Long userId, String nickname, String profileImageUrl,
+    public static ChatMessage create(Long eventId, Long userId, String nickname, String profileImageUrl,
                                      String content, String imageUrl, MessageType type) {
-        return new ChatMessage(weddingId, userId, nickname, profileImageUrl, content, imageUrl, type);
+        return new ChatMessage(eventId, userId, nickname, profileImageUrl, content, imageUrl, type);
     }
 
     public enum MessageType {

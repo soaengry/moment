@@ -2,29 +2,30 @@ package com.soaengry.moment.domain.guestbook.entity;
 
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.wedding.entity.Wedding;
+import com.soaengry.moment.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "guestbook_entries")
-public class GuestbookEntry {
+public class GuestbookEntry extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "wedding_id", nullable = false)
+    @JoinColumn(name = "wedding_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_guestbook_entries_weddings_wedding_id"))
     private Wedding wedding;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id",
+            foreignKey = @ForeignKey(name = "fk_guestbook_entries_users_user_id"))
     private User user;
 
     @Column(nullable = false, length = 50)
@@ -39,12 +40,6 @@ public class GuestbookEntry {
     @Column(nullable = false)
     private Boolean isSecret = false;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
     private GuestbookEntry(Wedding wedding, User user, String authorName, String content,
                            String password, Boolean isSecret) {
         this.wedding = wedding;
@@ -56,19 +51,8 @@ public class GuestbookEntry {
     }
 
     public static GuestbookEntry create(Wedding wedding, User user, String authorName,
-                                         String content, String password, Boolean isSecret) {
+                                        String content, String password, Boolean isSecret) {
         return new GuestbookEntry(wedding, user, authorName, content, password, isSecret);
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void update(String content, Boolean isSecret) {

@@ -23,6 +23,4 @@ public interface GuestbookEntryRepository extends JpaRepository<GuestbookEntry, 
             @Param("weddingId") Long weddingId,
             @Param("userId") Long userId,
             Pageable pageable);
-
-    long countByWeddingId(Long weddingId);
 }

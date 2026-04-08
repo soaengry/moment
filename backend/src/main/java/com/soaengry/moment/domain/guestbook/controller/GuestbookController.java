@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,16 +25,19 @@ public class GuestbookController {
     @PostMapping
     public ResponseEntity<GuestbookResponse> createEntry(
             @PathVariable Long weddingId,
-            @Valid @RequestBody GuestbookRequest request) {
-        GuestbookResponse response = guestbookService.createEntry(weddingId, request);
+            @Valid @RequestBody GuestbookRequest request,
+            Authentication authentication) {
+        GuestbookResponse response = guestbookService.createEntry(weddingId, request, extractUserId(authentication));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     public ResponseEntity<Page<GuestbookResponse>> getEntries(
             @PathVariable Long weddingId,
-            @PageableDefault(size = 20) Pageable pageable) {
-        Page<GuestbookResponse> responses = guestbookService.getEntries(weddingId, pageable);
+            @PageableDefault(size = 20) Pageable pageable,
+            Authentication authentication) {
+        Page<GuestbookResponse> responses = guestbookService.getEntries(
+                weddingId, extractUserId(authentication), isAdmin(authentication), pageable);
         return ResponseEntity.ok(responses);
     }
 
@@ -41,8 +45,10 @@ public class GuestbookController {
     public ResponseEntity<GuestbookResponse> updateEntry(
             @PathVariable Long weddingId,
             @PathVariable Long entryId,
-            @Valid @RequestBody GuestbookRequest request) {
-        GuestbookResponse response = guestbookService.updateEntry(weddingId, entryId, request);
+            @Valid @RequestBody GuestbookRequest request,
+            Authentication authentication) {
+        GuestbookResponse response = guestbookService.updateEntry(
+                weddingId, entryId, request, extractUserId(authentication), isAdmin(authentication));
         return ResponseEntity.ok(response);
     }
 
@@ -59,8 +65,21 @@ public class GuestbookController {
     public ResponseEntity<Void> deleteEntry(
             @PathVariable Long weddingId,
             @PathVariable Long entryId,
-            @RequestParam(required = false) String password) {
-        guestbookService.deleteEntry(weddingId, entryId, password);
+            @RequestParam(required = false) String password,
+            Authentication authentication) {
+        guestbookService.deleteEntry(weddingId, entryId, password, extractUserId(authentication), isAdmin(authentication));
         return ResponseEntity.noContent().build();
+    }
+
+    private Long extractUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) return null;
+        Object principal = authentication.getPrincipal();
+        return principal instanceof Long ? (Long) principal : null;
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 }
