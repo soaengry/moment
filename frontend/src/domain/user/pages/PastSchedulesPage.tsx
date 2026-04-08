@@ -21,8 +21,8 @@ const PastSchedulesPage: FC = () => {
         const all = await scheduleApi.getMyAttendances();
         const now = new Date();
         const past = all
-          .filter((s) => new Date(s.weddingDate) < now)
-          .sort((a, b) => new Date(b.weddingDate).getTime() - new Date(a.weddingDate).getTime());
+          .filter((s) => new Date(s.date) < now)
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setAllSchedules(past);
       } catch { /* silent */ }
       finally { setIsLoading(false); }
@@ -78,13 +78,13 @@ const PastSchedulesPage: FC = () => {
         {displayedSchedules.map((schedule) => (
           <button
             key={schedule.id}
-            onClick={() => navigate(`/wedding/${schedule.invitationId}`)}
+            onClick={() => navigate(`/event/${schedule.slug}`)}
             className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
           >
             <div className="text-left">
               <p className="text-sm font-medium text-gray-700">{schedule.title}</p>
               <p className="text-[11px] text-gray-400 mt-0.5">
-                {formatDate(schedule.weddingDate)} · {schedule.venueName}
+                {formatMonthDay(schedule.date)} · {schedule.locationName}
               </p>
             </div>
             <IoChevronForward size={16} className="text-gray-300 flex-shrink-0" />

@@ -2,12 +2,12 @@
 
 export interface AttendanceResponse {
   id: number;
-  weddingId: number;
-  invitationId: string;
+  eventId: number;
+  slug: string;
   title: string;
-  weddingDate: string;
-  venueName: string;
-  venueAddress: string;
+  date: string;
+  locationName: string;
+  locationAddress: string;
   groomName: string | null;
   brideName: string | null;
   groomProfileImageUrl: string | null;
@@ -18,5 +18,5 @@ export interface AttendanceResponse {
 // ─── Request ───
 
 export interface AddAttendanceRequest {
-  invitationId: string;
+  slug: string;
 }

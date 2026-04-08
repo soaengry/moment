@@ -3,12 +3,12 @@ import { useForm } from "react-hook-form";
 import { IoClose } from "react-icons/io5";
 
 interface AddScheduleForm {
-  invitationId: string;
+  slug: string;
 }
 
 interface AddScheduleModalProps {
   onClose: () => void;
-  onSubmit: (invitationId: string) => Promise<void>;
+  onSubmit: (slug: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -24,7 +24,7 @@ const AddScheduleModal: FC<AddScheduleModalProps> = ({
   } = useForm<AddScheduleForm>();
 
   const handleFormSubmit = async (data: AddScheduleForm) => {
-    await onSubmit(data.invitationId.trim());
+    await onSubmit(data.slug.trim());
   };
 
   return (
@@ -46,16 +46,16 @@ const AddScheduleModal: FC<AddScheduleModalProps> = ({
               초대장 ID
             </label>
             <input
-              {...register("invitationId", {
+              {...register("slug", {
                 required: "초대장 ID를 입력해주세요",
               })}
               placeholder="초대장 링크의 ID를 입력하세요"
               className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               autoFocus
             />
-            {errors.invitationId && (
+            {errors.slug && (
               <p className="mt-1 text-xs text-red-500">
-                {errors.invitationId.message}
+                {errors.slug.message}
               </p>
             )}
           </div>

@@ -51,11 +51,11 @@ const MyPage: FC = () => {
         const all = await scheduleApi.getMyAttendances();
         const now = new Date();
         const upcoming = all
-          .filter((s) => new Date(s.weddingDate) >= now)
+          .filter((s) => new Date(s.date) >= now)
           .sort(
             (a, b) =>
-              new Date(a.weddingDate).getTime() -
-              new Date(b.weddingDate).getTime(),
+              new Date(a.date).getTime() -
+              new Date(b.date).getTime(),
           )
           .slice(0, 3);
         setUpcomingSchedules(upcoming);
@@ -207,7 +207,7 @@ const MyPage: FC = () => {
               upcomingSchedules.map((schedule) => (
                 <button
                   key={schedule.id}
-                  onClick={() => navigate(`/wedding/${schedule.invitationId}`)}
+                  onClick={() => navigate(`/event/${schedule.slug}`)}
                   className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
                 >
                   <div className="text-left">
@@ -215,7 +215,7 @@ const MyPage: FC = () => {
                       {schedule.title}
                     </p>
                     <p className="text-[11px] text-gray-400 mt-0.5">
-                      {formatDate(schedule.weddingDate)} · {schedule.venueName}
+                      {formatMonthDay(schedule.date)} · {schedule.locationName}
                     </p>
                   </div>
                   <IoChevronForward size={16} className="text-gray-300" />

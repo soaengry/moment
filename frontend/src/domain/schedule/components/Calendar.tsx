@@ -49,10 +49,10 @@ const Calendar: FC = () => {
     }
   };
 
-  const handleAdd = async (invitationId: string) => {
+  const handleAdd = async (slug: string) => {
     setIsAdding(true);
     try {
-      const newAttendance = await scheduleApi.addAttendance({ invitationId });
+      const newAttendance = await scheduleApi.addAttendance({ slug });
       setAttendances((prev) => [newAttendance, ...prev]);
       setShowAddModal(false);
       toast.success("일정이 등록되었습니다");
