@@ -9,15 +9,15 @@ import org.springframework.data.repository.query.Param;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    @Query("SELECT p FROM Post p JOIN FETCH p.user LEFT JOIN FETCH p.images ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Post p JOIN FETCH p.user ORDER BY p.createdAt DESC")
     Page<Post> findAllWithUserAndImages(Pageable pageable);
 
-    @Query("SELECT p FROM Post p JOIN FETCH p.user LEFT JOIN FETCH p.images WHERE p.user.id = :userId ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Post p JOIN FETCH p.user WHERE p.user.id = :userId ORDER BY p.createdAt DESC")
     Page<Post> findByUserIdWithImages(@Param("userId") Long userId, Pageable pageable);
 
-    @Query("SELECT p FROM Post p JOIN FETCH p.user LEFT JOIN FETCH p.images WHERE p.weddingId = :weddingId ORDER BY p.createdAt DESC")
-    Page<Post> findByWeddingIdWithUserAndImages(@Param("weddingId") Long weddingId, Pageable pageable);
+    @Query("SELECT p FROM Post p JOIN FETCH p.user WHERE p.eventId = :eventId ORDER BY p.createdAt DESC")
+    Page<Post> findByEventIdWithUserAndImages(@Param("eventId") Long eventId, Pageable pageable);
 
-    @Query("SELECT p FROM Post p JOIN FETCH p.user LEFT JOIN FETCH p.images WHERE p.user.id = :userId AND (:weddingId IS NULL OR p.weddingId = :weddingId) ORDER BY p.createdAt DESC")
-    Page<Post> findByUserIdAndOptionalWeddingId(@Param("userId") Long userId, @Param("weddingId") Long weddingId, Pageable pageable);
+    @Query("SELECT p FROM Post p JOIN FETCH p.user WHERE p.user.id = :userId AND (:eventId IS NULL OR p.eventId = :eventId) ORDER BY p.createdAt DESC")
+    Page<Post> findByUserIdAndOptionalEventId(@Param("userId") Long userId, @Param("eventId") Long eventId, Pageable pageable);
 }
