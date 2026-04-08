@@ -15,7 +15,7 @@ public record PostResponse(
         Integer commentCount,
         Boolean isLiked,
         Boolean isBookmarked,
-        Long weddingId,
+        Long eventId,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -33,7 +33,7 @@ public record PostResponse(
                 post.getCommentCount(),
                 isLiked,
                 isBookmarked,
-                post.getWeddingId(),
+                post.getEventId(),
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

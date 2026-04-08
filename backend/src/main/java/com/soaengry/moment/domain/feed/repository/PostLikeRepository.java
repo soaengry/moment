@@ -19,6 +19,6 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     List<PostLike> findByUserIdAndPostIdIn(Long userId, List<Long> postIds);
 
-    @Query("SELECT pl.post.id FROM PostLike pl WHERE pl.user.id = :userId AND (:weddingId IS NULL OR pl.post.weddingId = :weddingId)")
-    Page<Long> findLikedPostIdsByUserIdAndOptionalWeddingId(@Param("userId") Long userId, @Param("weddingId") Long weddingId, Pageable pageable);
+    @Query("SELECT pl.post.id FROM PostLike pl WHERE pl.user.id = :userId AND (:eventId IS NULL OR pl.post.eventId = :eventId)")
+    Page<Long> findLikedPostIdsByUserIdAndOptionalEventId(@Param("userId") Long userId, @Param("eventId") Long eventId, Pageable pageable);
 }

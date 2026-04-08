@@ -119,40 +119,40 @@ public class FeedController {
     @GetMapping("/my/posts")
     public ResponseEntity<Page<PostResponse>> getMyPosts(
             Authentication authentication,
-            @RequestParam(required = false) @Nullable Long weddingId,
+            @RequestParam(required = false) @Nullable Long eventId,
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<PostResponse> responses = feedService.getMyPosts(userId, weddingId, pageable);
+        Page<PostResponse> responses = feedService.getMyPosts(userId, eventId, pageable);
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/my/bookmarks")
     public ResponseEntity<Page<PostResponse>> getMyBookmarks(
             Authentication authentication,
-            @RequestParam(required = false) @Nullable Long weddingId,
+            @RequestParam(required = false) @Nullable Long eventId,
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<PostResponse> responses = feedService.getMyBookmarks(userId, weddingId, pageable);
+        Page<PostResponse> responses = feedService.getMyBookmarks(userId, eventId, pageable);
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/my/likes")
     public ResponseEntity<Page<PostResponse>> getMyLikes(
             Authentication authentication,
-            @RequestParam(required = false) @Nullable Long weddingId,
+            @RequestParam(required = false) @Nullable Long eventId,
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<PostResponse> responses = feedService.getMyLikes(userId, weddingId, pageable);
+        Page<PostResponse> responses = feedService.getMyLikes(userId, eventId, pageable);
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/my/comments")
     public ResponseEntity<Page<CommentResponse>> getMyComments(
             Authentication authentication,
-            @RequestParam(required = false) @Nullable Long weddingId,
+            @RequestParam(required = false) @Nullable Long eventId,
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<CommentResponse> responses = feedService.getMyComments(userId, weddingId, pageable);
+        Page<CommentResponse> responses = feedService.getMyComments(userId, eventId, pageable);
         return ResponseEntity.ok(responses);
     }
 

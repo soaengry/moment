@@ -18,31 +18,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/weddings/{weddingId}/feed")
+@RequestMapping("/api/events/{eventId}/feed")
 @RequiredArgsConstructor
-public class WeddingFeedController {
+public class EventFeedController {
 
     private final FeedService feedService;
 
     // ==================== Post ====================
 
     @GetMapping("/posts")
-    public ResponseEntity<Page<PostResponse>> getWeddingFeed(
-            @PathVariable Long weddingId,
+    public ResponseEntity<Page<PostResponse>> getEventFeed(
+            @PathVariable Long eventId,
             Authentication authentication,
             @PageableDefault(size = 20) Pageable pageable) {
         Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
-        Page<PostResponse> responses = feedService.getWeddingFeed(weddingId, userId, pageable);
+        Page<PostResponse> responses = feedService.getEventFeed(eventId, userId, pageable);
         return ResponseEntity.ok(responses);
     }
 
     @PostMapping("/posts")
-    public ResponseEntity<PostResponse> createWeddingPost(
-            @PathVariable Long weddingId,
+    public ResponseEntity<PostResponse> createEventPost(
+            @PathVariable Long eventId,
             Authentication authentication,
             @Valid @RequestBody PostRequest request) {
         Long userId = (Long) authentication.getPrincipal();
-        PostResponse response = feedService.createWeddingPost(userId, weddingId, request);
+        PostResponse response = feedService.createEventPost(userId, eventId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
