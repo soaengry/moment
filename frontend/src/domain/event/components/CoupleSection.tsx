@@ -1,22 +1,25 @@
 import { type FC, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { slideUp } from "../../../global/constants/animations";
-import type { CoupleResponse } from "../types";
+import type { HostResponse, EventType } from "../types";
+import { TEMPLATE_LABELS } from "../utils/templateLabels";
 
 interface Props {
-  couples: CoupleResponse[];
+  couples: HostResponse[];
+  eventType: EventType;
 }
 
-const CoupleSection: FC<Props> = ({ couples }) => {
+const CoupleSection: FC<Props> = ({ couples, eventType }) => {
+  const tl = TEMPLATE_LABELS[eventType];
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-  const groom = couples.find((c) => c.role === "GROOM");
+  const groom = couples.find((c) => c.role === "GROOM" || c.role === "HOST");
   const bride = couples.find((c) => c.role === "BRIDE");
 
   if (!groom && !bride) return null;
 
-  const renderParents = (person: CoupleResponse) => {
+  const renderParents = (person: HostResponse) => {
     const parts: string[] = [];
     if (person.fatherName)
       parts.push(`${!person.isFatherAlive ? "故 " : ""}${person.fatherName}`);
@@ -26,7 +29,7 @@ const CoupleSection: FC<Props> = ({ couples }) => {
     return <p className="text-xs text-gray-400 mt-1">{parts.join(" · ")}</p>;
   };
 
-  const renderPerson = (person: CoupleResponse, label: string) => (
+  const renderPerson = (person: HostResponse, label: string) => (
     <div className="flex flex-col items-center text-center flex-1">
       {person.profileImageUrl && (
         <img
@@ -79,15 +82,19 @@ const CoupleSection: FC<Props> = ({ couples }) => {
       className="py-10 px-6 text-center"
     >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-8 uppercase font-medium">
-        Invitation
+        {tl.sectionTitle}
       </p>
 
       <div className="flex gap-6 justify-center items-start">
-        {groom && renderPerson(groom, "Groom")}
-        <div className="pt-8">
-          <span className="text-xl text-primary/20 font-serif">&</span>
-        </div>
-        {bride && renderPerson(bride, "Bride")}
+        {groom && renderPerson(groom, tl.role1)}
+        {tl.role2 !== null && (
+          <>
+            <div className="pt-8">
+              <span className="text-xl text-primary/20 font-serif">&</span>
+            </div>
+            {bride && renderPerson(bride, tl.role2)}
+          </>
+        )}
       </div>
     </motion.section>
   );

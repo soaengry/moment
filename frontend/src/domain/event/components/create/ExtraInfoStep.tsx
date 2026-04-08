@@ -3,10 +3,11 @@ import type {
   TransportationRequest,
   TransportType,
   AnnouncementRequest,
+  EventType,
 } from "../../types";
+import { inputCls, labelCls } from "../../../../global/styles/formStyles";
 
 export interface ExtraInfoFormData {
-  dressCode: string;
   notice: string;
   parkingInfo: string;
   mealInfo: string;
@@ -20,6 +21,7 @@ interface Props {
   onBack: () => void;
   isSubmitting: boolean;
   submitLabel?: string;
+  templateType?: EventType;
 }
 
 const TRANSPORT_TYPE_OPTIONS: { value: TransportType; label: string }[] = [
@@ -47,8 +49,9 @@ const ExtraInfoStep: FC<Props> = ({
   onBack,
   isSubmitting,
   submitLabel = "초대장 생성",
+  templateType,
 }) => {
-  const [dressCode, setDressCode] = useState(initialData.dressCode);
+  const isGathering = templateType === "GATHERING";
   const [notice, setNotice] = useState(initialData.notice);
   const [parkingInfo, setParkingInfo] = useState(initialData.parkingInfo);
   const [mealInfo, setMealInfo] = useState(initialData.mealInfo);
@@ -98,7 +101,6 @@ const ExtraInfoStep: FC<Props> = ({
     );
 
     onSubmit({
-      dressCode,
       notice,
       parkingInfo,
       mealInfo,
@@ -107,55 +109,44 @@ const ExtraInfoStep: FC<Props> = ({
     });
   };
 
-  const inputClass =
-    "w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-primary";
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
-
   return (
     <div className="space-y-4">
-      {/* 드레스코드 & 유의사항 */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 space-y-4">
-        <h3 className="text-sm font-semibold text-primary">안내 정보</h3>
+      {/* 안내 정보 - WEDDING 전용 */}
+      {!isGathering && (
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 space-y-4">
+          <h3 className="text-sm font-semibold text-primary">안내 정보</h3>
 
-        <div>
-          <label className={labelClass}>드레스 코드</label>
-          <input
-            value={dressCode}
-            onChange={(e) => setDressCode(e.target.value)}
-            placeholder="세미 포멀"
-            className={inputClass}
-          />
+          <div>
+            <label className={labelCls}>유의사항</label>
+            <textarea
+              value={notice}
+              onChange={(e) => setNotice(e.target.value)}
+              placeholder="하객분들께 전달할 유의사항"
+              rows={2}
+              className={`${inputCls} resize-none`}
+            />
+          </div>
+          <div>
+            <label className={labelCls}>주차 안내</label>
+            <textarea
+              value={parkingInfo}
+              onChange={(e) => setParkingInfo(e.target.value)}
+              placeholder="지하 2층 무료주차 가능 (2시간)"
+              rows={2}
+              className={`${inputCls} resize-none`}
+            />
+          </div>
+          <div>
+            <label className={labelCls}>식사 안내</label>
+            <input
+              value={mealInfo}
+              onChange={(e) => setMealInfo(e.target.value)}
+              placeholder="2층 뷔페홀"
+              className={inputCls}
+            />
+          </div>
         </div>
-        <div>
-          <label className={labelClass}>유의사항</label>
-          <textarea
-            value={notice}
-            onChange={(e) => setNotice(e.target.value)}
-            placeholder="하객분들께 전달할 유의사항"
-            rows={2}
-            className={`${inputClass} resize-none`}
-          />
-        </div>
-        <div>
-          <label className={labelClass}>주차 안내</label>
-          <textarea
-            value={parkingInfo}
-            onChange={(e) => setParkingInfo(e.target.value)}
-            placeholder="지하 2층 무료주차 가능 (2시간)"
-            rows={2}
-            className={`${inputClass} resize-none`}
-          />
-        </div>
-        <div>
-          <label className={labelClass}>식사 안내</label>
-          <input
-            value={mealInfo}
-            onChange={(e) => setMealInfo(e.target.value)}
-            placeholder="2층 뷔페홀"
-            className={inputClass}
-          />
-        </div>
-      </div>
+      )}
 
       {/* 교통 안내 */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 space-y-4">
@@ -179,13 +170,13 @@ const ExtraInfoStep: FC<Props> = ({
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className={labelClass}>유형</label>
+                <label className={labelCls}>유형</label>
                 <select
                   value={t.type}
                   onChange={(e) =>
                     updateTransport(i, "type", e.target.value)
                   }
-                  className={inputClass}
+                  className={inputCls}
                 >
                   {TRANSPORT_TYPE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -195,24 +186,24 @@ const ExtraInfoStep: FC<Props> = ({
                 </select>
               </div>
               <div className="col-span-2">
-                <label className={labelClass}>제목</label>
+                <label className={labelCls}>제목</label>
                 <input
                   value={t.title}
                   onChange={(e) => updateTransport(i, "title", e.target.value)}
                   placeholder="2호선 삼성역 5번 출구"
-                  className={inputClass}
+                  className={inputCls}
                 />
               </div>
             </div>
             <div>
-              <label className={labelClass}>설명</label>
+              <label className={labelCls}>설명</label>
               <input
                 value={t.description ?? ""}
                 onChange={(e) =>
                   updateTransport(i, "description", e.target.value)
                 }
                 placeholder="도보 10분"
-                className={inputClass}
+                className={inputCls}
               />
             </div>
           </div>
@@ -247,18 +238,18 @@ const ExtraInfoStep: FC<Props> = ({
               ✕
             </button>
             <div>
-              <label className={labelClass}>제목</label>
+              <label className={labelCls}>제목</label>
               <input
                 value={a.title}
                 onChange={(e) =>
                   updateAnnouncement(i, "title", e.target.value)
                 }
                 placeholder="공지 제목"
-                className={inputClass}
+                className={inputCls}
               />
             </div>
             <div>
-              <label className={labelClass}>내용</label>
+              <label className={labelCls}>내용</label>
               <textarea
                 value={a.content}
                 onChange={(e) =>
@@ -266,7 +257,7 @@ const ExtraInfoStep: FC<Props> = ({
                 }
                 placeholder="공지 내용"
                 rows={3}
-                className={`${inputClass} resize-none`}
+                className={`${inputCls} resize-none`}
               />
             </div>
             <label className="flex items-center gap-2 text-xs text-gray-500">

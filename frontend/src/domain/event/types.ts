@@ -1,36 +1,42 @@
 // ─── Enums ───
 
-export type CoupleRole = "GROOM" | "BRIDE";
-export type AccountSide = "GROOM" | "GROOM_FAMILY" | "BRIDE" | "BRIDE_FAMILY";
+export type HostRole = "GROOM" | "BRIDE" | "HOST";
+export type EventType = "WEDDING" | "GATHERING";
 export type TransportType = "SUBWAY" | "BUS" | "SHUTTLE";
+export type InvitationStatus = "INVITED" | "ACCEPTED" | "DECLINED";
 
 // ─── Response ───
 
-export interface WeddingResponse {
+export interface EventResponse {
   id: number;
+  userId: number;
   title: string;
-  invitationId: string;
-  weddingDate: string;
-  venueName: string;
-  venueAddress: string;
-  venueDetail: string | null;
-  venueLat: number | null;
-  venueLng: number | null;
-  venuePhone: string | null;
-  mapImageUrl: string | null;
-  dressCode: string | null;
-  notice: string | null;
-  parkingInfo: string | null;
-  mealInfo: string | null;
+  slug: string;
+  type: EventType;
+  date: string;
+  locationName: string;
+  locationAddress: string;
+  locationDetail: string | null;
+  locationLat: number | null;
+  locationLng: number | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CoupleResponse {
+export interface WeddingResponse {
   id: number;
-  weddingId: number;
+  eventId: number;
+  notice: string | null;
+  parkingInfo: string | null;
+  mealInfo: string | null;
+  greeting: string | null;
+}
+
+export interface HostResponse {
+  id: number;
+  eventId: number;
   userId: number | null;
-  role: CoupleRole;
+  role: HostRole;
   name: string;
   email: string;
   fatherName: string | null;
@@ -54,7 +60,6 @@ export interface ScheduleResponse {
 export interface AccountGroupResponse {
   id: number;
   weddingId: number;
-  side: AccountSide;
   groupName: string;
   orderIndex: number;
 }
@@ -75,39 +80,27 @@ export interface AccountGroupWithAccounts {
   accounts: AccountResponse[];
 }
 
-export interface GalleryResponse {
+export interface HeroImageResponse {
   id: number;
-  weddingId: number;
+  eventId: number;
   imageUrl: string;
   thumbnailUrl: string | null;
-  caption: string | null;
   orderIndex: number;
   createdAt: string;
 }
 
 export interface TransportationResponse {
   id: number;
-  weddingId: number;
+  eventId: number;
   type: TransportType;
   title: string;
   description: string | null;
   orderIndex: number;
 }
 
-export interface AccommodationResponse {
-  id: number;
-  weddingId: number;
-  name: string;
-  address: string | null;
-  phone: string | null;
-  distance: string | null;
-  priceRange: string | null;
-  orderIndex: number;
-}
-
 export interface AnnouncementResponse {
   id: number;
-  weddingId: number;
+  eventId: number;
   title: string;
   content: string;
   isPinned: boolean;
@@ -115,29 +108,58 @@ export interface AnnouncementResponse {
   updatedAt: string;
 }
 
-export interface CheckResponse {
+export interface InvitationResponse {
+  id: number;
+  eventId: number;
+  userId: number;
+  status: InvitationStatus;
+}
+
+export interface RsvpResponse {
+  id: number;
+  weddingId: number;
+  sessionId: string;
+  userId: number | null;
+  attendance: boolean;
+  name: string;
+  side: string | null;
+  phone: string | null;
+  attendeeCount: number;
+  willEat: boolean;
+  mealCount: number;
+  willRide: boolean;
+  rideCount: number;
+  note: string | null;
+  consent: boolean;
+  createdAt: string;
+}
+
+export interface CheckSlugResponse {
   exists: boolean;
 }
 
 // ─── Request ───
 
-export interface WeddingRequest {
+export interface EventRequest {
   title: string;
-  invitationId: string;
-  weddingDate: string;
-  venueName: string;
-  venueAddress: string;
-  venueDetail?: string;
-  venuePhone?: string;
-  mapImageUrl?: string;
-  dressCode?: string;
+  slug: string;
+  type?: EventType;
+  date: string;
+  locationName: string;
+  locationAddress: string;
+  locationDetail?: string;
+}
+
+export interface WeddingRequest {
+  eventId: number;
   notice?: string;
   parkingInfo?: string;
   mealInfo?: string;
+  greeting?: string;
 }
 
-export interface CoupleRequest {
-  role: CoupleRole;
+export interface HostRequest {
+  role: HostRole;
   name: string;
   email: string;
   fatherName?: string;
@@ -157,7 +179,6 @@ export interface ScheduleRequest {
 }
 
 export interface AccountGroupRequest {
-  side: AccountSide;
   groupName: string;
   orderIndex: number;
 }
@@ -168,6 +189,12 @@ export interface AccountRequest {
   accountNumber: string;
   accountHolder: string;
   kakaoPayUrl?: string;
+  orderIndex: number;
+}
+
+export interface HeroImageRequest {
+  imageUrl: string;
+  thumbnailUrl?: string;
   orderIndex: number;
 }
 
@@ -184,15 +211,30 @@ export interface AnnouncementRequest {
   isPinned: boolean;
 }
 
+export interface RsvpRequest {
+  sessionId: string;
+  attendance: boolean;
+  name: string;
+  side?: string;
+  phone?: string;
+  attendeeCount: number;
+  willEat: boolean;
+  mealCount: number;
+  willRide: boolean;
+  rideCount: number;
+  note?: string;
+  consent: boolean;
+}
+
 // ─── Aggregated ───
 
-export interface WeddingInfoResponse {
-  wedding: WeddingResponse;
-  couples: CoupleResponse[];
+export interface EventInfoResponse {
+  event: EventResponse;
+  heroImages: HeroImageResponse[];
+  transportation: TransportationResponse[];
+  announcements: AnnouncementResponse[];
+  wedding: WeddingResponse | null;
+  hosts: HostResponse[];
   schedules: ScheduleResponse[];
   accountGroups: AccountGroupWithAccounts[];
-  gallery: GalleryResponse[];
-  transportation: TransportationResponse[];
-  accommodation: AccommodationResponse[];
-  announcements: AnnouncementResponse[];
 }

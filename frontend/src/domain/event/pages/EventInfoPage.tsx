@@ -1,8 +1,7 @@
-import { type FC, useEffect, useState } from "react";
+import { type FC, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { weddingApi } from "../api/weddingApi";
-import type { WeddingInfoResponse } from "../types";
+import { useEventDetail } from "../hooks/useEventDetail";
 import {
   LandingSection,
   CoupleSection,
@@ -15,8 +14,8 @@ import {
 } from "../components";
 import GuestbookSection from "../../guestbook/components/GuestbookSection";
 import WeddingFeedTab from "../../feed/components/WeddingFeedTab";
-import WeddingHeader from "../components/WeddingHeader";
-import WeddingBottomNav from "../components/WeddingBottomNav";
+import EventHeader from "../components/EventHeader";
+import EventBottomNav from "../components/EventBottomNav";
 import { tokenStorage, parseJwt } from "../../auth/auth.utils";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 
@@ -28,40 +27,18 @@ const TAB_LABELS: Record<WeddingTab, string> = {
   guestbook: "방명록",
 };
 
-const WeddingInfoPage: FC = () => {
-  const { invitationId } = useParams<{ invitationId: string }>();
+const EventInfoPage: FC = () => {
+  const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
-  const [data, setData] = useState<WeddingInfoResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useEventDetail(slug);
 
-  const getTabFromPath = (): WeddingTab => {
+  const activeTab = useMemo((): WeddingTab => {
     if (location.pathname.endsWith("/feed")) return "feed";
     if (location.pathname.endsWith("/guestbook")) return "guestbook";
     return "info";
-  };
-  const activeTab = getTabFromPath();
+  }, [location.pathname]);
 
   const user = useAuthStore((s) => s.user);
-
-  useEffect(() => {
-    const fetchWeddingInfo = async () => {
-      if (!invitationId) {
-        setError("잘못된 접근입니다");
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const info = await weddingApi.getWeddingInfo(invitationId);
-        setData(info);
-      } catch {
-        setError("초대장을 찾을 수 없습니다");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchWeddingInfo();
-  }, [invitationId]);
 
   if (isLoading) {
     return (
@@ -84,42 +61,36 @@ const WeddingInfoPage: FC = () => {
     );
   }
 
-  const {
-    wedding,
-    couples,
-    schedules,
-    accountGroups,
-    gallery,
-    transportation,
-    announcements,
-  } = data;
-  const groom = couples.find((c) => c.role === "GROOM");
-  const bride = couples.find((c) => c.role === "BRIDE");
+  const { event, heroImages, transportation, announcements, wedding, hosts, schedules, accountGroups } = data;
+
+  const groom = hosts.find((c) => c.role === "GROOM");
+  const bride = hosts.find((c) => c.role === "BRIDE");
 
   const token = tokenStorage.getAccessToken();
   const currentUserId = token ? Number(parseJwt(token)?.sub) || null : null;
-  const hostUserIds = couples
+  const hostUserIds = hosts
     .map((c) => c.userId)
     .filter((id): id is number => id !== null);
 
-  const isHost = currentUserId !== null && hostUserIds.includes(currentUserId);
+  const isHost = currentUserId !== null &&
+    (hostUserIds.includes(currentUserId) || event.userId === currentUserId);
   const isAdmin = user?.role === "ADMIN";
   const showSettings = isHost || isAdmin;
 
-  const weddingId = Number(wedding.id);
+  const eventId = event.id;
 
   return (
     <div className="min-h-screen bg-[#faf9f6]">
       <div className="max-w-lg mx-auto">
         {/* Header */}
-        <WeddingHeader
+        <EventHeader
           title={
             activeTab === "info"
-              ? wedding.title || "초대장"
+              ? event.title || "초대장"
               : TAB_LABELS[activeTab]
           }
-          weddingId={weddingId}
-          invitationId={invitationId}
+          eventId={eventId}
+          slug={slug}
           showSettings={showSettings && activeTab === "info"}
         />
 
@@ -127,9 +98,9 @@ const WeddingInfoPage: FC = () => {
         {activeTab === "info" && (
           <>
             <LandingSection
-              gallery={gallery}
-              title={wedding.title}
-              weddingDate={wedding.weddingDate}
+              heroImages={heroImages}
+              title={event.title}
+              date={event.date}
               groomName={groom?.name}
               brideName={bride?.name}
             />
@@ -140,15 +111,15 @@ const WeddingInfoPage: FC = () => {
               <div className="w-16 h-px bg-primary/10" />
             </div>
 
-            <CoupleSection couples={couples} />
-            <DateVenueSection wedding={wedding} />
-            <LocationSection wedding={wedding} />
-            <ScheduleSection schedules={schedules} />
+            <CoupleSection couples={hosts} eventType={event.type} />
+            <DateVenueSection wedding={event} eventType={event.type} />
+            <LocationSection wedding={event} />
+            <ScheduleSection schedules={schedules} eventType={event.type} />
             <DressCodeSection
               wedding={wedding}
               transportation={transportation}
             />
-            <AccountSection accountGroups={accountGroups} />
+            <AccountSection accountGroups={accountGroups} eventType={event.type} />
 
             <div className="flex items-center justify-center gap-3 py-4">
               <div className="w-16 h-px bg-primary/10" />
@@ -166,12 +137,12 @@ const WeddingInfoPage: FC = () => {
           </>
         )}
 
-        {activeTab === "feed" && <WeddingFeedTab weddingId={weddingId} />}
+        {activeTab === "feed" && <WeddingFeedTab eventId={eventId} />}
 
-        {activeTab === "guestbook" && (
+        {activeTab === "guestbook" && wedding && (
           <div className="px-4 py-6">
             <GuestbookSection
-              weddingId={weddingId}
+              weddingId={wedding.id}
               currentUserId={currentUserId}
               hostUserIds={hostUserIds}
             />
@@ -188,10 +159,11 @@ const WeddingInfoPage: FC = () => {
       )}
 
       {/* Bottom Nav */}
-      <WeddingBottomNav
-        weddingId={weddingId}
-        invitationId={invitationId}
+      <EventBottomNav
+        eventId={eventId}
+        slug={slug}
         activeTab={activeTab}
+        eventType={event.type}
       />
 
       <ToastContainer
@@ -206,4 +178,4 @@ const WeddingInfoPage: FC = () => {
   );
 };
 
-export default WeddingInfoPage;
+export default EventInfoPage;

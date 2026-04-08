@@ -1,8 +1,11 @@
 import { type FC, useState } from "react";
-import type { ScheduleRequest } from "../../types";
+import type { ScheduleRequest, EventType } from "../../types";
+import { TEMPLATE_LABELS } from "../../utils/templateLabels";
+import { inputCls, labelCls } from "../../../../global/styles/formStyles";
 
 interface Props {
   initialData: ScheduleRequest[];
+  templateType: EventType;
   onSubmit: (schedules: ScheduleRequest[]) => void;
   onBack: () => void;
 }
@@ -14,7 +17,8 @@ const emptySchedule = (orderIndex: number): ScheduleRequest => ({
   orderIndex,
 });
 
-const ScheduleStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
+const ScheduleStep: FC<Props> = ({ initialData, templateType, onSubmit, onBack }) => {
+  const labels = TEMPLATE_LABELS[templateType];
   const [items, setItems] = useState<ScheduleRequest[]>(
     initialData.length > 0 ? initialData : [emptySchedule(0)],
   );
@@ -49,15 +53,11 @@ const ScheduleStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     onSubmit(valid);
   };
 
-  const inputClass =
-    "w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-primary";
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
-
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-primary">식순</h3>
+          <h3 className="text-sm font-semibold text-primary">{labels.scheduleTitle}</h3>
           <span className="text-xs text-gray-400">선택사항</span>
         </div>
 
@@ -78,34 +78,34 @@ const ScheduleStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className={labelClass}>시간</label>
+                <label className={labelCls}>시간</label>
                 <input
                   type="time"
                   value={item.time}
                   onChange={(e) => handleChange(index, "time", e.target.value)}
-                  className={inputClass}
+                  className={inputCls}
                 />
               </div>
               <div className="col-span-2">
-                <label className={labelClass}>일정 제목</label>
+                <label className={labelCls}>일정 제목</label>
                 <input
                   value={item.title}
                   onChange={(e) => handleChange(index, "title", e.target.value)}
-                  placeholder="하객 입장"
-                  className={inputClass}
+                  placeholder={templateType === "GATHERING" ? "식사" : "하객 입장"}
+                  className={inputCls}
                 />
               </div>
             </div>
 
             <div>
-              <label className={labelClass}>설명</label>
+              <label className={labelCls}>설명</label>
               <input
                 value={item.description ?? ""}
                 onChange={(e) =>
                   handleChange(index, "description", e.target.value)
                 }
                 placeholder="선택사항"
-                className={inputClass}
+                className={inputCls}
               />
             </div>
           </div>
@@ -116,7 +116,7 @@ const ScheduleStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
           onClick={addItem}
           className="w-full py-2.5 rounded-lg border-2 border-dashed border-green-200 text-primary text-sm font-medium hover:bg-bgPrimary transition-colors"
         >
-          + 식순 추가
+          + {labels.scheduleAddLabel}
         </button>
       </div>
 

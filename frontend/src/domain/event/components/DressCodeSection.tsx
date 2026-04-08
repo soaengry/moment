@@ -4,7 +4,7 @@ import { slideUp } from "../../../global/constants/animations";
 import type { WeddingResponse, TransportationResponse } from "../types";
 
 interface Props {
-  wedding: WeddingResponse;
+  wedding?: WeddingResponse | null;
   transportation?: TransportationResponse[];
 }
 
@@ -12,13 +12,14 @@ const DressCodeSection: FC<Props> = ({ wedding, transportation = [] }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-  const { dressCode, notice, parkingInfo, mealInfo } = wedding;
-  const hasContent = dressCode || notice || parkingInfo || mealInfo || transportation.length > 0;
+  const notice = wedding?.notice ?? null;
+  const parkingInfo = wedding?.parkingInfo ?? null;
+  const mealInfo = wedding?.mealInfo ?? null;
+  const hasContent = notice || parkingInfo || mealInfo || transportation.length > 0;
 
   if (!hasContent) return null;
 
   const items: { icon: string; title: string; content: string }[] = [];
-  if (dressCode) items.push({ icon: "👔", title: "드레스 코드", content: dressCode });
   if (notice) items.push({ icon: "📌", title: "유의사항", content: notice });
   if (parkingInfo) items.push({ icon: "🅿️", title: "주차 안내", content: parkingInfo });
   if (mealInfo) items.push({ icon: "🍽️", title: "식사 안내", content: mealInfo });
