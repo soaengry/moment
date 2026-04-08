@@ -10,10 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
-
     List<Account> findByAccountGroupIdOrderByOrderIndex(Long accountGroupId);
-
-    long countByAccountGroupId(Long accountGroupId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT COUNT(a) FROM Account a WHERE a.accountGroupId = :accountGroupId")

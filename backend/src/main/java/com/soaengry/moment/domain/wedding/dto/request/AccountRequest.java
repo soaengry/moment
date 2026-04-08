@@ -11,14 +11,6 @@ public record AccountRequest(
         Integer orderIndex
 ) {
     public Account toEntity(Long accountGroupId) {
-        return Account.create(
-                accountGroupId,
-                bankName,
-                bankCode,
-                accountNumber,
-                accountHolder,
-                kakaoPayUrl,
-                orderIndex
-        );
+        return Account.create(accountGroupId, bankName, bankCode, accountNumber, accountHolder, kakaoPayUrl, orderIndex);
     }
 }

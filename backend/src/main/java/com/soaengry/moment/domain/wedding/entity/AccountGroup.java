@@ -1,9 +1,7 @@
 package com.soaengry.moment.domain.wedding.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
@@ -18,34 +16,24 @@ public class AccountGroup {
     @Column(nullable = false)
     private Long weddingId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Side side;
-
     @Column(nullable = false)
     private String groupName;
 
     @Column(nullable = false)
     private Integer orderIndex;
 
-    private AccountGroup(Long weddingId, Side side, String groupName, Integer orderIndex) {
+    private AccountGroup(Long weddingId, String groupName, Integer orderIndex) {
         this.weddingId = weddingId;
-        this.side = side;
         this.groupName = groupName;
         this.orderIndex = orderIndex;
     }
 
-    public static AccountGroup create(Long weddingId, Side side, String groupName, Integer orderIndex) {
-        return new AccountGroup(weddingId, side, groupName, orderIndex);
+    public static AccountGroup create(Long weddingId, String groupName, Integer orderIndex) {
+        return new AccountGroup(weddingId, groupName, orderIndex);
     }
 
-    public void update(Side side, String groupName, Integer orderIndex) {
-        this.side = side;
+    public void update(String groupName, Integer orderIndex) {
         this.groupName = groupName;
         this.orderIndex = orderIndex;
-    }
-
-    public enum Side {
-        GROOM, GROOM_FAMILY, BRIDE, BRIDE_FAMILY
     }
 }
