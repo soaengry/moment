@@ -1,15 +1,18 @@
 import { type FC, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { slideUp } from "../../../global/constants/animations";
-import type { ScheduleResponse } from "../types";
+import type { ScheduleResponse, EventType } from "../types";
+import { TEMPLATE_LABELS } from "../utils/templateLabels";
 
 interface Props {
   schedules: ScheduleResponse[];
+  eventType: EventType;
 }
 
 const formatTime = (time: string) => time.slice(0, 5);
 
-const ScheduleSection: FC<Props> = ({ schedules }) => {
+const ScheduleSection: FC<Props> = ({ schedules, eventType }) => {
+  const tl = TEMPLATE_LABELS[eventType];
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
@@ -26,7 +29,7 @@ const ScheduleSection: FC<Props> = ({ schedules }) => {
       className="py-10 px-6"
     >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-8 uppercase font-medium text-center">
-        Ceremony
+        {tl.scheduleTitle}
       </p>
 
       <div className="relative max-w-sm mx-auto">

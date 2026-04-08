@@ -7,12 +7,12 @@ import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 
 interface Props {
   title: string;
-  weddingId: number;
-  invitationId?: string;
+  eventId: number;
+  slug?: string;
   showSettings?: boolean;
 }
 
-const WeddingHeader: FC<Props> = ({ title, invitationId, showSettings }) => {
+const EventHeader: FC<Props> = ({ title, slug, showSettings }) => {
   const navigate = useNavigate();
   const isVisible = useScrollVisibility();
 
@@ -36,7 +36,7 @@ const WeddingHeader: FC<Props> = ({ title, invitationId, showSettings }) => {
         </h1>
         {showSettings ? (
           <motion.button
-            onClick={() => navigate(`/wedding/${invitationId}/edit`)}
+            onClick={() => navigate(`/event/${slug}/edit`)}
             whileTap={buttonTap}
             className="p-1 text-gray-500"
           >
@@ -50,4 +50,4 @@ const WeddingHeader: FC<Props> = ({ title, invitationId, showSettings }) => {
   );
 };
 
-export default WeddingHeader;
+export default EventHeader;

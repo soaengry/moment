@@ -1,11 +1,11 @@
 import { type FC, useState, useRef } from "react";
-import type { AccountRequest, AccountSide } from "../../types";
+import type { AccountRequest, EventType } from "../../types";
 import axiosInstance from "../../../../global/api/axiosInstance";
+import { inputCls, labelCls } from "../../../../global/styles/formStyles";
 
 export type PaymentMethod = "BANK" | "KAKAOPAY" | "TOSS";
 
 export interface AccountGroupFormData {
-  side: AccountSide;
   groupName: string;
   orderIndex: number;
   accounts: (AccountRequest & { type?: PaymentMethod })[];
@@ -15,14 +15,8 @@ interface Props {
   initialData: AccountGroupFormData[];
   onSubmit: (groups: AccountGroupFormData[]) => void;
   onBack: () => void;
+  templateType?: EventType;
 }
-
-const SIDE_OPTIONS: { value: AccountSide; label: string }[] = [
-  { value: "GROOM", label: "신랑측" },
-  { value: "GROOM_FAMILY", label: "신랑 혼주측" },
-  { value: "BRIDE", label: "신부측" },
-  { value: "BRIDE_FAMILY", label: "신부 혼주측" },
-];
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: string }[] =
   [
@@ -75,7 +69,7 @@ const getAccountType = (
   return "BANK";
 };
 
-const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
+const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack, templateType }) => {
   const [groups, setGroups] = useState<AccountGroupFormData[]>(
     initialData.length > 0 ? initialData : [],
   );
@@ -90,7 +84,6 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     setGroups((prev) => [
       ...prev,
       {
-        side: "GROOM",
         groupName: "",
         orderIndex: newIndex,
         accounts: [createAccount("BANK", 0)],
@@ -235,10 +228,7 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
       .map((g, i) => ({
         ...g,
         orderIndex: i,
-        groupName:
-          g.groupName ||
-          SIDE_OPTIONS.find((s) => s.value === g.side)?.label ||
-          "",
+        groupName: g.groupName || `그룹 ${i + 1}`,
         accounts: g.accounts.map((a, ai) => {
           const { type, ...rest } = a as AccountRequest & {
             type?: PaymentMethod;
@@ -248,10 +238,6 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
       }));
     onSubmit(valid);
   };
-
-  const inputClass =
-    "w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-primary";
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
 
   const renderBankForm = (
     account: AccountRequest & { type?: PaymentMethod },
@@ -264,12 +250,12 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
     return (
       <div className="space-y-2">
         <div>
-          <label className={labelClass}>계좌번호</label>
+          <label className={labelCls}>계좌번호</label>
           <input
             value={account.accountNumber}
             onChange={(e) => handleAccountNumberChange(gi, ai, e.target.value)}
             placeholder="계좌번호를 입력하면 은행이 자동 감지됩니다"
-            className={inputClass}
+            className={inputCls}
           />
         </div>
 
@@ -291,27 +277,27 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
           account.accountNumber.replace(/[^0-9]/g, "").length >= 3 &&
           !isDetecting && (
             <div>
-              <label className={labelClass}>은행명</label>
+              <label className={labelCls}>은행명</label>
               <input
                 value={account.bankName}
                 onChange={(e) =>
                   updateAccount(gi, ai, "bankName", e.target.value)
                 }
                 placeholder="○○은행"
-                className={inputClass}
+                className={inputCls}
               />
             </div>
           )}
 
         <div>
-          <label className={labelClass}>예금주</label>
+          <label className={labelCls}>예금주</label>
           <input
             value={account.accountHolder}
             onChange={(e) =>
               updateAccount(gi, ai, "accountHolder", e.target.value)
             }
             placeholder="홍길동"
-            className={inputClass}
+            className={inputCls}
           />
         </div>
       </div>
@@ -331,23 +317,23 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
         </span>
       </div>
       <div>
-        <label className={labelClass}>카카오페이 송금 URL *</label>
+        <label className={labelCls}>카카오페이 송금 URL *</label>
         <input
           value={account.kakaoPayUrl ?? ""}
           onChange={(e) => updateAccount(gi, ai, "kakaoPayUrl", e.target.value)}
           placeholder="https://qr.kakaopay.com/..."
-          className={inputClass}
+          className={inputCls}
         />
       </div>
       <div>
-        <label className={labelClass}>받는 분</label>
+        <label className={labelCls}>받는 분</label>
         <input
           value={account.accountHolder}
           onChange={(e) =>
             updateAccount(gi, ai, "accountHolder", e.target.value)
           }
           placeholder="홍길동"
-          className={inputClass}
+          className={inputCls}
         />
       </div>
     </div>
@@ -366,25 +352,25 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
         </span>
       </div>
       <div>
-        <label className={labelClass}>토스 ID (전화번호) *</label>
+        <label className={labelCls}>토스 ID (전화번호) *</label>
         <input
           value={account.accountNumber}
           onChange={(e) =>
             updateAccount(gi, ai, "accountNumber", e.target.value)
           }
           placeholder="010-1234-5678"
-          className={inputClass}
+          className={inputCls}
         />
       </div>
       <div>
-        <label className={labelClass}>받는 분</label>
+        <label className={labelCls}>받는 분</label>
         <input
           value={account.accountHolder}
           onChange={(e) =>
             updateAccount(gi, ai, "accountHolder", e.target.value)
           }
           placeholder="홍길동"
-          className={inputClass}
+          className={inputCls}
         />
       </div>
     </div>
@@ -419,22 +405,15 @@ const AccountStep: FC<Props> = ({ initialData, onSubmit, onBack }) => {
                 ✕
               </button>
 
-              {/* Side selector */}
+              {/* Group name */}
               <div>
-                <label className={labelClass}>측</label>
-                <select
-                  value={group.side}
-                  onChange={(e) =>
-                    updateGroup(gi, "side", e.target.value as AccountSide)
-                  }
-                  className={inputClass}
-                >
-                  {SIDE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                <label className={labelCls}>그룹 이름</label>
+                <input
+                  value={group.groupName}
+                  onChange={(e) => updateGroup(gi, "groupName", e.target.value)}
+                  placeholder={templateType === "GATHERING" ? "예: 계주" : "예: 신랑측, 신부측"}
+                  className={inputCls}
+                />
               </div>
 
               {/* Account list */}

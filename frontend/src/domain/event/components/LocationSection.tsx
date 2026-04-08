@@ -2,11 +2,11 @@ import { type FC, useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { slideUp } from "../../../global/constants/animations";
 import { toast } from "react-toastify";
-import type { WeddingResponse } from "../types";
+import type { EventResponse } from "../types";
 import { ENV } from "../../../global/config/env";
 
 interface Props {
-  wedding: WeddingResponse;
+  wedding: EventResponse;
 }
 
 const loadKakaoMapSdk = (): Promise<void> => {
@@ -27,7 +27,7 @@ const LocationSection: FC<Props> = ({ wedding }) => {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
   const mapRef = useRef<HTMLDivElement>(null);
-  const hasMap = wedding.venueLat != null && wedding.venueLng != null;
+  const hasMap = wedding.locationLat != null && wedding.locationLng != null;
 
   useEffect(() => {
     if (!hasMap || !mapRef.current || !ENV.KAKAO_MAP_KEY) return;
@@ -36,34 +36,34 @@ const LocationSection: FC<Props> = ({ wedding }) => {
       .then(() => {
         if (!isMounted || !mapRef.current) return;
         const { kakao } = window;
-        const position = new kakao.maps.LatLng(wedding.venueLat!, wedding.venueLng!);
+        const position = new kakao.maps.LatLng(wedding.locationLat!, wedding.locationLng!);
         const map = new kakao.maps.Map(mapRef.current, { center: position, level: 3 });
         new kakao.maps.Marker({ map, position });
       })
       .catch(() => {});
     return () => { isMounted = false; };
-  }, [hasMap, wedding.venueLat, wedding.venueLng]);
+  }, [hasMap, wedding.locationLat, wedding.locationLng]);
 
-  if (!hasMap && !wedding.mapImageUrl) return null;
+  if (!hasMap) return null;
 
   const handleCopyAddress = async () => {
     try {
-      await navigator.clipboard.writeText(wedding.venueAddress);
+      await navigator.clipboard.writeText(wedding.locationAddress);
       toast.success("주소가 복사되었습니다");
     } catch { toast.error("주소 복사에 실패했습니다"); }
   };
 
   const handleOpenKakaoMap = () => {
     const url = hasMap
-      ? `https://map.kakao.com/link/map/${wedding.venueName},${wedding.venueLat},${wedding.venueLng}`
-      : `https://map.kakao.com/link/search/${encodeURIComponent(wedding.venueAddress)}`;
+      ? `https://map.kakao.com/link/map/${wedding.locationName},${wedding.locationLat},${wedding.locationLng}`
+      : `https://map.kakao.com/link/search/${encodeURIComponent(wedding.locationAddress)}`;
     window.open(url, "_blank");
   };
 
   const handleOpenNavi = () => {
     const url = hasMap
-      ? `https://map.kakao.com/link/to/${wedding.venueName},${wedding.venueLat},${wedding.venueLng}`
-      : `https://map.kakao.com/link/search/${encodeURIComponent(wedding.venueAddress)}`;
+      ? `https://map.kakao.com/link/to/${wedding.locationName},${wedding.locationLat},${wedding.locationLng}`
+      : `https://map.kakao.com/link/search/${encodeURIComponent(wedding.locationAddress)}`;
     window.open(url, "_blank");
   };
 
@@ -81,10 +81,6 @@ const LocationSection: FC<Props> = ({ wedding }) => {
 
       {hasMap && ENV.KAKAO_MAP_KEY && (
         <div ref={mapRef} className="w-full h-60 rounded-2xl mb-4 bg-gray-100 shadow-inner" />
-      )}
-
-      {wedding.mapImageUrl && (
-        <img src={wedding.mapImageUrl} alt="약도" className="w-full rounded-2xl mb-4" />
       )}
 
       <div className="flex gap-2 justify-center">

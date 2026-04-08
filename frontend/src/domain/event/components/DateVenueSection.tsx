@@ -1,19 +1,22 @@
-import { type FC, useRef } from "react";
+import { type FC, useRef, useMemo } from "react";
 import { motion, useInView } from "framer-motion";
 import { slideUp } from "../../../global/constants/animations";
-import type { WeddingResponse } from "../types";
+import type { EventResponse, EventType } from "../types";
+import { TEMPLATE_LABELS } from "../utils/templateLabels";
 
 interface Props {
-  wedding: WeddingResponse;
+  wedding: EventResponse;
+  eventType: EventType;
 }
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-const DateVenueSection: FC<Props> = ({ wedding }) => {
+const DateVenueSection: FC<Props> = ({ wedding, eventType }) => {
+  const tl = TEMPLATE_LABELS[eventType];
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-  const date = new Date(wedding.weddingDate);
+  const date = new Date(wedding.date);
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -24,11 +27,14 @@ const DateVenueSection: FC<Props> = ({ wedding }) => {
   const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
 
   // 달력 생성
-  const firstDay = new Date(year, date.getMonth(), 1).getDay();
-  const daysInMonth = new Date(year, date.getMonth() + 1, 0).getDate();
-  const calendarDays: (number | null)[] = [];
-  for (let i = 0; i < firstDay; i++) calendarDays.push(null);
-  for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
+  const calendarDays = useMemo(() => {
+    const firstDay = new Date(year, date.getMonth(), 1).getDay();
+    const daysInMonth = new Date(year, date.getMonth() + 1, 0).getDate();
+    const days: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(i);
+    return days;
+  }, [year, date]);
 
   return (
     <motion.section
@@ -39,7 +45,7 @@ const DateVenueSection: FC<Props> = ({ wedding }) => {
       className="py-10 px-6 text-center"
     >
       <p className="text-[10px] tracking-[0.4em] text-primary/40 mb-6 uppercase font-medium">
-        Wedding Day
+        {tl.dateTitle}
       </p>
 
       <p className="text-lg text-gray-700 font-medium">
@@ -90,19 +96,11 @@ const DateVenueSection: FC<Props> = ({ wedding }) => {
 
       {/* 예식장 정보 */}
       <p className="text-base font-semibold text-gray-800">
-        {wedding.venueName}
+        {wedding.locationName}
       </p>
-      <p className="text-sm text-gray-500 mt-1">{wedding.venueAddress}</p>
-      {wedding.venueDetail && (
-        <p className="text-xs text-gray-400 mt-0.5">{wedding.venueDetail}</p>
-      )}
-      {wedding.venuePhone && (
-        <a
-          href={`tel:${wedding.venuePhone}`}
-          className="inline-block mt-2 text-xs text-primary hover:underline"
-        >
-          {wedding.venuePhone}
-        </a>
+      <p className="text-sm text-gray-500 mt-1">{wedding.locationAddress}</p>
+      {wedding.locationDetail && (
+        <p className="text-xs text-gray-400 mt-0.5">{wedding.locationDetail}</p>
       )}
     </motion.section>
   );

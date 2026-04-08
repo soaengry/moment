@@ -1,24 +1,25 @@
 import { type FC, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { kenBurns } from "../../../global/constants/animations";
-import type { GalleryResponse } from "../types";
+import type { HeroImageResponse } from "../types";
+import { formatEventDateLong } from "../../../global/utils/date";
 
 interface Props {
-  gallery: GalleryResponse[];
+  heroImages: HeroImageResponse[];
   title: string;
-  weddingDate: string;
+  date: string;
   groomName?: string;
   brideName?: string;
 }
 
 const LandingSection: FC<Props> = ({
-  gallery,
+  heroImages,
   title,
-  weddingDate,
+  date,
   groomName,
   brideName,
 }) => {
-  const images = [...gallery].sort((a, b) => a.orderIndex - b.orderIndex);
+  const images = [...heroImages].sort((a, b) => a.orderIndex - b.orderIndex);
   const [current, setCurrent] = useState(0);
 
   const next = useCallback(() => {
@@ -31,16 +32,6 @@ const LandingSection: FC<Props> = ({
     const timer = setInterval(next, 3000);
     return () => clearInterval(timer);
   }, [images.length, next]);
-
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    const dow = DAYS[d.getDay()];
-    return `${year}. ${month}. ${day}. ${dow}요일`;
-  };
 
   return (
     <section
@@ -61,7 +52,7 @@ const LandingSection: FC<Props> = ({
             >
               <img
                 src={images[current].imageUrl}
-                alt={images[current].caption ?? `슬라이드 ${current + 1}`}
+                alt={`슬라이드 ${current + 1}`}
                 className="w-full h-full object-cover"
                 style={{ minHeight: "85vh" }}
               />
@@ -89,7 +80,7 @@ const LandingSection: FC<Props> = ({
           {title}
         </h1>
         <p className="text-sm tracking-[0.15em] text-white/80 drop-shadow">
-          {formatDate(weddingDate)}
+          {formatEventDateLong(date)}
         </p>
 
         {/* 슬라이드 인디케이터 */}

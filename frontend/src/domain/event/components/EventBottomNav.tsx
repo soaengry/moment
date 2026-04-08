@@ -13,28 +13,31 @@ import {
   IoChatbubblesOutline,
 } from "react-icons/io5";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
+import type { EventType } from "../types";
 
 export type WeddingTab = "info" | "feed" | "guestbook" | "chat" | "mypage";
 
 interface Props {
-  weddingId: number;
-  invitationId?: string;
+  eventId: number;
+  slug?: string;
   activeTab: WeddingTab;
+  eventType: EventType;
 }
 
-const WeddingBottomNav: FC<Props> = ({
-  weddingId,
-  invitationId,
+const EventBottomNav: FC<Props> = ({
+  eventId,
+  slug,
   activeTab,
+  eventType,
 }) => {
   const navigate = useNavigate();
   const isVisible = useScrollVisibility();
 
-  const basePath = invitationId
-    ? `/wedding/${invitationId}`
-    : `/wedding/${weddingId}`;
+  const basePath = slug
+    ? `/event/${slug}`
+    : `/event/${eventId}`;
 
-  const items = [
+  const allItems = [
     {
       key: "info" as const,
       label: "정보",
@@ -64,6 +67,10 @@ const WeddingBottomNav: FC<Props> = ({
       action: () => navigate(`${basePath}/chat`),
     },
   ];
+
+  const items = eventType === "GATHERING"
+    ? allItems.filter((item) => item.key !== "guestbook")
+    : allItems;
 
   return (
     <motion.nav
@@ -101,4 +108,4 @@ const WeddingBottomNav: FC<Props> = ({
   );
 };
 
-export default WeddingBottomNav;
+export default EventBottomNav;
