@@ -72,8 +72,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/feed/**").authenticated()
                         // 채팅 이미지 업로드는 인증 사용자
                         .requestMatchers(HttpMethod.POST, "/api/invitations/*/chat/**").authenticated()
-                        // 웨딩 생성은 ADMIN만, 하위 리소스 CUD는 인증 사용자 (서비스에서 권한 검증)
-                        .requestMatchers(HttpMethod.POST, "/api/invitations").hasRole("ADMIN")
+                        // 웨딩 생성은 인증 사용자, 하위 리소스 CUD는 인증 사용자 (서비스에서 권한 검증)
+                        .requestMatchers(HttpMethod.POST, "/api/invitations").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/invitations/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/invitations/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/invitations/**").authenticated()

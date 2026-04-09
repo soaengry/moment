@@ -14,7 +14,7 @@ interface NavItem {
   label: string;
   icon: FC<{ className?: string }>;
   activeIcon: FC<{ className?: string }>;
-  adminOnly?: boolean;
+  requiresAuth?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -35,7 +35,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "초대장 만들기",
     icon: IoAddCircleOutline,
     activeIcon: IoAddCircle,
-    adminOnly: true,
+    requiresAuth: true,
   },
   {
     path: "/my-page",
@@ -51,8 +51,7 @@ const BottomNav: FC = () => {
   const user = useAuthStore((state) => state.user);
   const isVisible = useScrollVisibility();
 
-  const isAdmin = user?.role === "ADMIN";
-  const visibleItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
+  const visibleItems = NAV_ITEMS.filter((item) => !item.requiresAuth || !!user);
 
   // 특정 페이지에서는 BottomNav를 숨김 (로그인, 회원가입 등)
   const hiddenPaths = [
