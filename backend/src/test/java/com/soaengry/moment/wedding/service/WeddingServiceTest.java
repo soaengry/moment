@@ -1,28 +1,20 @@
 package com.soaengry.moment.wedding.service;
 
 import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
-import com.soaengry.moment.domain.feed.repository.BookmarkRepository;
-import com.soaengry.moment.domain.feed.repository.CommentRepository;
-import com.soaengry.moment.domain.feed.repository.PostImageRepository;
-import com.soaengry.moment.domain.feed.repository.PostLikeRepository;
-import com.soaengry.moment.domain.feed.repository.PostRepository;
+import com.soaengry.moment.domain.feed.repository.*;
 import com.soaengry.moment.domain.guestbook.repository.GuestbookEntryRepository;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.wedding.dto.request.*;
 import com.soaengry.moment.domain.wedding.dto.response.*;
-import com.soaengry.moment.domain.wedding.entity.*;
+import com.soaengry.moment.domain.wedding.entity.Account;
+import com.soaengry.moment.domain.wedding.entity.AccountGroup;
+import com.soaengry.moment.domain.wedding.entity.Couple;
+import com.soaengry.moment.domain.wedding.entity.Wedding;
 import com.soaengry.moment.domain.wedding.exception.WeddingErrorCode;
 import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import com.soaengry.moment.domain.wedding.repository.*;
-import com.soaengry.moment.domain.wedding.service.AccommodationService;
-import com.soaengry.moment.domain.wedding.service.AccountService;
-import com.soaengry.moment.domain.wedding.service.AnnouncementService;
-import com.soaengry.moment.domain.wedding.service.CoupleService;
-import com.soaengry.moment.domain.wedding.service.GalleryService;
-import com.soaengry.moment.domain.wedding.service.ScheduleService;
-import com.soaengry.moment.domain.wedding.service.TransportationService;
-import com.soaengry.moment.domain.wedding.service.WeddingService;
+import com.soaengry.moment.domain.wedding.service.*;
 import com.soaengry.moment.global.service.KakaoGeocodingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -63,13 +55,7 @@ class WeddingServiceTest {
     private GalleryService galleryService;
 
     @Autowired
-    private TransportationService transportationService;
-
-    @Autowired
     private AccommodationService accommodationService;
-
-    @Autowired
-    private AnnouncementService announcementService;
 
     @Autowired
     private WeddingRepository weddingRepository;
@@ -90,13 +76,7 @@ class WeddingServiceTest {
     private GalleryRepository galleryRepository;
 
     @Autowired
-    private TransportationRepository transportationRepository;
-
-    @Autowired
     private AccommodationRepository accommodationRepository;
-
-    @Autowired
-    private AnnouncementRepository announcementRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -1339,166 +1319,6 @@ class WeddingServiceTest {
         assertThat(galleryRepository.findById(created.id())).isEmpty();
     }
 
-    // ==================== Transportation CRUD ====================
-
-    @Test
-    @DisplayName("Transportation 생성 성공")
-    void createTransportation_Success() {
-        // given
-        Wedding wedding = weddingRepository.save(
-                Wedding.builder()
-                        .title("제목")
-                        .invitationId("invitation-id")
-                        .weddingDate(LocalDateTime.now())
-                        .venueAddress("주소")
-                        .venueName("장소")
-                        .venueLat(37.5)
-                        .venueLng(127.0)
-                        .build()
-        );
-
-        coupleRepository.save(Couple.builder()
-                .wedding(wedding)
-                .role(Couple.CoupleRole.GROOM)
-                .name("김철수")
-                .email(testUser.getEmail())
-                .isFatherAlive(true)
-                .isMotherAlive(true)
-                .build());
-
-        TransportationRequest request = new TransportationRequest(
-                Transportation.TransportType.SUBWAY,
-                "2호선 강남역",
-                "1번 출구에서 도보 5분",
-                1
-        );
-
-        // when
-        TransportationResponse response = transportationService.createTransportation(wedding.getId(), testUser.getId(), request);
-
-        // then
-        assertThat(response.id()).isNotNull();
-        assertThat(response.type()).isEqualTo(Transportation.TransportType.SUBWAY);
-        assertThat(response.title()).isEqualTo("2호선 강남역");
-    }
-
-    @Test
-    @DisplayName("Wedding의 Transportation 목록 조회 성공")
-    void getTransportationsByWedding_Success() {
-        // given
-        Wedding wedding = weddingRepository.save(
-                Wedding.builder()
-                        .title("제목")
-                        .invitationId("invitation-id")
-                        .weddingDate(LocalDateTime.now())
-                        .venueAddress("주소")
-                        .venueName("장소")
-                        .venueLat(37.5)
-                        .venueLng(127.0)
-                        .build()
-        );
-
-        coupleRepository.save(Couple.builder()
-                .wedding(wedding)
-                .role(Couple.CoupleRole.GROOM)
-                .name("김철수")
-                .email(testUser.getEmail())
-                .isFatherAlive(true)
-                .isMotherAlive(true)
-                .build());
-
-        transportationService.createTransportation(wedding.getId(), testUser.getId(),
-                new TransportationRequest(Transportation.TransportType.SUBWAY, "지하철", "설명1", 1));
-        transportationService.createTransportation(wedding.getId(), testUser.getId(),
-                new TransportationRequest(Transportation.TransportType.BUS, "버스", "설명2", 2));
-
-        // when
-        List<TransportationResponse> transportations = transportationService.getTransportationsByWedding(wedding.getId());
-
-        // then
-        assertThat(transportations).hasSize(2);
-        assertThat(transportations.get(0).title()).isEqualTo("지하철");
-        assertThat(transportations.get(1).title()).isEqualTo("버스");
-    }
-
-    @Test
-    @DisplayName("Transportation 수정 성공")
-    void updateTransportation_Success() {
-        // given
-        Wedding wedding = weddingRepository.save(
-                Wedding.builder()
-                        .title("제목")
-                        .invitationId("invitation-id")
-                        .weddingDate(LocalDateTime.now())
-                        .venueAddress("주소")
-                        .venueName("장소")
-                        .venueLat(37.5)
-                        .venueLng(127.0)
-                        .build()
-        );
-
-        coupleRepository.save(Couple.builder()
-                .wedding(wedding)
-                .role(Couple.CoupleRole.GROOM)
-                .name("김철수")
-                .email(testUser.getEmail())
-                .isFatherAlive(true)
-                .isMotherAlive(true)
-                .build());
-
-        TransportationResponse created = transportationService.createTransportation(wedding.getId(), testUser.getId(),
-                new TransportationRequest(Transportation.TransportType.SUBWAY, "지하철", "설명", 1));
-
-        TransportationRequest updateRequest = new TransportationRequest(
-                Transportation.TransportType.BUS,
-                "수정된 제목",
-                "수정된 설명",
-                2
-        );
-
-        // when
-        TransportationResponse response = transportationService.updateTransportation(created.id(), testUser.getId(), updateRequest);
-
-        // then
-        assertThat(response.type()).isEqualTo(Transportation.TransportType.BUS);
-        assertThat(response.title()).isEqualTo("수정된 제목");
-        assertThat(response.description()).isEqualTo("수정된 설명");
-    }
-
-    @Test
-    @DisplayName("Transportation 삭제 성공")
-    void deleteTransportation_Success() {
-        // given
-        Wedding wedding = weddingRepository.save(
-                Wedding.builder()
-                        .title("제목")
-                        .invitationId("invitation-id")
-                        .weddingDate(LocalDateTime.now())
-                        .venueAddress("주소")
-                        .venueName("장소")
-                        .venueLat(37.5)
-                        .venueLng(127.0)
-                        .build()
-        );
-
-        coupleRepository.save(Couple.builder()
-                .wedding(wedding)
-                .role(Couple.CoupleRole.GROOM)
-                .name("김철수")
-                .email(testUser.getEmail())
-                .isFatherAlive(true)
-                .isMotherAlive(true)
-                .build());
-
-        TransportationResponse created = transportationService.createTransportation(wedding.getId(), testUser.getId(),
-                new TransportationRequest(Transportation.TransportType.SUBWAY, "지하철", "설명", 1));
-
-        // when
-        transportationService.deleteTransportation(created.id(), testUser.getId());
-
-        // then
-        assertThat(transportationRepository.findById(created.id())).isEmpty();
-    }
 
     // ==================== Accommodation CRUD ====================
 
@@ -1665,162 +1485,6 @@ class WeddingServiceTest {
         assertThat(accommodationRepository.findById(created.id())).isEmpty();
     }
 
-    // ==================== Announcement CRUD ====================
-
-    @Test
-    @DisplayName("Announcement 생성 성공")
-    void createAnnouncement_Success() {
-        // given
-        Wedding wedding = weddingRepository.save(
-                Wedding.builder()
-                        .title("제목")
-                        .invitationId("invitation-id")
-                        .weddingDate(LocalDateTime.now())
-                        .venueAddress("주소")
-                        .venueName("장소")
-                        .venueLat(37.5)
-                        .venueLng(127.0)
-                        .build()
-        );
-
-        coupleRepository.save(Couple.builder()
-                .wedding(wedding)
-                .role(Couple.CoupleRole.GROOM)
-                .name("김철수")
-                .email(testUser.getEmail())
-                .isFatherAlive(true)
-                .isMotherAlive(true)
-                .build());
-
-        AnnouncementRequest request = new AnnouncementRequest(
-                "중요 공지사항",
-                "시간이 변경되었습니다.",
-                true
-        );
-
-        // when
-        AnnouncementResponse response = announcementService.createAnnouncement(wedding.getId(), testUser.getId(), request);
-
-        // then
-        assertThat(response.id()).isNotNull();
-        assertThat(response.title()).isEqualTo("중요 공지사항");
-        assertThat(response.isPinned()).isTrue();
-    }
-
-    @Test
-    @DisplayName("Wedding의 Announcement 목록 조회 성공")
-    void getAnnouncementsByWedding_Success() {
-        // given
-        Wedding wedding = weddingRepository.save(
-                Wedding.builder()
-                        .title("제목")
-                        .invitationId("invitation-id")
-                        .weddingDate(LocalDateTime.now())
-                        .venueAddress("주소")
-                        .venueName("장소")
-                        .venueLat(37.5)
-                        .venueLng(127.0)
-                        .build()
-        );
-
-        coupleRepository.save(Couple.builder()
-                .wedding(wedding)
-                .role(Couple.CoupleRole.GROOM)
-                .name("김철수")
-                .email(testUser.getEmail())
-                .isFatherAlive(true)
-                .isMotherAlive(true)
-                .build());
-
-        announcementService.createAnnouncement(wedding.getId(), testUser.getId(),
-                new AnnouncementRequest("공지1", "내용1", false));
-        announcementService.createAnnouncement(wedding.getId(), testUser.getId(),
-                new AnnouncementRequest("공지2", "내용2", true));
-
-        // when
-        List<AnnouncementResponse> announcements = announcementService.getAnnouncementsByWedding(wedding.getId());
-
-        // then
-        assertThat(announcements).hasSize(2);
-    }
-
-    @Test
-    @DisplayName("Announcement 수정 성공")
-    void updateAnnouncement_Success() {
-        // given
-        Wedding wedding = weddingRepository.save(
-                Wedding.builder()
-                        .title("제목")
-                        .invitationId("invitation-id")
-                        .weddingDate(LocalDateTime.now())
-                        .venueAddress("주소")
-                        .venueName("장소")
-                        .venueLat(37.5)
-                        .venueLng(127.0)
-                        .build()
-        );
-
-        coupleRepository.save(Couple.builder()
-                .wedding(wedding)
-                .role(Couple.CoupleRole.GROOM)
-                .name("김철수")
-                .email(testUser.getEmail())
-                .isFatherAlive(true)
-                .isMotherAlive(true)
-                .build());
-
-        AnnouncementResponse created = announcementService.createAnnouncement(wedding.getId(), testUser.getId(),
-                new AnnouncementRequest("공지", "내용", false));
-
-        AnnouncementRequest updateRequest = new AnnouncementRequest(
-                "수정된 공지",
-                "수정된 내용",
-                true
-        );
-
-        // when
-        AnnouncementResponse response = announcementService.updateAnnouncement(created.id(), testUser.getId(), updateRequest);
-
-        // then
-        assertThat(response.title()).isEqualTo("수정된 공지");
-        assertThat(response.content()).isEqualTo("수정된 내용");
-        assertThat(response.isPinned()).isTrue();
-    }
-
-    @Test
-    @DisplayName("Announcement 삭제 성공")
-    void deleteAnnouncement_Success() {
-        // given
-        Wedding wedding = weddingRepository.save(
-                Wedding.builder()
-                        .title("제목")
-                        .invitationId("invitation-id")
-                        .weddingDate(LocalDateTime.now())
-                        .venueAddress("주소")
-                        .venueName("장소")
-                        .venueLat(37.5)
-                        .venueLng(127.0)
-                        .build()
-        );
-
-        coupleRepository.save(Couple.builder()
-                .wedding(wedding)
-                .role(Couple.CoupleRole.GROOM)
-                .name("김철수")
-                .email(testUser.getEmail())
-                .isFatherAlive(true)
-                .isMotherAlive(true)
-                .build());
-
-        AnnouncementResponse created = announcementService.createAnnouncement(wedding.getId(), testUser.getId(),
-                new AnnouncementRequest("공지", "내용", false));
-
-        // when
-        announcementService.deleteAnnouncement(created.id(), testUser.getId());
-
-        // then
-        assertThat(announcementRepository.findById(created.id())).isEmpty();
-    }
 
     // ==================== 전체 정보 조회 ====================
 
