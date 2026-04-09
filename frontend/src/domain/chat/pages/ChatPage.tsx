@@ -8,11 +8,11 @@ import type { ChatMessage } from "../types";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { tokenStorage } from "../../auth/auth.utils";
 import { ENV } from "../../../global/config/env";
-import { weddingApi } from "../../wedding/api/weddingApi";
+import { eventApi } from "../../event/api/eventApi";
 import ImageViewer from "../../feed/components/ImageViewer";
 
 const ChatPage: FC = () => {
-  const { invitationId } = useParams<{ invitationId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -32,14 +32,16 @@ const ChatPage: FC = () => {
 
   // weddingId 조회
   useEffect(() => {
-    if (!invitationId) return;
-    weddingApi
-      .getWeddingInfo(invitationId)
-      .then((info) => setWeddingId(Number(info.wedding.id)))
+    if (!slug) return;
+    eventApi
+      .getEventInfo(slug)
+      .then((info) => {
+        if (info.wedding?.id) setWeddingId(Number(info.wedding.id));
+      })
       .catch(() => {
         /* silent */
       });
-  }, [invitationId]);
+  }, [slug]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -158,7 +160,7 @@ const ChatPage: FC = () => {
     return `${ampm} ${h}:${mins}`;
   };
 
-  if (!invitationId || weddingId === null) {
+  if (!slug || weddingId === null) {
     return (
       <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />

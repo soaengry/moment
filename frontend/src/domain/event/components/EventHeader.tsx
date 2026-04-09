@@ -7,7 +7,6 @@ import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 
 interface Props {
   title: string;
-  eventId: number;
   slug?: string;
   showSettings?: boolean;
 }

@@ -89,7 +89,6 @@ const EventInfoPage: FC = () => {
               ? event.title || "초대장"
               : TAB_LABELS[activeTab]
           }
-          eventId={eventId}
           slug={slug}
           showSettings={showSettings && activeTab === "info"}
         />
@@ -137,7 +136,7 @@ const EventInfoPage: FC = () => {
           </>
         )}
 
-        {activeTab === "feed" && <WeddingFeedTab eventId={eventId} />}
+        {activeTab === "feed" && wedding && <WeddingFeedTab weddingId={wedding.id} />}
 
         {activeTab === "guestbook" && wedding && (
           <div className="px-4 py-6">
