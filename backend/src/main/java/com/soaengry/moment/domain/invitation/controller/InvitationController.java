@@ -48,8 +48,11 @@ public class InvitationController {
     }
 
     @GetMapping("/{invitationId}")
-    public ResponseEntity<InvitationResponse> getInvitation(@PathVariable Long invitationId) {
-        return ResponseEntity.ok(invitationService.getInvitation(invitationId));
+    public ResponseEntity<InvitationResponse> getInvitation(
+            @PathVariable Long invitationId,
+            Authentication authentication) {
+        Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
+        return ResponseEntity.ok(invitationService.getInvitation(invitationId, userId));
     }
 
     @PutMapping("/{invitationId}")
@@ -77,8 +80,11 @@ public class InvitationController {
     }
 
     @GetMapping("/{invitationId}/info")
-    public ResponseEntity<InvitationInfoResponse> getInvitationInfo(@PathVariable String invitationId) {
-        return ResponseEntity.ok(invitationService.getInvitationInfo(invitationId));
+    public ResponseEntity<InvitationInfoResponse> getInvitationInfo(
+            @PathVariable String invitationId,
+            Authentication authentication) {
+        Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
+        return ResponseEntity.ok(invitationService.getInvitationInfo(invitationId, userId));
     }
 
     // ==================== Couple ====================

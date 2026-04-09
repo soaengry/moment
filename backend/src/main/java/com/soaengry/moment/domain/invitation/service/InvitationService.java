@@ -1,5 +1,7 @@
 package com.soaengry.moment.domain.invitation.service;
 
+import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
+import com.soaengry.moment.domain.feed.repository.PostRepository;
 import com.soaengry.moment.domain.invitation.dto.request.InvitationRequest;
 import com.soaengry.moment.domain.invitation.dto.response.*;
 import com.soaengry.moment.domain.invitation.entity.*;
@@ -12,6 +14,8 @@ import com.soaengry.moment.global.service.KakaoGeocodingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +35,8 @@ public class InvitationService {
     private final AnnouncementRepository announcementRepository;
     private final KakaoGeocodingService kakaoGeocodingService;
     private final UserRepository userRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final PostRepository postRepository;
 
     private KakaoGeocodingService.Coordinate resolveCoordinate(String address) {
         KakaoGeocodingService.Coordinate coord = kakaoGeocodingService.geocode(address);
@@ -51,6 +57,26 @@ public class InvitationService {
         throw new InvitationException(InvitationErrorCode.INVITATION_UNAUTHORIZED);
     }
 
+    public void validateViewAccess(Long invitationId, Long userId) {
+        Invitation invitation = invitationRepository.findById(invitationId)
+                .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_NOT_FOUND));
+
+        if (invitation.isPublic()) return;
+
+        if (userId == null) throw new InvitationException(InvitationErrorCode.INVITATION_UNAUTHORIZED);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_UNAUTHORIZED));
+
+        if (user.getRole() == User.Role.ADMIN) return;
+
+        if (attendanceRepository.existsByUserIdAndWeddingId(userId, invitationId)) return;
+
+        if (coupleRepository.existsByInvitationIdAndEmail(invitationId, user.getEmail())) return;
+
+        throw new InvitationException(InvitationErrorCode.INVITATION_UNAUTHORIZED);
+    }
+
     public Long resolveCoupleUserId(String email) {
         return userRepository.findByEmail(email)
                 .map(User::getId)
@@ -65,7 +91,8 @@ public class InvitationService {
     }
 
     @Transactional(readOnly = true)
-    public InvitationResponse getInvitation(Long invitationId) {
+    public InvitationResponse getInvitation(Long invitationId, Long userId) {
+        validateViewAccess(invitationId, userId);
         Invitation invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_NOT_FOUND));
         return InvitationResponse.from(invitation);
@@ -88,6 +115,7 @@ public class InvitationService {
         invitation.updateNotice(request.notice());
         invitation.updateParkingInfo(request.parkingInfo());
         invitation.updateMealInfo(request.mealInfo());
+        invitation.updateIsPublic(request.isPublic() != null && request.isPublic());
 
         return InvitationResponse.from(invitation);
     }
@@ -99,6 +127,7 @@ public class InvitationService {
         if (!invitationRepository.existsById(invitationId)) {
             throw new InvitationException(InvitationErrorCode.INVITATION_NOT_FOUND);
         }
+        postRepository.softDeleteByWeddingId(invitationId, LocalDateTime.now());
         invitationRepository.deleteById(invitationId);
     }
 
@@ -108,10 +137,11 @@ public class InvitationService {
     }
 
     @Transactional(readOnly = true)
-    public InvitationInfoResponse getInvitationInfo(String invitationId) {
+    public InvitationInfoResponse getInvitationInfo(String invitationId, Long userId) {
         Invitation entity = invitationRepository.findByInvitationId(invitationId)
                 .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_NOT_FOUND));
         Long id = entity.getId();
+        validateViewAccess(id, userId);
 
         InvitationResponse invitation = InvitationResponse.from(entity);
 

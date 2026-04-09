@@ -142,6 +142,7 @@ export interface WeddingRequest {
   notice?: string;
   parkingInfo?: string;
   mealInfo?: string;
+  isPublic?: boolean;
 }
 
 export interface CoupleRequest {

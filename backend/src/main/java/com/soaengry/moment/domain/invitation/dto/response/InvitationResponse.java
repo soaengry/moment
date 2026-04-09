@@ -20,7 +20,8 @@ public record InvitationResponse(
         String dressCode,
         String notice,
         String parkingInfo,
-        String mealInfo
+        String mealInfo,
+        boolean isPublic
 ) {
     public static InvitationResponse from(Invitation invitation) {
         return new InvitationResponse(
@@ -38,7 +39,8 @@ public record InvitationResponse(
                 invitation.getDressCode(),
                 invitation.getNotice(),
                 invitation.getParkingInfo(),
-                invitation.getMealInfo()
+                invitation.getMealInfo(),
+                invitation.isPublic()
         );
     }
 }

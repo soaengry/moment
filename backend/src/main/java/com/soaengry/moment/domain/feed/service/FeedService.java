@@ -1,5 +1,6 @@
 package com.soaengry.moment.domain.feed.service;
 
+import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
 import com.soaengry.moment.domain.feed.dto.request.CommentRequest;
 import com.soaengry.moment.domain.feed.dto.request.PostRequest;
 import com.soaengry.moment.domain.feed.dto.response.CommentResponse;
@@ -8,6 +9,10 @@ import com.soaengry.moment.domain.feed.entity.*;
 import com.soaengry.moment.domain.feed.exception.FeedErrorCode;
 import com.soaengry.moment.domain.feed.exception.FeedException;
 import com.soaengry.moment.domain.feed.repository.*;
+import com.soaengry.moment.domain.invitation.entity.Invitation;
+import com.soaengry.moment.domain.invitation.exception.InvitationErrorCode;
+import com.soaengry.moment.domain.invitation.exception.InvitationException;
+import com.soaengry.moment.domain.invitation.repository.InvitationRepository;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +35,8 @@ public class FeedService {
     private final PostLikeRepository postLikeRepository;
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
+    private final InvitationRepository invitationRepository;
+    private final AttendanceRepository attendanceRepository;
 
     // ==================== Post ====================
 
@@ -52,8 +59,30 @@ public class FeedService {
     }
 
     public Page<PostResponse> getFeed(Long userId, Pageable pageable) {
-        Page<Post> posts = postRepository.findAllWithUserAndImages(pageable);
-        return enrichPostResponses(posts, userId);
+        Page<Long> postIds = postRepository.findVisiblePostIds(userId, pageable);
+        if (postIds.isEmpty()) {
+            return postIds.map(id -> null);
+        }
+        List<Long> ids = postIds.getContent();
+        Map<Long, Post> postMap = postRepository.findWithUserAndImagesByIds(ids)
+                .stream().collect(Collectors.toMap(Post::getId, p -> p));
+
+        List<Long> likedPostIds = Collections.emptyList();
+        List<Long> bookmarkedPostIds = Collections.emptyList();
+        if (userId != null) {
+            likedPostIds = postLikeRepository.findByUserIdAndPostIdIn(userId, ids)
+                    .stream().map(l -> l.getPost().getId()).toList();
+            bookmarkedPostIds = bookmarkRepository.findByUserIdAndPostIdIn(userId, ids)
+                    .stream().map(b -> b.getPost().getId()).toList();
+        }
+        final Set<Long> likedSet = new HashSet<>(likedPostIds);
+        final Set<Long> bookmarkedSet = new HashSet<>(bookmarkedPostIds);
+
+        return postIds.map(id -> {
+            Post post = postMap.get(id);
+            if (post == null) return null;
+            return PostResponse.from(post, likedSet.contains(id), bookmarkedSet.contains(id));
+        });
     }
 
     public Page<PostResponse> getUserPosts(Long userId, Long targetUserId, Pageable pageable) {
@@ -232,6 +261,17 @@ public class FeedService {
     }
 
     public Page<PostResponse> getWeddingFeed(Long weddingId, Long userId, Pageable pageable) {
+        Invitation invitation = invitationRepository.findById(weddingId)
+                .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_NOT_FOUND));
+        if (!invitation.isPublic()) {
+            if (userId == null) throw new InvitationException(InvitationErrorCode.INVITATION_UNAUTHORIZED);
+            User viewer = userRepository.findById(userId)
+                    .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_UNAUTHORIZED));
+            if (viewer.getRole() != User.Role.ADMIN
+                    && !attendanceRepository.existsByUserIdAndWeddingId(userId, weddingId)) {
+                throw new InvitationException(InvitationErrorCode.INVITATION_UNAUTHORIZED);
+            }
+        }
         Page<Post> posts = postRepository.findByWeddingIdWithUserAndImages(weddingId, pageable);
         return enrichPostResponses(posts, userId);
     }

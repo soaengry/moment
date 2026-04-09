@@ -60,11 +60,15 @@ public class Invitation extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String mealInfo;
 
+    @Column(nullable = false)
+    private boolean isPublic = false;
+
     @Builder
     private Invitation(String title, String invitationId, TemplateType templateType, LocalDateTime eventDate,
                        String venueName, String venueAddress, String venueDetail,
                        Double venueLat, Double venueLng, String venuePhone,
-                       String dressCode, String notice, String parkingInfo, String mealInfo) {
+                       String dressCode, String notice, String parkingInfo, String mealInfo,
+                       boolean isPublic) {
         this.title = title;
         this.invitationId = invitationId;
         this.templateType = templateType != null ? templateType : TemplateType.WEDDING;
@@ -79,6 +83,7 @@ public class Invitation extends BaseTimeEntity {
         this.notice = notice;
         this.parkingInfo = parkingInfo;
         this.mealInfo = mealInfo;
+        this.isPublic = isPublic;
     }
 
     public void updateTitle(String title) {
@@ -113,5 +118,9 @@ public class Invitation extends BaseTimeEntity {
 
     public void updateMealInfo(String mealInfo) {
         this.mealInfo = mealInfo;
+    }
+
+    public void updateIsPublic(boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

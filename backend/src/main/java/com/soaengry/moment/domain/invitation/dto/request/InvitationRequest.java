@@ -17,7 +17,8 @@ public record InvitationRequest(
         String dressCode,
         String notice,
         String parkingInfo,
-        String mealInfo
+        String mealInfo,
+        Boolean isPublic
 ) {
     public Invitation toEntity(Double venueLat, Double venueLng) {
         return Invitation.builder()
@@ -35,6 +36,7 @@ public record InvitationRequest(
                 .notice(notice)
                 .parkingInfo(parkingInfo)
                 .mealInfo(mealInfo)
+                .isPublic(isPublic != null && isPublic)
                 .build();
     }
 }

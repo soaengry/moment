@@ -34,6 +34,7 @@ const weddingSchema = z.object({
   venueAddress: z.string().min(1, "주소를 입력해주세요."),
   venueDetail: z.string().optional(),
   venuePhone: z.string().optional(),
+  isPublic: z.boolean(),
 });
 
 type FormValues = z.infer<typeof weddingSchema>;
@@ -60,10 +61,12 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
       venueAddress: initialData?.venueAddress ?? "",
       venueDetail: initialData?.venueDetail ?? "",
       venuePhone: initialData?.venuePhone ?? "",
+      isPublic: initialData?.isPublic ?? false,
     },
   });
 
   const [showPostcode, setShowPostcode] = useState(false);
+  const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? false);
   const [invitationIdDupError, setInvitationIdDupError] = useState<
     string | null
   >(null);
@@ -111,6 +114,7 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
       venueAddress: values.venueAddress,
       venueDetail: values.venueDetail || undefined,
       venuePhone: values.venuePhone || undefined,
+      isPublic,
     };
     onSubmit(request);
   };
@@ -239,6 +243,28 @@ const BasicInfoStep: FC<Props> = ({ initialData, onSubmit }) => {
             placeholder="02-1234-5678"
             className={inputClass}
           />
+        </div>
+
+        <div className="flex items-center justify-between py-1">
+          <div>
+            <p className="text-sm font-medium text-gray-700">일정 공개 여부</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {isPublic ? "누구나 이 일정을 볼 수 있습니다" : "참석자만 이 일정을 볼 수 있습니다"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPublic((v) => !v)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isPublic ? "bg-primary" : "bg-gray-200"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                isPublic ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
         </div>
       </div>
 
