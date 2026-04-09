@@ -62,8 +62,11 @@ public class EventController {
     }
 
     @GetMapping("/{slug}/info")
-    public ResponseEntity<EventInfoResponse> getEventInfo(@PathVariable String slug) {
-        return ResponseEntity.ok(eventService.getEventInfo(slug));
+    public ResponseEntity<EventInfoResponse> getEventInfo(
+            @PathVariable String slug,
+            Authentication authentication) {
+        Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
+        return ResponseEntity.ok(eventService.getEventInfo(slug, userId));
     }
 
     // ─── HeroImages ───

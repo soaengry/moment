@@ -39,9 +39,10 @@ public class CoupleService {
         Couple saved = coupleRepository.save(couple);
 
         // 커플 이메일로 가입된 사용자가 있으면 자동 참석 등록
+        Long eventId = wedding.getEvent().getId();
         userRepository.findByEmail(saved.getEmail()).ifPresent(user -> {
-            if (!attendanceRepository.existsByUserIdAndWeddingId(user.getId(), weddingId)) {
-                attendanceRepository.save(Attendance.create(user.getId(), weddingId));
+            if (!attendanceRepository.existsByUserIdAndEventId(user.getId(), eventId)) {
+                attendanceRepository.save(Attendance.create(user.getId(), eventId));
             }
         });
 

@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +46,9 @@ public class Post extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer commentCount = 0;
 
+    @Column
+    private LocalDateTime deletedAt;
+
     private Post(User user, String content, Long eventId) {
         this.user = user;
         this.content = content;
@@ -59,6 +63,10 @@ public class Post extends BaseTimeEntity {
 
     public static Post create(User user, String content, Long eventId) {
         return new Post(user, content, eventId);
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
     }
 
     public void update(String content) {

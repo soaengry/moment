@@ -19,6 +19,7 @@ export interface EventResponse {
   locationDetail: string | null;
   locationLat: number | null;
   locationLng: number | null;
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -148,6 +149,7 @@ export interface EventRequest {
   locationName: string;
   locationAddress: string;
   locationDetail?: string;
+  isPublic?: boolean;
 }
 
 export interface WeddingRequest {

@@ -1,5 +1,10 @@
 package com.soaengry.moment.domain.feed.service;
 
+import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
+import com.soaengry.moment.domain.event.entity.Event;
+import com.soaengry.moment.domain.event.exception.EventErrorCode;
+import com.soaengry.moment.domain.event.exception.EventException;
+import com.soaengry.moment.domain.event.repository.EventRepository;
 import com.soaengry.moment.domain.feed.dto.request.CommentRequest;
 import com.soaengry.moment.domain.feed.dto.request.PostRequest;
 import com.soaengry.moment.domain.feed.dto.response.CommentResponse;
@@ -30,6 +35,8 @@ public class FeedService {
     private final PostLikeRepository postLikeRepository;
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final AttendanceRepository attendanceRepository;
 
     // ==================== Post ====================
 
@@ -46,8 +53,30 @@ public class FeedService {
     }
 
     public Page<PostResponse> getFeed(Long userId, Pageable pageable) {
-        Page<Post> posts = postRepository.findAllWithUserAndImages(pageable);
-        return enrichPostResponses(posts, userId);
+        Page<Long> postIds = postRepository.findVisiblePostIds(userId, pageable);
+        if (postIds.isEmpty()) {
+            return postIds.map(id -> null);
+        }
+        List<Long> ids = postIds.getContent();
+        Map<Long, Post> postMap = postRepository.findWithUserAndImagesByIds(ids)
+                .stream().collect(Collectors.toMap(Post::getId, p -> p));
+
+        Set<Long> likedSet = Collections.emptySet();
+        Set<Long> bookmarkedSet = Collections.emptySet();
+        if (userId != null) {
+            likedSet = postLikeRepository.findByUserIdAndPostIdIn(userId, ids)
+                    .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+            bookmarkedSet = bookmarkRepository.findByUserIdAndPostIdIn(userId, ids)
+                    .stream().map(b -> b.getPost().getId()).collect(Collectors.toSet());
+        }
+        final Set<Long> finalLiked = likedSet;
+        final Set<Long> finalBookmarked = bookmarkedSet;
+
+        return postIds.map(id -> {
+            Post post = postMap.get(id);
+            if (post == null) return null;
+            return PostResponse.from(post, finalLiked.contains(id), finalBookmarked.contains(id));
+        });
     }
 
     public Page<PostResponse> getUserPosts(Long userId, Long targetUserId, Pageable pageable) {
@@ -204,6 +233,14 @@ public class FeedService {
     }
 
     public Page<PostResponse> getEventFeed(Long eventId, Long userId, Pageable pageable) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+        if (!event.isPublic()) {
+            if (userId == null
+                    || (!event.getUserId().equals(userId) && !attendanceRepository.existsByUserIdAndEventId(userId, eventId))) {
+                throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
+            }
+        }
         Page<Post> posts = postRepository.findByEventIdWithUserAndImages(eventId, pageable);
         return enrichPostResponses(posts, userId);
     }

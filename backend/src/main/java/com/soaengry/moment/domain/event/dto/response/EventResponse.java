@@ -17,6 +17,7 @@ public record EventResponse(
         Double locationLat,
         Double locationLng,
         String slug,
+        boolean isPublic,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -33,6 +34,7 @@ public record EventResponse(
                 event.getLocationLat(),
                 event.getLocationLng(),
                 event.getSlug(),
+                event.isPublic(),
                 event.getCreatedAt(),
                 event.getUpdatedAt()
         );

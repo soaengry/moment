@@ -33,6 +33,10 @@ public class WeddingService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
+    public void validateWeddingAccess(Long weddingId, Long userId) {
+        validateAndGetWedding(weddingId, userId);
+    }
+
     private Wedding validateAndGetWedding(Long weddingId, Long userId) {
         Wedding wedding = weddingRepository.findById(weddingId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
@@ -55,6 +59,10 @@ public class WeddingService {
         return userRepository.findByEmail(email)
                 .map(u -> u.getId())
                 .orElse(null);
+    }
+
+    public Long resolveCoupleUserId(String email) {
+        return resolveUserIdByEmail(email);
     }
 
     // ?�?�?� Wedding CRUD ?�?�?�

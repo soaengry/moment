@@ -11,5 +11,6 @@ public record EventRequest(
         LocalDateTime date,
         String locationName,
         String locationAddress,
-        String locationDetail
+        String locationDetail,
+        Boolean isPublic
 ) {}

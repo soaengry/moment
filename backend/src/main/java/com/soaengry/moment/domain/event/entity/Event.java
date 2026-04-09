@@ -49,10 +49,13 @@ public class Event extends BaseTimeEntity {
 
     private LocalDateTime deletedAt;
 
+    @Column(nullable = false)
+    private boolean isPublic = false;
+
     @Builder
     private Event(Long userId, String title, EventType type, LocalDateTime date,
                   String locationName, String locationAddress, String locationDetail,
-                  Double locationLat, Double locationLng, String slug) {
+                  Double locationLat, Double locationLng, String slug, boolean isPublic) {
         this.userId = userId;
         this.title = title;
         this.type = type;
@@ -63,6 +66,7 @@ public class Event extends BaseTimeEntity {
         this.locationLat = locationLat;
         this.locationLng = locationLng;
         this.slug = slug;
+        this.isPublic = isPublic;
     }
 
     public void updateTitle(String title) { this.title = title; }
@@ -77,6 +81,8 @@ public class Event extends BaseTimeEntity {
         this.locationLat = locationLat;
         this.locationLng = locationLng;
     }
+
+    public void updateIsPublic(boolean isPublic) { this.isPublic = isPublic; }
 
     public void softDelete() { this.deletedAt = LocalDateTime.now(); }
 

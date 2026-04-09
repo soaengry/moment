@@ -7,12 +7,14 @@ import { IoPersonOutline, IoPerson } from "react-icons/io5";
 import { IoAddCircleOutline, IoAddCircle } from "react-icons/io5";
 // import { IoNewspaperOutline, IoNewspaper } from "react-icons/io5";
 import { useScrollVisibility } from "../hooks/useScrollVisibility";
+import { useAuthStore } from "../../domain/auth/store/useAuthStore";
 
 interface NavItem {
   path: string;
   label: string;
   icon: FC<{ className?: string }>;
   activeIcon: FC<{ className?: string }>;
+  requiresAuth?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -33,6 +35,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "초대장 만들기",
     icon: IoAddCircleOutline,
     activeIcon: IoAddCircle,
+    requiresAuth: true,
   },
   {
     path: "/my-page",
@@ -45,7 +48,9 @@ const NAV_ITEMS: NavItem[] = [
 const BottomNav: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useAuthStore((state) => state.user);
   const isVisible = useScrollVisibility();
+  const visibleItems = NAV_ITEMS.filter((item) => !item.requiresAuth || !!user);
 
   // 특정 페이지에서는 BottomNav를 숨김 (로그인, 회원가입 등)
   const hiddenPaths = [
@@ -88,7 +93,7 @@ const BottomNav: FC = () => {
       className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50"
     >
       <div className="max-w-lg mx-auto flex items-center justify-around py-2">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = isActive ? item.activeIcon : item.icon;
 

@@ -1,21 +1,33 @@
 package com.soaengry.moment.domain.event.service;
 
+import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
 import com.soaengry.moment.domain.event.dto.request.*;
 import com.soaengry.moment.domain.event.dto.response.*;
 import com.soaengry.moment.domain.event.entity.*;
 import com.soaengry.moment.domain.event.exception.EventErrorCode;
 import com.soaengry.moment.domain.event.exception.EventException;
 import com.soaengry.moment.domain.event.repository.*;
+import com.soaengry.moment.domain.feed.repository.PostRepository;
 import com.soaengry.moment.domain.user.repository.UserRepository;
-import com.soaengry.moment.domain.wedding.dto.response.*;
+import com.soaengry.moment.domain.wedding.dto.response.AccountGroupResponse;
+import com.soaengry.moment.domain.wedding.dto.response.AccountGroupWithAccountsResponse;
+import com.soaengry.moment.domain.wedding.dto.response.AccountResponse;
+import com.soaengry.moment.domain.wedding.dto.response.HostResponse;
+import com.soaengry.moment.domain.wedding.dto.response.ScheduleResponse;
+import com.soaengry.moment.domain.wedding.dto.response.WeddingResponse;
 import com.soaengry.moment.domain.wedding.entity.AccountGroup;
 import com.soaengry.moment.domain.wedding.entity.Wedding;
-import com.soaengry.moment.domain.wedding.repository.*;
+import com.soaengry.moment.domain.wedding.repository.AccountGroupRepository;
+import com.soaengry.moment.domain.wedding.repository.AccountRepository;
+import com.soaengry.moment.domain.wedding.repository.HostRepository;
+import com.soaengry.moment.domain.wedding.repository.ScheduleRepository;
+import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
 import com.soaengry.moment.global.service.KakaoGeocodingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,6 +47,8 @@ public class EventService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final KakaoGeocodingService kakaoGeocodingService;
+    private final AttendanceRepository attendanceRepository;
+    private final PostRepository postRepository;
 
     public Event validateAndGetEvent(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)
@@ -43,6 +57,16 @@ public class EventService {
             throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
         }
         return event;
+    }
+
+    public void validateViewAccess(Long eventId, Long userId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+        if (event.isPublic()) return;
+        if (userId == null) throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
+        if (event.getUserId().equals(userId)) return;
+        if (attendanceRepository.existsByUserIdAndEventId(userId, eventId)) return;
+        throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
     }
 
     private KakaoGeocodingService.Coordinate resolveCoordinate(String address) {
@@ -75,6 +99,7 @@ public class EventService {
                 .locationLat(coord.lat())
                 .locationLng(coord.lng())
                 .slug(request.slug())
+                .isPublic(request.isPublic() != null && request.isPublic())
                 .build();
         return EventResponse.from(eventRepository.save(event));
     }
@@ -93,11 +118,13 @@ public class EventService {
         event.updateDate(request.date());
         event.updateLocation(request.locationName(), request.locationAddress(), request.locationDetail(),
                 coord.lat(), coord.lng());
+        event.updateIsPublic(request.isPublic() != null && request.isPublic());
         return EventResponse.from(event);
     }
 
     public void deleteEvent(Long eventId, Long userId) {
         validateAndGetEvent(eventId, userId);
+        postRepository.softDeleteByEventId(eventId, LocalDateTime.now());
         eventRepository.deleteById(eventId);
     }
 
@@ -107,10 +134,11 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public EventInfoResponse getEventInfo(String slug) {
+    public EventInfoResponse getEventInfo(String slug, Long userId) {
         Event event = eventRepository.findBySlug(slug)
                 .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
         Long eventId = event.getId();
+        validateViewAccess(eventId, userId);
 
         List<HeroImageResponse> heroImages = heroImageRepository.findByEventIdOrderByOrderIndex(eventId).stream()
                 .map(HeroImageResponse::from)

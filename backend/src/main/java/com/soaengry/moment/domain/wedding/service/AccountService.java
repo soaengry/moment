@@ -53,7 +53,7 @@ public class AccountService {
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.ACCOUNT_GROUP_NOT_FOUND));
 
         weddingService.validateWeddingAccess(accountGroup.getWeddingId(), userId);
-        accountGroup.update(request.side(), request.groupName(), request.orderIndex());
+        accountGroup.update(request.groupName(), request.orderIndex());
         return AccountGroupResponse.from(accountGroup);
     }
 
