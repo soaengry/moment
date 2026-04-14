@@ -17,7 +17,7 @@ const ChatPage: FC = () => {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const [weddingId, setWeddingId] = useState<number | null>(null);
+  const [eventId, setEventId] = useState<number | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isConnected, setIsConnected] = useState(false);
@@ -30,13 +30,13 @@ const ChatPage: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // weddingId 조회
+  // eventId 조회
   useEffect(() => {
     if (!slug) return;
     eventApi
       .getEventInfo(slug)
       .then((info) => {
-        if (info.wedding?.id) setWeddingId(Number(info.wedding.id));
+        setEventId(info.event.id);
       })
       .catch(() => {
         /* silent */
@@ -48,23 +48,23 @@ const ChatPage: FC = () => {
   };
 
   const fetchMessages = useCallback(async () => {
-    if (weddingId === null) return;
+    if (eventId === null) return;
     try {
-      const res = await chatApi.getMessages(weddingId);
+      const res = await chatApi.getMessages(eventId);
       setMessages(res.content.reverse());
     } catch {
       /* silent */
     } finally {
       setIsLoading(false);
     }
-  }, [weddingId]);
+  }, [eventId]);
 
   // 초기 메시지 로드
   useEffect(() => {
-    if (weddingId === null) return;
+    if (eventId === null) return;
     setIsLoading(true);
     fetchMessages();
-  }, [weddingId, fetchMessages]);
+  }, [eventId, fetchMessages]);
 
   useEffect(() => {
     scrollToBottom();
@@ -72,7 +72,7 @@ const ChatPage: FC = () => {
 
   // 로그인 유저: WebSocket 연결
   useEffect(() => {
-    if (weddingId === null || !isAuthenticated) return;
+    if (eventId === null || !isAuthenticated) return;
 
     const client = new Client({
       webSocketFactory: () => new SockJS(`${ENV.API_BASE_URL}/ws`),
@@ -81,7 +81,7 @@ const ChatPage: FC = () => {
       },
       onConnect: () => {
         setIsConnected(true);
-        client.subscribe(`/topic/chat/wedding/${weddingId}`, (message) => {
+        client.subscribe(`/topic/chat/event/${eventId}`, (message) => {
           const msg: ChatMessage = JSON.parse(message.body);
           setMessages((prev) => [...prev, msg]);
         });
@@ -96,11 +96,11 @@ const ChatPage: FC = () => {
     return () => {
       client.deactivate();
     };
-  }, [weddingId, isAuthenticated]);
+  }, [eventId, isAuthenticated]);
 
   // 비로그인 유저: 30초 polling
   useEffect(() => {
-    if (isAuthenticated || weddingId === null) return;
+    if (isAuthenticated || eventId === null) return;
 
     pollingRef.current = setInterval(() => {
       fetchMessages();
@@ -109,16 +109,16 @@ const ChatPage: FC = () => {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [isAuthenticated, weddingId, fetchMessages]);
+  }, [isAuthenticated, eventId, fetchMessages]);
 
   const sendMessage = () => {
-    if (!input.trim() || !clientRef.current?.connected || weddingId === null)
+    if (!input.trim() || !clientRef.current?.connected || eventId === null)
       return;
 
     clientRef.current.publish({
       destination: "/app/chat.sendMessage",
       body: JSON.stringify({
-        weddingId,
+        eventId,
         content: input.trim(),
         type: "CHAT",
       }),
@@ -129,15 +129,15 @@ const ChatPage: FC = () => {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || weddingId === null || !clientRef.current?.connected) return;
+    if (!file || eventId === null || !clientRef.current?.connected) return;
 
     setIsUploading(true);
     try {
-      const imageUrl = await chatApi.uploadChatImage(weddingId, file);
+      const imageUrl = await chatApi.uploadChatImage(eventId, file);
       clientRef.current.publish({
         destination: "/app/chat.sendMessage",
         body: JSON.stringify({
-          weddingId,
+          eventId,
           content: "",
           imageUrl,
           type: "IMAGE",
@@ -160,7 +160,7 @@ const ChatPage: FC = () => {
     return `${ampm} ${h}:${mins}`;
   };
 
-  if (!slug || weddingId === null) {
+  if (!slug || eventId === null) {
     return (
       <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
