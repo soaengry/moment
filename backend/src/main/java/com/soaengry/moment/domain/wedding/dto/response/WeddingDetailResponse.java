@@ -9,9 +9,10 @@ import java.util.List;
 @Getter
 @Builder
 public class WeddingDetailResponse implements EventDetailResponse {
+    private Long weddingId;
     private String notice;
     private String parkingInfo;
     private String mealInfo;
     private String greeting;
-    private List<WeddingHostResponse> weddingHosts;
+    private List<WeddingHostCombinedResponse> hosts;
 }
