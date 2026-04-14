@@ -27,9 +27,4 @@ public class BankController {
                         "bankName", ""
                 )));
     }
-
-    @GetMapping
-    public ResponseEntity<List<BankService.BankInfo>> getAllBanks() {
-        return ResponseEntity.ok(bankService.getAllBanks());
-    }
 }
