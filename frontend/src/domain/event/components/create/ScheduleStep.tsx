@@ -11,7 +11,6 @@ interface Props {
 }
 
 const emptySchedule = (orderIndex: number): ScheduleRequest => ({
-  time: "",
   title: "",
   description: "",
   orderIndex,
@@ -46,9 +45,9 @@ const ScheduleStep: FC<Props> = ({ initialData, templateType, onSubmit, onBack }
   };
 
   const handleSubmit = () => {
-    // 빈 항목 제거 후 전달 (time과 title이 있는 항목만)
+    // 빈 항목 제거 후 전달 (title이 있는 항목만)
     const valid = items
-      .filter((s) => s.time && s.title.trim())
+      .filter((s) => s.title.trim())
       .map((s, i) => ({ ...s, orderIndex: i }));
     onSubmit(valid);
   };
@@ -76,25 +75,14 @@ const ScheduleStep: FC<Props> = ({ initialData, templateType, onSubmit, onBack }
               </button>
             )}
 
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className={labelCls}>시간</label>
-                <input
-                  type="time"
-                  value={item.time}
-                  onChange={(e) => handleChange(index, "time", e.target.value)}
-                  className={inputCls}
-                />
-              </div>
-              <div className="col-span-2">
-                <label className={labelCls}>일정 제목</label>
-                <input
-                  value={item.title}
-                  onChange={(e) => handleChange(index, "title", e.target.value)}
-                  placeholder={templateType === "GATHERING" ? "식사" : "하객 입장"}
-                  className={inputCls}
-                />
-              </div>
+            <div>
+              <label className={labelCls}>일정 제목</label>
+              <input
+                value={item.title}
+                onChange={(e) => handleChange(index, "title", e.target.value)}
+                placeholder={templateType === "GATHERING" ? "식사" : "하객 입장"}
+                className={inputCls}
+              />
             </div>
 
             <div>

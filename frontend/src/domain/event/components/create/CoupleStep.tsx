@@ -1,5 +1,5 @@
 import { type FC, useState } from "react";
-import type { HostRequest, HostRole, EventType } from "../../types";
+import type { HostRequest, HostRole, EventType, WeddingHostData } from "../../types";
 import PersonForm from "./PersonForm";
 import LandingPhotoGrid from "./LandingPhotoGrid";
 
@@ -26,16 +26,20 @@ interface Props {
 
 const isWedding = (t: EventType) => t === "WEDDING";
 
-const emptyCoupleForm = (role: HostRole): HostRequest => ({
-  role,
-  name: "",
-  email: "",
+const emptyWeddingHostData = (): WeddingHostData => ({
   fatherName: "",
   motherName: "",
   isFatherAlive: true,
   isMotherAlive: true,
+});
+
+const emptyCoupleForm = (role: HostRole, includeWeddingInfo = false): HostRequest => ({
+  role,
+  name: "",
+  email: "",
   contact: "",
   introduction: "",
+  weddingHostData: includeWeddingInfo ? emptyWeddingHostData() : undefined,
 });
 
 const defaultRole = (templateType: EventType): HostRole =>
@@ -56,22 +60,34 @@ const CoupleStep: FC<Props> = ({
     const existing =
       initialData.find((c) => c.role === role) ??
       initialData.find((c) => c.role === "GROOM");
-    if (existing) return existing;
+    if (existing) {
+      return wedding && !existing.weddingHostData
+        ? { ...existing, weddingHostData: emptyWeddingHostData() }
+        : existing;
+    }
     if (!wedding && currentUser) {
       return {
-        ...emptyCoupleForm(role),
+        ...emptyCoupleForm(role, false),
         name: currentUser.nickname,
         email: currentUser.email,
         profileImageUrl: currentUser.profileImageUrl ?? undefined,
       };
     }
-    return emptyCoupleForm(role);
+    return emptyCoupleForm(role, wedding);
+  };
+
+  const buildInitialBride = (): HostRequest => {
+    const existing = initialData.find((c) => c.role === "BRIDE");
+    if (existing) {
+      return !existing.weddingHostData
+        ? { ...existing, weddingHostData: emptyWeddingHostData() }
+        : existing;
+    }
+    return emptyCoupleForm("BRIDE", true);
   };
 
   const [groom, setGroom] = useState<HostRequest>(buildInitialGroom);
-  const [bride, setBride] = useState<HostRequest>(
-    initialData.find((c) => c.role === "BRIDE") ?? emptyCoupleForm("BRIDE"),
-  );
+  const [bride, setBride] = useState<HostRequest>(buildInitialBride);
   const [photos, setPhotos] = useState<LandingPhoto[]>(initialPhotos ?? []);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -87,7 +103,14 @@ const CoupleStep: FC<Props> = ({
       setErrors(newErrors);
       return;
     }
-    onSubmit(wedding ? [groom, bride] : [groom], photos);
+    if (wedding) {
+      onSubmit([groom, bride], photos);
+    } else {
+      // GATHERING: strip weddingHostData so the backend never creates WeddingHost records
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { weddingHostData: _wd, ...hostOnly } = groom;
+      onSubmit([hostOnly], photos);
+    }
   };
 
   return (

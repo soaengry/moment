@@ -1,11 +1,13 @@
 import { type FC, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { slideUp } from "../../../global/constants/animations";
-import type { HostResponse, EventType } from "../types";
+import type { HostResponse, WeddingHostCombinedResponse, EventType } from "../types";
 import { TEMPLATE_LABELS } from "../utils/templateLabels";
 
+type AnyHost = HostResponse | WeddingHostCombinedResponse;
+
 interface Props {
-  couples: HostResponse[];
+  couples: AnyHost[];
   eventType: EventType;
 }
 
@@ -19,17 +21,19 @@ const CoupleSection: FC<Props> = ({ couples, eventType }) => {
 
   if (!groom && !bride) return null;
 
-  const renderParents = (person: HostResponse) => {
+  const renderParents = (person: AnyHost) => {
+    if (!("fatherName" in person)) return null;
+    const wh = person as WeddingHostCombinedResponse;
     const parts: string[] = [];
-    if (person.fatherName)
-      parts.push(`${!person.isFatherAlive ? "故 " : ""}${person.fatherName}`);
-    if (person.motherName)
-      parts.push(`${!person.isMotherAlive ? "故 " : ""}${person.motherName}`);
+    if (wh.fatherName)
+      parts.push(`${!wh.isFatherAlive ? "故 " : ""}${wh.fatherName}`);
+    if (wh.motherName)
+      parts.push(`${!wh.isMotherAlive ? "故 " : ""}${wh.motherName}`);
     if (parts.length === 0) return null;
     return <p className="text-xs text-gray-400 mt-1">{parts.join(" · ")}</p>;
   };
 
-  const renderPerson = (person: HostResponse, label: string) => (
+  const renderPerson = (person: AnyHost, label: string) => (
     <div className="flex flex-col items-center text-center flex-1">
       {person.profileImageUrl && (
         <img

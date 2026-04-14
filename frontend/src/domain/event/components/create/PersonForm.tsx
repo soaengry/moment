@@ -14,7 +14,7 @@ interface Props {
   showParents: boolean;
 }
 
-const PersonForm: FC<Props> = ({ label, role, data, setData, nameKey, errors, showParents }) => {
+const PersonForm: FC<Props> = ({ label, data, setData, nameKey, errors, showParents }) => {
   const [preview, setPreview] = useState<string | null>(data.profileImageUrl ?? null);
   const [uploading, setUploading] = useState(false);
 
@@ -39,6 +39,10 @@ const PersonForm: FC<Props> = ({ label, role, data, setData, nameKey, errors, sh
     setPreview(null);
     setData({ ...data, profileImageUrl: undefined });
   };
+
+  const wh = data.weddingHostData ?? {};
+  const setWh = (patch: Partial<typeof wh>) =>
+    setData({ ...data, weddingHostData: { ...wh, ...patch } });
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-green-100 space-y-4">
@@ -67,15 +71,15 @@ const PersonForm: FC<Props> = ({ label, role, data, setData, nameKey, errors, sh
           <div>
             <label className={labelCls}>아버지 성함</label>
             <input
-              value={data.fatherName ?? ""}
-              onChange={(e) => setData({ ...data, fatherName: e.target.value })}
+              value={wh.fatherName ?? ""}
+              onChange={(e) => setWh({ fatherName: e.target.value })}
               className={inputCls}
             />
             <label className="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
               <input
                 type="checkbox"
-                checked={!(data.isFatherAlive ?? true)}
-                onChange={(e) => setData({ ...data, isFatherAlive: !e.target.checked })}
+                checked={!(wh.isFatherAlive ?? true)}
+                onChange={(e) => setWh({ isFatherAlive: !e.target.checked })}
                 className="rounded"
               />
               故人
@@ -84,15 +88,15 @@ const PersonForm: FC<Props> = ({ label, role, data, setData, nameKey, errors, sh
           <div>
             <label className={labelCls}>어머니 성함</label>
             <input
-              value={data.motherName ?? ""}
-              onChange={(e) => setData({ ...data, motherName: e.target.value })}
+              value={wh.motherName ?? ""}
+              onChange={(e) => setWh({ motherName: e.target.value })}
               className={inputCls}
             />
             <label className="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
               <input
                 type="checkbox"
-                checked={!(data.isMotherAlive ?? true)}
-                onChange={(e) => setData({ ...data, isMotherAlive: !e.target.checked })}
+                checked={!(wh.isMotherAlive ?? true)}
+                onChange={(e) => setWh({ isMotherAlive: !e.target.checked })}
                 className="rounded"
               />
               故人

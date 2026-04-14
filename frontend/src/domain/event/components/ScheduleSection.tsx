@@ -9,8 +9,6 @@ interface Props {
   eventType: EventType;
 }
 
-const formatTime = (time: string) => time.slice(0, 5);
-
 const ScheduleSection: FC<Props> = ({ schedules, eventType }) => {
   const tl = TEMPLATE_LABELS[eventType];
   const ref = useRef(null);
@@ -46,20 +44,15 @@ const ScheduleSection: FC<Props> = ({ schedules, eventType }) => {
                 }`}
               />
 
-              <div className="flex gap-3 items-baseline">
-                <span className="text-xs font-semibold text-primary min-w-[40px]">
-                  {formatTime(schedule.time)}
-                </span>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">
-                    {schedule.title}
+              <div>
+                <p className="text-sm font-medium text-gray-700">
+                  {schedule.title}
+                </p>
+                {schedule.description && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {schedule.description}
                   </p>
-                  {schedule.description && (
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {schedule.description}
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           ))}
