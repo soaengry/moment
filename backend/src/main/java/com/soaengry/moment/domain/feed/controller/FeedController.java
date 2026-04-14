@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/feed")
 @RequiredArgsConstructor
 public class FeedController {
 
@@ -27,7 +26,7 @@ public class FeedController {
 
     // ==================== Post ====================
 
-    @PostMapping("/posts")
+    @PostMapping("/api/feed")
     public ResponseEntity<PostResponse> createPost(
             Authentication authentication,
             @Valid @RequestBody PostRequest request) {
@@ -36,7 +35,7 @@ public class FeedController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/posts")
+    @GetMapping("/api/feed")
     public ResponseEntity<Page<PostResponse>> getFeed(
             Authentication authentication,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -45,7 +44,7 @@ public class FeedController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/posts/{postId}")
+    @GetMapping("/api/feed/{postId}")
     public ResponseEntity<PostResponse> getPost(
             Authentication authentication,
             @PathVariable Long postId) {
@@ -54,17 +53,7 @@ public class FeedController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/users/{targetUserId}/posts")
-    public ResponseEntity<Page<PostResponse>> getUserPosts(
-            Authentication authentication,
-            @PathVariable Long targetUserId,
-            @PageableDefault(size = 20) Pageable pageable) {
-        Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
-        Page<PostResponse> responses = feedService.getUserPosts(userId, targetUserId, pageable);
-        return ResponseEntity.ok(responses);
-    }
-
-    @PutMapping("/posts/{postId}")
+    @PutMapping("/api/feed/{postId}")
     public ResponseEntity<PostResponse> updatePost(
             Authentication authentication,
             @PathVariable Long postId,
@@ -74,7 +63,7 @@ public class FeedController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/posts/{postId}")
+    @DeleteMapping("/api/feed/{postId}")
     public ResponseEntity<Void> deletePost(
             Authentication authentication,
             @PathVariable Long postId) {
@@ -85,7 +74,7 @@ public class FeedController {
 
     // ==================== Like ====================
 
-    @PostMapping("/posts/{postId}/like")
+    @PostMapping("/api/feed/{postId}/like")
     public ResponseEntity<Map<String, Boolean>> toggleLike(
             Authentication authentication,
             @PathVariable Long postId) {
@@ -96,7 +85,7 @@ public class FeedController {
 
     // ==================== Bookmark ====================
 
-    @PostMapping("/posts/{postId}/bookmark")
+    @PostMapping("/api/feed/{postId}/bookmark")
     public ResponseEntity<Map<String, Boolean>> toggleBookmark(
             Authentication authentication,
             @PathVariable Long postId) {
@@ -105,7 +94,7 @@ public class FeedController {
         return ResponseEntity.ok(Map.of("bookmarked", bookmarked));
     }
 
-    @GetMapping("/bookmarks")
+    @GetMapping("/api/feed/bookmarks")
     public ResponseEntity<Page<PostResponse>> getBookmarkedPosts(
             Authentication authentication,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -116,7 +105,7 @@ public class FeedController {
 
     // ==================== My Page ====================
 
-    @GetMapping("/my/posts")
+    @GetMapping("/api/feed/my/posts")
     public ResponseEntity<Page<PostResponse>> getMyPosts(
             Authentication authentication,
             @RequestParam(required = false) @Nullable Long eventId,
@@ -126,7 +115,7 @@ public class FeedController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/my/bookmarks")
+    @GetMapping("/api/feed/my/bookmarks")
     public ResponseEntity<Page<PostResponse>> getMyBookmarks(
             Authentication authentication,
             @RequestParam(required = false) @Nullable Long eventId,
@@ -136,7 +125,7 @@ public class FeedController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/my/likes")
+    @GetMapping("/api/feed/my/likes")
     public ResponseEntity<Page<PostResponse>> getMyLikes(
             Authentication authentication,
             @RequestParam(required = false) @Nullable Long eventId,
@@ -146,7 +135,7 @@ public class FeedController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/my/comments")
+    @GetMapping("/api/feed/my/comments")
     public ResponseEntity<Page<CommentResponse>> getMyComments(
             Authentication authentication,
             @RequestParam(required = false) @Nullable Long eventId,
@@ -158,7 +147,7 @@ public class FeedController {
 
     // ==================== Comment ====================
 
-    @PostMapping("/posts/{postId}/comments")
+    @PostMapping("/api/feed/{postId}/comments")
     public ResponseEntity<CommentResponse> createComment(
             Authentication authentication,
             @PathVariable Long postId,
@@ -168,7 +157,7 @@ public class FeedController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/posts/{postId}/comments")
+    @GetMapping("/api/feed/{postId}/comments")
     public ResponseEntity<Page<CommentResponse>> getComments(
             @PathVariable Long postId,
             @PageableDefault(size = 30) Pageable pageable) {
@@ -176,7 +165,7 @@ public class FeedController {
         return ResponseEntity.ok(responses);
     }
 
-    @PutMapping("/comments/{commentId}")
+    @PutMapping("/api/feed/comments/{commentId}")
     public ResponseEntity<CommentResponse> updateComment(
             Authentication authentication,
             @PathVariable Long commentId,
@@ -186,12 +175,34 @@ public class FeedController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/comments/{commentId}")
+    @DeleteMapping("/api/feed/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             Authentication authentication,
             @PathVariable Long commentId) {
         Long userId = (Long) authentication.getPrincipal();
         feedService.deleteComment(userId, commentId);
         return ResponseEntity.noContent().build();
+    }
+
+    // ==================== Event Feed ====================
+
+    @GetMapping("/api/events/{eventId}/feed/posts")
+    public ResponseEntity<Page<PostResponse>> getEventFeed(
+            @PathVariable Long eventId,
+            Authentication authentication,
+            @PageableDefault(size = 20) Pageable pageable) {
+        Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
+        Page<PostResponse> responses = feedService.getEventFeed(eventId, userId, pageable);
+        return ResponseEntity.ok(responses);
+    }
+
+    @PostMapping("/api/events/{eventId}/feed/posts")
+    public ResponseEntity<PostResponse> createEventPost(
+            @PathVariable Long eventId,
+            Authentication authentication,
+            @Valid @RequestBody PostRequest request) {
+        Long userId = (Long) authentication.getPrincipal();
+        PostResponse response = feedService.createEventPost(userId, eventId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

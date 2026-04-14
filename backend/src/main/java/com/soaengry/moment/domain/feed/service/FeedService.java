@@ -237,7 +237,7 @@ public class FeedService {
                 .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
         if (!event.isPublic()) {
             if (userId == null
-                    || (!event.getUserId().equals(userId) && !attendanceRepository.existsByUserIdAndEventId(userId, eventId))) {
+                    || (!event.getUser().getId().equals(userId) && !attendanceRepository.existsByUserIdAndEventId(userId, eventId))) {
                 throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
             }
         }
