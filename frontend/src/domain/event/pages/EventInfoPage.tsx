@@ -2,6 +2,8 @@ import { type FC, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { useEventDetail } from "../hooks/useEventDetail";
+import { isWeddingDetail } from "../types";
+import type { GatheringDetailResponse } from "../types";
 import {
   LandingSection,
   CoupleSection,
@@ -61,7 +63,12 @@ const EventInfoPage: FC = () => {
     );
   }
 
-  const { event, heroImages, transportation, announcements, wedding, hosts, schedules, accountGroups } = data;
+  const { event, heroImages, transportation, announcements, detail, schedules, accountGroups } = data;
+
+  const weddingDetail = isWeddingDetail(detail) ? detail : null;
+  const hosts = weddingDetail
+    ? weddingDetail.hosts
+    : (detail ? (detail as GatheringDetailResponse).hosts : []);
 
   const groom = hosts.find((c) => c.role === "GROOM");
   const bride = hosts.find((c) => c.role === "BRIDE");
@@ -115,7 +122,7 @@ const EventInfoPage: FC = () => {
             <LocationSection wedding={event} />
             <ScheduleSection schedules={schedules} eventType={event.type} />
             <DressCodeSection
-              wedding={wedding}
+              detail={weddingDetail}
               transportation={transportation}
             />
             <AccountSection accountGroups={accountGroups} eventType={event.type} />
@@ -136,12 +143,12 @@ const EventInfoPage: FC = () => {
           </>
         )}
 
-        {activeTab === "feed" && wedding && <WeddingFeedTab weddingId={wedding.id} />}
+        {activeTab === "feed" && <WeddingFeedTab eventId={eventId} />}
 
-        {activeTab === "guestbook" && wedding && (
+        {activeTab === "guestbook" && weddingDetail && (
           <div className="px-4 py-6">
             <GuestbookSection
-              weddingId={wedding.id}
+              weddingId={weddingDetail.weddingId}
               currentUserId={currentUserId}
               hostUserIds={hostUserIds}
             />
