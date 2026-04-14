@@ -5,14 +5,16 @@ import { ToastContainer } from "react-toastify";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 import Calendar from "../components/Calendar";
 
-const MySchedulePage: FC = () => {
+const MyAttendancePage: FC = () => {
   const navigate = useNavigate();
   const headerVisible = useScrollVisibility();
 
   return (
     <div className="min-h-screen bg-[#faf9f6]">
       <div className="max-w-lg mx-auto">
-        <header className={`sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}>
+        <header
+          className={`sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-50 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}
+        >
           <div className="flex items-center gap-3 px-4 py-3">
             <button onClick={() => navigate(-1)} className="text-gray-600">
               <IoArrowBack size={22} />
@@ -40,4 +42,4 @@ const MySchedulePage: FC = () => {
   );
 };
 
-export default MySchedulePage;
+export default MyAttendancePage;

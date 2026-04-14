@@ -13,9 +13,9 @@ import {
 } from "react-icons/io5";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
 import type { UserResponse } from "../../domain/auth/types";
-import { scheduleApi } from "../../domain/schedule/api/scheduleApi";
+import { attendanceApi } from "../../domain/attendance/api/AttendanceApi";
 import { feedApi } from "../../domain/feed/api/feedApi";
-import type { AttendanceResponse } from "../../domain/schedule/types";
+import type { AttendanceResponse } from "../../domain/attendance/types";
 import type { PostResponse } from "../../domain/feed/types";
 
 const HomePage = () => {
@@ -109,16 +109,14 @@ const Dashboard = ({ user }: DashboardProps) => {
   const [postsLoading, setPostsLoading] = useState(true);
 
   useEffect(() => {
-    scheduleApi
+    attendanceApi
       .getMyAttendances()
       .then((data) => {
         const now = new Date();
         const upcoming = data
           .filter((s) => new Date(s.date) >= now)
           .sort(
-            (a, b) =>
-              new Date(a.date).getTime() -
-              new Date(b.date).getTime(),
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
           )
           .slice(0, 3);
         setSchedules(upcoming);

@@ -1,12 +1,12 @@
 import { type FC, useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
-import { scheduleApi } from "../api/scheduleApi";
+import { attendanceApi } from "../api/AttendanceApi";
 import type { AttendanceResponse } from "../types";
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";
-import AddScheduleModal from "./AddScheduleModal";
-import WeddingDetailModal from "./WeddingDetailModal";
+import AddScheduleModal from "./AddAttendanceModal";
+import WeddingDetailModal from "./EventDetailModal";
 
 const Calendar: FC = () => {
   const now = new Date();
@@ -20,7 +20,7 @@ const Calendar: FC = () => {
 
   const fetchAttendances = useCallback(async () => {
     try {
-      const data = await scheduleApi.getMyAttendances();
+      const data = await attendanceApi.getMyAttendances();
       setAttendances(data);
     } catch {
       toast.error("일정을 불러오는데 실패했습니다");
@@ -52,7 +52,7 @@ const Calendar: FC = () => {
   const handleAdd = async (slug: string) => {
     setIsAdding(true);
     try {
-      const newAttendance = await scheduleApi.addAttendance({ slug });
+      const newAttendance = await attendanceApi.addAttendance({ slug });
       setAttendances((prev) => [newAttendance, ...prev]);
       setShowAddModal(false);
       toast.success("일정이 등록되었습니다");
@@ -76,7 +76,7 @@ const Calendar: FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await scheduleApi.deleteAttendance(id);
+      await attendanceApi.deleteAttendance(id);
       setAttendances((prev) => prev.filter((a) => a.id !== id));
       setSelectedAttendance(null);
       toast.success("일정이 삭제되었습니다");

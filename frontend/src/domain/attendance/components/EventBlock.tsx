@@ -1,14 +1,14 @@
 import { type FC } from "react";
 import type { AttendanceResponse } from "../types";
-import { PASTEL_COLORS } from "../schedule.constants";
+import { PASTEL_COLORS } from "../attendance.constants";
 
-interface WeddingBlockProps {
+interface EventBlockProps {
   attendance: AttendanceResponse;
   colorIndex: number;
   onClick: (attendance: AttendanceResponse) => void;
 }
 
-const WeddingBlock: FC<WeddingBlockProps> = ({
+const EventBlock: FC<EventBlockProps> = ({
   attendance,
   colorIndex,
   onClick,
@@ -25,4 +25,4 @@ const WeddingBlock: FC<WeddingBlockProps> = ({
   );
 };
 
-export default WeddingBlock;
+export default EventBlock;

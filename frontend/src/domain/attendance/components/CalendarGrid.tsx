@@ -1,7 +1,7 @@
 import { type FC, useMemo } from "react";
-import { DAYS_OF_WEEK } from "../schedule.constants";
+import { DAYS_OF_WEEK } from "../attendance.constants";
 import type { AttendanceResponse } from "../types";
-import WeddingBlock from "./WeddingBlock";
+import EventBlock from "./EventBlock";
 
 interface CalendarGridProps {
   year: number;
@@ -53,7 +53,11 @@ const CalendarGrid: FC<CalendarGridProps> = ({
           <div
             key={day}
             className={`text-center text-xs font-medium py-2 ${
-              i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-gray-500"
+              i === 0
+                ? "text-red-400"
+                : i === 6
+                  ? "text-blue-400"
+                  : "text-gray-500"
             }`}
           >
             {day}
@@ -62,7 +66,7 @@ const CalendarGrid: FC<CalendarGridProps> = ({
       </div>
       <div className="grid grid-cols-7 border-t border-l border-gray-200">
         {cells.map((day, i) => {
-          const dayAttendances = day ? attendancesByDate.get(day) ?? [] : [];
+          const dayAttendances = day ? (attendancesByDate.get(day) ?? []) : [];
           return (
             <div
               key={i}
@@ -87,7 +91,7 @@ const CalendarGrid: FC<CalendarGridProps> = ({
                   </span>
                   <div className="mt-0.5 space-y-0.5">
                     {dayAttendances.map((a, idx) => (
-                      <WeddingBlock
+                      <EventBlock
                         key={a.id}
                         attendance={a}
                         colorIndex={idx}

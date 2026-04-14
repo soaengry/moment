@@ -1,4 +1,4 @@
-export const SCHEDULE_API = {
+export const ATTENDANCE_API = {
   BASE: "/api/attendances",
   DETAIL: (id: number) => `/api/attendances/${id}`,
 } as const;
