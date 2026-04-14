@@ -33,7 +33,7 @@ public class InvitationService {
         Event event = eventRepository.findById(request.eventId())
                 .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
 
-        if (!event.getUserId().equals(requesterId)) {
+        if (!event.getUser().getId().equals(requesterId)) {
             throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
         }
 
@@ -71,7 +71,7 @@ public class InvitationService {
         Invitation invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new InvitationException(InvitationErrorCode.INVITATION_NOT_FOUND));
 
-        boolean isEventOwner = invitation.getEvent().getUserId().equals(requesterId);
+        boolean isEventOwner = invitation.getEvent().getUser().getId().equals(requesterId);
         boolean isInvitee = invitation.getUser().getId().equals(requesterId);
 
         if (!isEventOwner && !isInvitee) {

@@ -26,24 +26,22 @@ public class Gallery {
     @Column(nullable = false)
     private String thumbnailUrl;
 
-    private String caption;
-
-    @Column(nullable = false)
-    private Integer orderIndex;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    private Gallery(Long weddingId, String imageUrl, String thumbnailUrl, String caption, Integer orderIndex) {
+    private Gallery(Long weddingId, String imageUrl, String thumbnailUrl) {
         this.weddingId = weddingId;
         this.imageUrl = imageUrl;
         this.thumbnailUrl = thumbnailUrl;
-        this.caption = caption;
-        this.orderIndex = orderIndex;
     }
 
-    public static Gallery create(Long weddingId, String imageUrl, String thumbnailUrl, String caption, Integer orderIndex) {
-        return new Gallery(weddingId, imageUrl, thumbnailUrl, caption, orderIndex);
+    public static Gallery create(Long weddingId, String imageUrl, String thumbnailUrl) {
+        return new Gallery(weddingId, imageUrl, thumbnailUrl);
+    }
+
+    public void update(String imageUrl, String thumbnailUrl) {
+        this.imageUrl = imageUrl;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     @PrePersist
@@ -51,8 +49,4 @@ public class Gallery {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void update(String caption, Integer orderIndex) {
-        this.caption = caption;
-        this.orderIndex = orderIndex;
-    }
 }

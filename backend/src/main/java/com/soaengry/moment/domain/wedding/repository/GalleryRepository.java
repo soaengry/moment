@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface GalleryRepository extends JpaRepository<Gallery, Long> {
 
-    List<Gallery> findByWeddingIdOrderByOrderIndex(Long weddingId);
+    List<Gallery> findByWeddingId(Long weddingId);
 }
