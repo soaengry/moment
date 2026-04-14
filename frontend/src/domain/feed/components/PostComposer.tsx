@@ -16,7 +16,7 @@ interface Props {
   editingPost?: PostResponse | null;
   onPostUpdated?: (post: PostResponse) => void;
   onCancel?: () => void;
-  weddingId?: number;
+  eventId?: number;
 }
 
 const PostComposer: FC<Props> = ({
@@ -24,7 +24,7 @@ const PostComposer: FC<Props> = ({
   editingPost,
   onPostUpdated,
   onCancel,
-  weddingId,
+  eventId,
 }) => {
   const [content, setContent] = useState(editingPost?.content ?? "");
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -97,13 +97,11 @@ const PostComposer: FC<Props> = ({
       };
 
       if (editingPost) {
-        const updated = weddingId
-          ? await feedApi.updateWeddingPost(weddingId, editingPost.id, request)
-          : await feedApi.updatePost(editingPost.id, request);
+        const updated = await feedApi.updatePost(editingPost.id, request);
         onPostUpdated?.(updated);
       } else {
-        const created = weddingId
-          ? await feedApi.createWeddingPost(weddingId, request)
+        const created = eventId
+          ? await feedApi.createEventPost(eventId, request)
           : await feedApi.createPost(request);
         onPostCreated?.(created);
       }
