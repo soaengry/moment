@@ -110,7 +110,7 @@ public class GuestbookService {
     private boolean isHostOfWedding(Long weddingId, Long userId) {
         if (userId == null) return false;
         return weddingRepository.findById(weddingId)
-                .map(w -> w.getEvent().getUserId().equals(userId))
+                .map(w -> w.getEvent().getUser().getId().equals(userId))
                 .orElse(false);
     }
 }

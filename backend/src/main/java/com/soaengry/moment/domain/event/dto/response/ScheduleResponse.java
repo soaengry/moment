@@ -1,12 +1,10 @@
-package com.soaengry.moment.domain.wedding.dto.response;
+package com.soaengry.moment.domain.event.dto.response;
 
-import com.soaengry.moment.domain.wedding.entity.Schedule;
-import java.time.LocalTime;
+import com.soaengry.moment.domain.event.entity.Schedule;
 
 public record ScheduleResponse(
         Long id,
-        Long weddingId,
-        LocalTime time,
+        Long eventId,
         String title,
         String description,
         Integer orderIndex
@@ -14,8 +12,7 @@ public record ScheduleResponse(
     public static ScheduleResponse from(Schedule schedule) {
         return new ScheduleResponse(
                 schedule.getId(),
-                schedule.getWeddingId(),
-                schedule.getTime(),
+                schedule.getEventId(),
                 schedule.getTitle(),
                 schedule.getDescription(),
                 schedule.getOrderIndex()

@@ -2,7 +2,10 @@ package com.soaengry.moment.domain.wedding.entity;
 
 import com.soaengry.moment.domain.event.entity.Event;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
@@ -20,16 +23,16 @@ public class Wedding {
     private Event event;
 
     @Column(columnDefinition = "TEXT")
-    private String notice;
+    private String notice;              // 유의사항
 
     @Column(columnDefinition = "TEXT")
-    private String parkingInfo;
+    private String parkingInfo;         // 주차정보
 
     @Column(columnDefinition = "TEXT")
-    private String mealInfo;
+    private String mealInfo;            // 식사정보
 
     @Column(columnDefinition = "TEXT")
-    private String greeting;
+    private String greeting;            // 인사말
 
     @Version
     private Integer version = 0;

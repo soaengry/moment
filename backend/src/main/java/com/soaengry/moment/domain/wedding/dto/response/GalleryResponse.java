@@ -9,8 +9,6 @@ public record GalleryResponse(
         Long weddingId,
         String imageUrl,
         String thumbnailUrl,
-        String caption,
-        Integer orderIndex,
         LocalDateTime createdAt
 ) {
     public static GalleryResponse from(Gallery gallery) {
@@ -19,8 +17,6 @@ public record GalleryResponse(
                 gallery.getWeddingId(),
                 gallery.getImageUrl(),
                 gallery.getThumbnailUrl(),
-                gallery.getCaption(),
-                gallery.getOrderIndex(),
                 gallery.getCreatedAt()
         );
     }

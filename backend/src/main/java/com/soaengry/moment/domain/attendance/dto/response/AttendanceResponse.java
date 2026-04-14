@@ -2,7 +2,7 @@ package com.soaengry.moment.domain.attendance.dto.response;
 
 import com.soaengry.moment.domain.attendance.entity.Attendance;
 import com.soaengry.moment.domain.event.entity.Event;
-import com.soaengry.moment.domain.wedding.entity.Host;
+import com.soaengry.moment.domain.event.entity.Host;
 
 import java.time.LocalDateTime;
 import java.util.List;

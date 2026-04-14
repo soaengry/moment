@@ -59,7 +59,7 @@ public class RsvpService {
         Wedding wedding = weddingRepository.findById(weddingId)
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
 
-        if (!wedding.getEvent().getUserId().equals(requesterId)) {
+        if (!wedding.getEvent().getUser().getId().equals(requesterId)) {
             throw new WeddingException(WeddingErrorCode.WEDDING_UNAUTHORIZED);
         }
 
@@ -72,7 +72,7 @@ public class RsvpService {
         Rsvp rsvp = rsvpRepository.findById(rsvpId)
                 .orElseThrow(() -> new InvitationException(InvitationErrorCode.RSVP_NOT_FOUND));
 
-        boolean isEventOwner = rsvp.getWedding().getEvent().getUserId().equals(requesterId);
+        boolean isEventOwner = rsvp.getWedding().getEvent().getUser().getId().equals(requesterId);
         if (!isEventOwner) {
             throw new InvitationException(InvitationErrorCode.INVITATION_UNAUTHORIZED);
         }

@@ -29,7 +29,7 @@ public class GalleryService {
 
     @Transactional(readOnly = true)
     public List<GalleryResponse> getGalleriesByWedding(Long weddingId) {
-        return galleryRepository.findByWeddingIdOrderByOrderIndex(weddingId).stream()
+        return galleryRepository.findByWeddingId(weddingId).stream()
                 .map(GalleryResponse::from)
                 .collect(Collectors.toList());
     }
@@ -39,7 +39,7 @@ public class GalleryService {
                 .orElseThrow(() -> new WeddingException(WeddingErrorCode.GALLERY_NOT_FOUND));
 
         weddingService.validateWeddingAccess(gallery.getWeddingId(), userId);
-        gallery.update(request.caption(), request.orderIndex());
+        gallery.update(request.imageUrl(), request.thumbnailUrl());
         return GalleryResponse.from(gallery);
     }
 
