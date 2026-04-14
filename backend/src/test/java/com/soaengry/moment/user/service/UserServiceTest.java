@@ -17,6 +17,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,10 +49,15 @@ class UserServiceTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @PersistenceContext
+    private EntityManager em;
+
     @BeforeEach
     void setUp() {
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=0").executeUpdate();
         userRepository.deleteAll();
         emailVerificationRepository.deleteAll();
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=1").executeUpdate();
     }
 
     @Test

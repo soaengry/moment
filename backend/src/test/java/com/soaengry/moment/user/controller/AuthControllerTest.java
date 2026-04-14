@@ -1,5 +1,6 @@
 package com.soaengry.moment.user.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soaengry.moment.domain.email.entity.EmailVerification;
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
@@ -8,6 +9,8 @@ import com.soaengry.moment.domain.user.dto.request.RefreshRequest;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.user.service.AuthService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,10 +48,15 @@ class AuthControllerTest {
     @Autowired
     private AuthService authService;
 
+    @PersistenceContext
+    private EntityManager em;
+
     @BeforeEach
     void setUp() {
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=0").executeUpdate();
         userRepository.deleteAll();
         emailVerificationRepository.deleteAll();
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=1").executeUpdate();
     }
 
     @Test
@@ -66,12 +74,12 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").exists())
-                .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.accessToken").exists())
-                .andExpect(jsonPath("$.refreshToken").exists())
-                .andExpect(jsonPath("$.expiresIn").exists());
+                .andExpect(jsonPath("$.data.userId").exists())
+                .andExpect(jsonPath("$.data.email").value("test@example.com"))
+                .andExpect(jsonPath("$.data.message").exists())
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists())
+                .andExpect(jsonPath("$.data.expiresIn").exists());
 
         System.out.println("✅ 회원가입 API 테스트 통과");
     }
@@ -145,9 +153,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").exists())
-                .andExpect(jsonPath("$.refreshToken").exists())
-                .andExpect(jsonPath("$.expiresIn").exists());
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists())
+                .andExpect(jsonPath("$.data.expiresIn").exists());
 
         System.out.println("✅ 로그인 API 테스트 통과");
     }
@@ -208,17 +216,18 @@ class AuthControllerTest {
                 .andReturn();
 
         String loginResponseBody = loginResult.getResponse().getContentAsString();
-        TokenResponse tokenResponse = objectMapper.readValue(loginResponseBody, TokenResponse.class);
+        JsonNode loginJson = objectMapper.readTree(loginResponseBody);
+        String refreshToken = loginJson.at("/data/refreshToken").asText();
 
-        RefreshRequest refreshRequest = new RefreshRequest(tokenResponse.refreshToken());
+        RefreshRequest refreshRequest = new RefreshRequest(refreshToken);
 
         // when & then
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(refreshRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").exists())
-                .andExpect(jsonPath("$.refreshToken").exists());
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists());
 
         System.out.println("✅ 토큰 갱신 API 테스트 통과");
     }
@@ -252,16 +261,19 @@ class AuthControllerTest {
                 .andReturn();
 
         String loginResponseBody = loginResult.getResponse().getContentAsString();
-        TokenResponse tokenResponse = objectMapper.readValue(loginResponseBody, TokenResponse.class);
+        JsonNode loginJson = objectMapper.readTree(loginResponseBody);
+        String accessToken = loginJson.at("/data/accessToken").asText();
+        String refreshToken = loginJson.at("/data/refreshToken").asText();
 
-        RefreshRequest logoutRequest = new RefreshRequest(tokenResponse.refreshToken());
+        RefreshRequest logoutRequest = new RefreshRequest(refreshToken);
 
         // when & then
         mockMvc.perform(post("/api/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + accessToken)
                         .content(objectMapper.writeValueAsString(logoutRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("로그아웃되었습니다"));
+                .andExpect(jsonPath("$.data.message").value("로그아웃되었습니다"));
 
         System.out.println("✅ 로그아웃 API 테스트 통과");
     }

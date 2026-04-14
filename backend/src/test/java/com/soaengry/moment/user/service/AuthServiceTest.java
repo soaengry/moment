@@ -13,6 +13,8 @@ import com.soaengry.moment.domain.user.repository.RefreshTokenRepository;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.user.service.AuthService;
 import com.soaengry.moment.global.security.JwtProvider;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,11 +50,15 @@ class AuthServiceTest {
     @Autowired
     private JwtProvider jwtProvider;
 
+    @PersistenceContext
+    private EntityManager em;
+
     @BeforeEach
     void setUp() {
-        // 테스트 전 데이터 정리
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=0").executeUpdate();
         userRepository.deleteAll();
         emailVerificationRepository.deleteAll();
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=1").executeUpdate();
     }
 
     @Test
