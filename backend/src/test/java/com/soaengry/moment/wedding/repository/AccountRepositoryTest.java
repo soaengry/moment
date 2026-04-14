@@ -1,21 +1,24 @@
 package com.soaengry.moment.wedding.repository;
 
-import com.soaengry.moment.domain.wedding.entity.Account;
-import com.soaengry.moment.domain.wedding.repository.AccountRepository;
+import com.soaengry.moment.config.TestSchemaConfig;
+import com.soaengry.moment.domain.event.entity.Account;
+import com.soaengry.moment.domain.event.repository.AccountRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+@SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Transactional
+@Import(TestSchemaConfig.class)
 class AccountRepositoryTest {
 
     @Autowired
@@ -63,21 +66,6 @@ class AccountRepositoryTest {
         assertThat(accounts).hasSize(2);
         assertThat(accounts.get(0).getBankName()).isEqualTo("국민은행");
         assertThat(accounts.get(1).getBankName()).isEqualTo("신한은행");
-    }
-
-    @Test
-    @DisplayName("AccountGroup ID로 계좌 개수 조회")
-    void countByAccountGroupId() {
-        // given
-        accountRepository.save(Account.create(1L, "신한은행", "088", "110-111-111111", "김철수", null, 1));
-        accountRepository.save(Account.create(1L, "국민은행", "004", "220-222-222222", "박철수", null, 2));
-        accountRepository.save(Account.create(2L, "우리은행", "020", "330-333-333333", "이철수", null, 1));
-
-        // when
-        long count = accountRepository.countByAccountGroupId(1L);
-
-        // then
-        assertThat(count).isEqualTo(2);
     }
 
     @Test
