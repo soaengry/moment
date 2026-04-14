@@ -8,10 +8,10 @@ import { useAuthStore } from "../../auth/store/useAuthStore";
 import { IoClose } from "react-icons/io5";
 
 interface Props {
-  weddingId: number;
+  eventId: number;
 }
 
-const WeddingFeedTab: FC<Props> = ({ weddingId }) => {
+const WeddingFeedTab: FC<Props> = ({ eventId }) => {
   const [posts, setPosts] = useState<PostResponse[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -24,7 +24,7 @@ const WeddingFeedTab: FC<Props> = ({ weddingId }) => {
   const fetchPosts = useCallback(async (pageNum: number, append = false) => {
     setIsLoading(true);
     try {
-      const res = await feedApi.getWeddingFeed(weddingId, pageNum);
+      const res = await feedApi.getEventFeed(eventId, pageNum);
       if (append) {
         setPosts((prev) => [...prev, ...res.content]);
       } else {
@@ -34,7 +34,7 @@ const WeddingFeedTab: FC<Props> = ({ weddingId }) => {
       setPage(pageNum);
     } catch { /* silent */ }
     finally { setIsLoading(false); }
-  }, [weddingId]);
+  }, [eventId]);
 
   useEffect(() => {
     fetchPosts(0);
@@ -58,7 +58,7 @@ const WeddingFeedTab: FC<Props> = ({ weddingId }) => {
       {/* Composer — 로그인한 유저만 */}
       {user && (
         <PostComposer
-          weddingId={weddingId}
+          eventId={eventId}
           onPostCreated={handleRefresh}
         />
       )}
@@ -74,7 +74,7 @@ const WeddingFeedTab: FC<Props> = ({ weddingId }) => {
               </button>
             </div>
             <PostComposer
-              weddingId={weddingId}
+              eventId={eventId}
               editingPost={editingPost}
               onPostUpdated={handleRefresh}
               onCancel={() => setEditingPost(null)}
@@ -90,7 +90,6 @@ const WeddingFeedTab: FC<Props> = ({ weddingId }) => {
             key={post.id}
             post={post}
             currentUserId={user?.id}
-            weddingId={weddingId}
             onPostDeleted={handleRefresh}
             onCommentClick={setCommentPostId}
             onPostUpdated={setEditingPost}
@@ -122,7 +121,6 @@ const WeddingFeedTab: FC<Props> = ({ weddingId }) => {
           isOpen={true}
           onClose={() => setCommentPostId(null)}
           currentUserId={user?.id}
-          weddingId={weddingId}
           onCommentCountChange={handleCommentCountChange}
         />
       )}

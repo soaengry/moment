@@ -18,7 +18,6 @@ import ImageViewer from "./ImageViewer";
 interface Props {
   post: PostResponse;
   currentUserId?: number;
-  weddingId?: number;
   onPostDeleted?: () => void;
   onCommentClick?: (postId: number) => void;
   onPostUpdated?: (post: PostResponse) => void;
@@ -27,7 +26,6 @@ interface Props {
 const PostCard: FC<Props> = ({
   post,
   currentUserId,
-  weddingId,
   onPostDeleted,
   onCommentClick,
   onPostUpdated,
@@ -50,9 +48,7 @@ const PostCard: FC<Props> = ({
 
   const handleLike = async () => {
     try {
-      const res = weddingId
-        ? await feedApi.toggleWeddingLike(weddingId, post.id)
-        : await feedApi.toggleLike(post.id);
+      const res = await feedApi.toggleLike(post.id);
       setLiked(res.liked);
       setLikeCount((prev) => (res.liked ? prev + 1 : prev - 1));
     } catch {
@@ -62,9 +58,7 @@ const PostCard: FC<Props> = ({
 
   const handleBookmark = async () => {
     try {
-      const res = weddingId
-        ? await feedApi.toggleWeddingBookmark(weddingId, post.id)
-        : await feedApi.toggleBookmark(post.id);
+      const res = await feedApi.toggleBookmark(post.id);
       setBookmarked(res.bookmarked);
     } catch {
       /* silent */
@@ -74,11 +68,7 @@ const PostCard: FC<Props> = ({
   const handleDelete = async () => {
     if (!window.confirm("게시글을 삭제하시겠습니까?")) return;
     try {
-      if (weddingId) {
-        await feedApi.deleteWeddingPost(weddingId, post.id);
-      } else {
-        await feedApi.deletePost(post.id);
-      }
+      await feedApi.deletePost(post.id);
       onPostDeleted?.();
     } catch {
       /* silent */
