@@ -11,7 +11,10 @@ import type {
   TransportationRequest,
   AnnouncementRequest,
   EventType,
+  WeddingDetailResponse,
+  GatheringDetailResponse,
 } from "../types";
+import { isWeddingDetail } from "../types";
 import { useEventDetail } from "../hooks/useEventDetail";
 import {
   useEventSteps,
@@ -40,25 +43,32 @@ const EventEditPage: FC = () => {
 
   useEffect(() => {
     if (!eventDetail) return;
-    const { event, heroImages, transportation, announcements, wedding, hosts, schedules, accountGroups } = eventDetail;
+    const { event, heroImages, transportation, announcements, detail, schedules, accountGroups } = eventDetail;
 
-    const coupleRequests: HostRequest[] = hosts.map((c) => ({
+    const weddingDetail = isWeddingDetail(detail) ? detail as WeddingDetailResponse : null;
+    const gatheringDetail = (!isWeddingDetail(detail) && detail) ? detail as GatheringDetailResponse : null;
+    const rawHosts = weddingDetail ? weddingDetail.hosts : (gatheringDetail ? gatheringDetail.hosts : []);
+
+    const coupleRequests: HostRequest[] = rawHosts.map((c) => ({
       role: c.role,
       name: c.name,
       email: c.email,
-      fatherName: c.fatherName ?? undefined,
-      motherName: c.motherName ?? undefined,
-      isFatherAlive: c.isFatherAlive,
-      isMotherAlive: c.isMotherAlive,
       contact: c.contact ?? undefined,
       profileImageUrl: c.profileImageUrl ?? undefined,
       introduction: c.introduction ?? undefined,
+      weddingHostData: weddingDetail && "fatherName" in c
+        ? {
+            fatherName: (c as WeddingDetailResponse["hosts"][0]).fatherName ?? undefined,
+            motherName: (c as WeddingDetailResponse["hosts"][0]).motherName ?? undefined,
+            isFatherAlive: (c as WeddingDetailResponse["hosts"][0]).isFatherAlive ?? undefined,
+            isMotherAlive: (c as WeddingDetailResponse["hosts"][0]).isMotherAlive ?? undefined,
+          }
+        : undefined,
     }));
 
     const scheduleRequests: ScheduleRequest[] = [...schedules]
       .sort((a, b) => a.orderIndex - b.orderIndex)
       .map((s) => ({
-        time: s.time,
         title: s.title,
         description: s.description ?? undefined,
         orderIndex: s.orderIndex,
@@ -118,9 +128,9 @@ const EventEditPage: FC = () => {
       accountGroups: accountGroupData,
       transportation: transportRequests,
       announcements: announcementRequests,
-      notice: wedding?.notice ?? "",
-      parkingInfo: wedding?.parkingInfo ?? "",
-      mealInfo: wedding?.mealInfo ?? "",
+      notice: weddingDetail?.notice ?? "",
+      parkingInfo: weddingDetail?.parkingInfo ?? "",
+      mealInfo: weddingDetail?.mealInfo ?? "",
     });
   }, [eventDetail]);
 
@@ -179,48 +189,40 @@ const EventEditPage: FC = () => {
     if (!state.basic) return;
     setIsSubmitting(true);
     const eventId = eventDetail.event.id;
-    const weddingId = eventDetail.wedding?.id ?? null;
 
     try {
-      await eventApi.updateEvent(eventId, state.basic);
-
-      if (weddingId) {
-        await eventApi.updateWedding(weddingId, {
-          eventId,
-          notice: state.notice || undefined,
-          parkingInfo: state.parkingInfo || undefined,
-          mealInfo: state.mealInfo || undefined,
-        });
-
-        for (const h of eventDetail.hosts) await eventApi.deleteHost(h.id);
-        for (const couple of state.couples) await eventApi.createHost(eventId, couple);
-
-        for (const s of eventDetail.schedules) await eventApi.deleteSchedule(s.id);
-        for (const schedule of state.schedules) await eventApi.createSchedule(weddingId, schedule);
-
-        for (const ag of eventDetail.accountGroups) await eventApi.deleteAccountGroup(ag.group.id);
-        for (const groupData of state.accountGroups) {
-          const group = await eventApi.createAccountGroup(weddingId, {
-            groupName: groupData.groupName,
-            orderIndex: groupData.orderIndex,
-          });
-          for (const account of groupData.accounts) await eventApi.createAccount(group.id, account);
-        }
-      }
-
-      for (const t of eventDetail.transportation) await eventApi.deleteTransportation(t.id);
-      for (const transport of state.transportation) await eventApi.addTransportation(eventId, transport);
-
-      for (const a of eventDetail.announcements) await eventApi.deleteAnnouncement(a.id);
-      for (const announcement of state.announcements) await eventApi.addAnnouncement(eventId, announcement);
-
-      for (const img of eventDetail.heroImages) await eventApi.deleteHeroImage(img.id);
+      // 히어로 이미지 업로드 처리
+      const heroImages = [];
       for (let i = 0; i < state.landingPhotos.length; i++) {
         const photo = state.landingPhotos[i];
         let imageUrl = photo.url;
         if (photo.file) imageUrl = await eventApi.uploadFile(photo.file);
-        if (imageUrl) await eventApi.addHeroImage(eventId, { imageUrl, orderIndex: i });
+        if (imageUrl) heroImages.push({ imageUrl, orderIndex: i });
       }
+
+      const isWedding = state.eventType === "WEDDING";
+
+      await eventApi.updateEventWithDetails(eventId, {
+        event: {
+          ...state.basic,
+          type: state.eventType,
+          notice: state.notice || undefined,
+          parkingInfo: state.parkingInfo || undefined,
+          mealInfo: state.mealInfo || undefined,
+        },
+        heroImages,
+        schedules: state.schedules,
+        transportation: state.transportation,
+        announcements: state.announcements,
+        hosts: state.couples.map((c) =>
+          isWedding ? c : { ...c, weddingHostData: undefined },
+        ),
+        accountGroups: state.accountGroups.map((g) => ({
+          groupName: g.groupName,
+          orderIndex: g.orderIndex,
+          accounts: g.accounts.map(({ type: _type, ...rest }) => rest),
+        })),
+      });
 
       toast.success("초대장이 수정되었습니다!");
       setTimeout(() => navigate(`/event/${slug}`), 1500);

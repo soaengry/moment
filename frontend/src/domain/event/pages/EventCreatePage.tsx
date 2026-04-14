@@ -2,15 +2,17 @@ import { type FC, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { eventApi } from "../api/eventApi";
-import { scheduleApi } from "../../schedule/api/scheduleApi";
+import { attendanceApi } from "../../attendance/api/AttendanceApi";
 import { useAuthStore } from "../../auth/store/useAuthStore";
-import type { EventRequest, EventType } from "../types";
+import type { EventType } from "../types";
 import TemplateSelectStep from "../components/create/TemplateSelectStep";
 import BasicInfoStep from "../components/create/BasicInfoStep";
 import CoupleStep from "../components/create/CoupleStep";
 import ScheduleStep from "../components/create/ScheduleStep";
 import AccountStep from "../components/create/AccountStep";
-import ExtraInfoStep, { type ExtraInfoFormData } from "../components/create/ExtraInfoStep";
+import ExtraInfoStep, {
+  type ExtraInfoFormData,
+} from "../components/create/ExtraInfoStep";
 import {
   useEventSteps,
   initialEventFormState,
@@ -19,14 +21,30 @@ import {
 import StepIndicator from "../components/create/StepIndicator";
 
 const STEP_LABELS: Record<EventType, string[]> = {
-  WEDDING:   ["템플릿", "기본 정보", "신랑신부", "식순", "계좌 정보", "추가 정보"],
-  GATHERING: ["템플릿", "기본 정보", "주최자",   "일정",   "계좌 정보", "추가 정보"],
+  WEDDING: [
+    "템플릿",
+    "기본 정보",
+    "신랑신부",
+    "식순",
+    "계좌 정보",
+    "추가 정보",
+  ],
+  GATHERING: [
+    "템플릿",
+    "기본 정보",
+    "주최자",
+    "일정",
+    "계좌 정보",
+    "추가 정보",
+  ],
 };
 
 const EventCreatePage: FC = () => {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const [formState, setFormState] = useState<EventFormState>(initialEventFormState);
+  const [formState, setFormState] = useState<EventFormState>(
+    initialEventFormState,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const steps = STEP_LABELS[formState.eventType];
@@ -58,45 +76,40 @@ const EventCreatePage: FC = () => {
     if (!state.basic) return;
     setIsSubmitting(true);
     try {
-      const event = await eventApi.createEvent({ ...state.basic, type: state.eventType });
-      const { id: eventId, slug } = event;
+      // 1. 사진 파일을 먼저 업로드해 URL 획득 (이벤트 저장 전)
+      const heroImages = await Promise.all(
+        state.landingPhotos.map(async (photo, i) => ({
+          imageUrl: await eventApi.uploadFile(photo.file!),
+          orderIndex: i,
+        })),
+      );
 
-      const wedding = await eventApi.createWedding({
-        eventId,
-        notice: state.notice || undefined,
-        parkingInfo: state.parkingInfo || undefined,
-        mealInfo: state.mealInfo || undefined,
+      // 2. event + 모든 하위 도메인을 단일 트랜잭션으로 저장
+      const result = await eventApi.createEventWithDetails({
+        event: {
+          ...state.basic,
+          type: state.eventType,
+          notice: state.notice || undefined,
+          parkingInfo: state.parkingInfo || undefined,
+          mealInfo: state.mealInfo || undefined,
+        },
+        heroImages,
+        schedules: state.schedules,
+        transportation: state.transportation,
+        announcements: state.announcements,
+        hosts: state.couples,
+        accountGroups: state.accountGroups.map((g) => ({
+          groupName: g.groupName,
+          orderIndex: g.orderIndex,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          accounts: g.accounts.map(({ type: _t, ...acc }) => acc),
+        })),
       });
 
-      for (const couple of state.couples) {
-        await eventApi.createHost(eventId, couple);
-      }
-      for (const schedule of state.schedules) {
-        await eventApi.createSchedule(wedding.id, schedule);
-      }
-      for (const groupData of state.accountGroups) {
-        const group = await eventApi.createAccountGroup(wedding.id, {
-          groupName: groupData.groupName,
-          orderIndex: groupData.orderIndex,
-        });
-        for (const account of groupData.accounts) {
-          await eventApi.createAccount(group.id, account);
-        }
-      }
-      for (let i = 0; i < state.landingPhotos.length; i++) {
-        const photo = state.landingPhotos[i];
-        const imageUrl = await eventApi.uploadFile(photo.file!);
-        await eventApi.addHeroImage(eventId, { imageUrl, orderIndex: i });
-      }
-      for (const transport of state.transportation) {
-        await eventApi.addTransportation(eventId, transport);
-      }
-      for (const announcement of state.announcements) {
-        await eventApi.addAnnouncement(eventId, announcement);
-      }
+      const { slug } = result.event;
 
       try {
-        await scheduleApi.addAttendance({ slug });
+        await attendanceApi.addAttendance({ slug });
       } catch {
         // 자동 등록 실패 시 무시
       }

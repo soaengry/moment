@@ -1,20 +1,20 @@
 import { type FC, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { slideUp } from "../../../global/constants/animations";
-import type { WeddingResponse, TransportationResponse } from "../types";
+import type { WeddingDetailResponse, TransportationResponse } from "../types";
 
 interface Props {
-  wedding?: WeddingResponse | null;
+  detail?: WeddingDetailResponse | null;
   transportation?: TransportationResponse[];
 }
 
-const DressCodeSection: FC<Props> = ({ wedding, transportation = [] }) => {
+const DressCodeSection: FC<Props> = ({ detail, transportation = [] }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-  const notice = wedding?.notice ?? null;
-  const parkingInfo = wedding?.parkingInfo ?? null;
-  const mealInfo = wedding?.mealInfo ?? null;
+  const notice = detail?.notice ?? null;
+  const parkingInfo = detail?.parkingInfo ?? null;
+  const mealInfo = detail?.mealInfo ?? null;
   const hasContent = notice || parkingInfo || mealInfo || transportation.length > 0;
 
   if (!hasContent) return null;
