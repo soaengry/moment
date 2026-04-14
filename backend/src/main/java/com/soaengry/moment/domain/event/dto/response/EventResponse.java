@@ -24,7 +24,7 @@ public record EventResponse(
     public static EventResponse from(Event event) {
         return new EventResponse(
                 event.getId(),
-                event.getUserId(),
+                event.getUser().getId(),
                 event.getTitle(),
                 event.getType(),
                 event.getDate(),
