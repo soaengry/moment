@@ -15,7 +15,7 @@ import {
   MyBookmarksPage,
   MyLikesPage,
   MyCommentsPage,
-  PastSchedulesPage,
+  PastAttendancesPage,
 } from "../../domain/user/pages";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
@@ -28,7 +28,7 @@ import {
 } from "../../domain/event/pages";
 import { FeedPage } from "../../domain/feed/pages";
 import { ChatPage } from "../../domain/chat/pages";
-import MySchedulePage from "../../domain/schedule/pages/MySchedulePage";
+import MyAttendancePage from "../../domain/attendance/pages/MyAttendancePage";
 
 const AppRouter: FC = () => {
   return (
@@ -79,15 +79,12 @@ const AppRouter: FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/event/:slug/chat"
-          element={<ChatPage />}
-        />
+        <Route path="/event/:slug/chat" element={<ChatPage />} />
         <Route
           path="/my-schedule"
           element={
             <ProtectedRoute>
-              <MySchedulePage />
+              <MyAttendancePage />
             </ProtectedRoute>
           }
         />
@@ -127,7 +124,7 @@ const AppRouter: FC = () => {
           path="/my-page/past-schedules"
           element={
             <ProtectedRoute>
-              <PastSchedulesPage />
+              <PastAttendancesPage />
             </ProtectedRoute>
           }
         />
