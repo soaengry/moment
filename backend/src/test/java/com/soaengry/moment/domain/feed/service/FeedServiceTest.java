@@ -557,73 +557,6 @@ class FeedServiceTest {
         System.out.println("✅ 댓글 삭제 + 카운트 감소 성공");
     }
 
-    // ==================== Wedding Feed (4 tests) ====================
-
-    @Test
-    @DisplayName("웨딩 게시글 작성")
-    void createWeddingPost_Success() {
-        // given
-        PostRequest request = new PostRequest("웨딩 게시글", null);
-
-        // when
-        PostResponse result = feedService.createWeddingPost(user1.getId(), 1L, request);
-
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.weddingId()).isEqualTo(1L);
-
-        System.out.println("✅ 웨딩 게시글 작성 성공");
-    }
-
-    @Test
-    @DisplayName("웨딩 게시글 작성 (weddingId 포함)")
-    void createWeddingPost_WithWeddingId_Success() {
-        // given
-        PostRequest request = new PostRequest("웨딩 게시글", List.of("https://s3.amazonaws.com/wedding.jpg"));
-
-        // when
-        PostResponse result = feedService.createWeddingPost(user1.getId(), 1L, request);
-
-        // then
-        assertThat(result.weddingId()).isEqualTo(1L);
-        assertThat(result.imageUrls()).hasSize(1);
-
-        System.out.println("✅ 웨딩 게시글 작성 성공 (weddingId 포함)");
-    }
-
-    @Test
-    @DisplayName("웨딩 피드 조회")
-    void getWeddingFeed_Success() {
-        // given
-        feedService.createWeddingPost(user1.getId(), 1L, new PostRequest("웨딩1", null));
-        feedService.createWeddingPost(user2.getId(), 1L, new PostRequest("웨딩2", null));
-
-        // when
-        Page<PostResponse> result = feedService.getWeddingFeed(1L, user1.getId(), PageRequest.of(0, 10));
-
-        // then
-        assertThat(result.getContent()).hasSize(2);
-
-        System.out.println("✅ 웨딩 피드 조회 성공");
-    }
-
-    @Test
-    @DisplayName("특정 웨딩 피드 필터링")
-    void getWeddingFeed_Filtered_Success() {
-        // given
-        feedService.createWeddingPost(user1.getId(), 1L, new PostRequest("웨딩1", null));
-        feedService.createWeddingPost(user1.getId(), 2L, new PostRequest("웨딩2", null));
-
-        // when
-        Page<PostResponse> result = feedService.getWeddingFeed(1L, user1.getId(), PageRequest.of(0, 10));
-
-        // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).weddingId()).isEqualTo(1L);
-
-        System.out.println("✅ 특정 웨딩 피드 필터링 성공");
-    }
-
     // ==================== My Page (6 tests) ====================
 
     @Test
@@ -645,20 +578,21 @@ class FeedServiceTest {
     }
 
     @Test
-    @DisplayName("내 게시글 필터링 (weddingId)")
-    void getMyPosts_FilteredByWedding_Success() {
+    @DisplayName("내 게시글 필터링 (eventId=null이면 전체)")
+    void getMyPosts_FilteredByEvent_Null_Success() {
         // given
-        feedService.createPost(user1.getId(), new PostRequest("일반 게시글", null));
-        feedService.createWeddingPost(user1.getId(), 1L, new PostRequest("웨딩 게시글", null));
+        feedService.createPost(user1.getId(), new PostRequest("내 게시글 1", null));
+        feedService.createPost(user1.getId(), new PostRequest("내 게시글 2", null));
+        feedService.createPost(user2.getId(), new PostRequest("타인 게시글", null));
 
-        // when
-        Page<PostResponse> result = feedService.getMyPosts(user1.getId(), 1L, PageRequest.of(0, 10));
+        // when - eventId=null → 전체 조회
+        Page<PostResponse> result = feedService.getMyPosts(user1.getId(), null, PageRequest.of(0, 10));
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).weddingId()).isEqualTo(1L);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent()).allMatch(p -> p.author().id().equals(user1.getId()));
 
-        System.out.println("✅ 내 게시글 웨딩 필터링 성공");
+        System.out.println("✅ 내 게시글 전체 조회 성공 (eventId=null)");
     }
 
     @Test

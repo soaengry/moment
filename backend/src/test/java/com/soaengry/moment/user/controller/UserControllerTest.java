@@ -5,8 +5,11 @@ import com.soaengry.moment.domain.email.entity.EmailVerification;
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
 import com.soaengry.moment.domain.user.dto.request.*;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
+import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.user.service.AuthService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,10 +46,15 @@ class UserControllerTest {
     @Autowired
     private AuthService authService;
 
+    @PersistenceContext
+    private EntityManager em;
+
     @BeforeEach
     void setUp() {
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=0").executeUpdate();
         userRepository.deleteAll();
         emailVerificationRepository.deleteAll();
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=1").executeUpdate();
     }
 
     @Test
@@ -119,7 +127,7 @@ class UserControllerTest {
 
         // 회원 탈퇴
         authService.logoutAll(signupResponse.userId());
-        userRepository.findById(signupResponse.userId()).ifPresent(user -> user.softDelete());
+        userRepository.findById(signupResponse.userId()).ifPresent(User::softDelete);
 
         RestoreAccountRequest restoreRequest = new RestoreAccountRequest(
                 "test@example.com",
@@ -131,7 +139,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(restoreRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("계정이 복구되었습니다"));
+                .andExpect(jsonPath("$.data.message").value("계정이 복구되었습니다"));
 
         System.out.println("✅ 계정 복구 API 테스트 통과");
     }
@@ -154,7 +162,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exists").value(true));
+                .andExpect(jsonPath("$.data.exists").value(true));
 
         System.out.println("✅ 이메일 중복 체크 (존재) API 테스트 통과");
     }
@@ -170,7 +178,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exists").value(false));
+                .andExpect(jsonPath("$.data.exists").value(false));
 
         System.out.println("✅ 이메일 중복 체크 (미존재) API 테스트 통과");
     }
@@ -193,7 +201,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exists").value(true));
+                .andExpect(jsonPath("$.data.exists").value(true));
 
         System.out.println("✅ 닉네임 중복 체크 (존재) API 테스트 통과");
     }
@@ -209,7 +217,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exists").value(false));
+                .andExpect(jsonPath("$.data.exists").value(false));
 
         System.out.println("✅ 닉네임 중복 체크 (미존재) API 테스트 통과");
     }

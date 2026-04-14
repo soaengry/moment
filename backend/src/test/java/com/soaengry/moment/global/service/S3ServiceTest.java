@@ -1,7 +1,7 @@
 package com.soaengry.moment.global.service;
 
-import com.soaengry.moment.global.exception.CustomException;
 import com.soaengry.moment.global.exception.ErrorCode;
+import com.soaengry.moment.global.exception.FileException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -110,7 +110,7 @@ class S3ServiceTest {
     void uploadProfileImage_NullFile_Fail() {
         // when & then
         assertThatThrownBy(() -> s3Service.uploadProfileImage(null))
-                .isInstanceOf(CustomException.class)
+                .isInstanceOf(FileException.class)
                 .hasMessage(ErrorCode.FILE_EMPTY.getMessage());
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
@@ -131,7 +131,7 @@ class S3ServiceTest {
 
         // when & then
         assertThatThrownBy(() -> s3Service.uploadProfileImage(emptyFile))
-                .isInstanceOf(CustomException.class)
+                .isInstanceOf(FileException.class)
                 .hasMessage(ErrorCode.FILE_EMPTY.getMessage());
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
@@ -153,7 +153,7 @@ class S3ServiceTest {
 
         // when & then
         assertThatThrownBy(() -> s3Service.uploadProfileImage(largeFile))
-                .isInstanceOf(CustomException.class)
+                .isInstanceOf(FileException.class)
                 .hasMessage(ErrorCode.FILE_SIZE_EXCEEDED.getMessage());
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
@@ -175,7 +175,7 @@ class S3ServiceTest {
 
         // when & then
         assertThatThrownBy(() -> s3Service.uploadProfileImage(pdfFile))
-                .isInstanceOf(CustomException.class)
+                .isInstanceOf(FileException.class)
                 .hasMessage("지원하지 않는 파일 형식입니다. (jpg, png, webp만 가능)");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
@@ -264,7 +264,7 @@ class S3ServiceTest {
 
         // when & then
         assertThatThrownBy(() -> s3Service.uploadProfileImage(corruptedFile))
-                .isInstanceOf(CustomException.class)
+                .isInstanceOf(FileException.class)
                 .hasMessage(ErrorCode.FILE_UPLOAD_FAILED.getMessage());
 
         System.out.println("✅ S3 업로드 실패 테스트 통과");
