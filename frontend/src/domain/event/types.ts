@@ -24,15 +24,6 @@ export interface EventResponse {
   updatedAt: string;
 }
 
-export interface WeddingResponse {
-  id: number;
-  eventId: number;
-  notice: string | null;
-  parkingInfo: string | null;
-  mealInfo: string | null;
-  greeting: string | null;
-}
-
 export interface HostResponse {
   id: number;
   eventId: number;
@@ -40,19 +31,31 @@ export interface HostResponse {
   role: HostRole;
   name: string;
   email: string;
-  fatherName: string | null;
-  motherName: string | null;
-  isFatherAlive: boolean;
-  isMotherAlive: boolean;
   contact: string | null;
   profileImageUrl: string | null;
   introduction: string | null;
 }
 
+/** Wedding 이벤트의 호스트 — 부모님 정보가 flat하게 포함됨 */
+export interface WeddingHostCombinedResponse {
+  id: number;
+  eventId: number;
+  userId: number | null;
+  role: HostRole;
+  name: string;
+  email: string;
+  contact: string | null;
+  profileImageUrl: string | null;
+  introduction: string | null;
+  fatherName: string | null;
+  motherName: string | null;
+  isFatherAlive: boolean | null;
+  isMotherAlive: boolean | null;
+}
+
 export interface ScheduleResponse {
   id: number;
-  weddingId: number;
-  time: string;
+  eventId: number;
   title: string;
   description: string | null;
   orderIndex: number;
@@ -60,7 +63,7 @@ export interface ScheduleResponse {
 
 export interface AccountGroupResponse {
   id: number;
-  weddingId: number;
+  eventId: number;
   groupName: string;
   orderIndex: number;
 }
@@ -116,27 +119,29 @@ export interface InvitationResponse {
   status: InvitationStatus;
 }
 
-export interface RsvpResponse {
-  id: number;
-  weddingId: number;
-  sessionId: string;
-  userId: number | null;
-  attendance: boolean;
-  name: string;
-  side: string | null;
-  phone: string | null;
-  attendeeCount: number;
-  willEat: boolean;
-  mealCount: number;
-  willRide: boolean;
-  rideCount: number;
-  note: string | null;
-  consent: boolean;
-  createdAt: string;
-}
-
 export interface CheckSlugResponse {
   exists: boolean;
+}
+
+// ─── Detail (polymorphic) ───
+
+export interface WeddingDetailResponse {
+  weddingId: number;
+  notice: string | null;
+  parkingInfo: string | null;
+  mealInfo: string | null;
+  greeting: string | null;
+  hosts: WeddingHostCombinedResponse[];
+}
+
+export interface GatheringDetailResponse {
+  hosts: HostResponse[];
+}
+
+export type EventDetailResponse = WeddingDetailResponse | GatheringDetailResponse;
+
+export function isWeddingDetail(detail: EventDetailResponse | null | undefined): detail is WeddingDetailResponse {
+  return detail != null && "weddingId" in detail;
 }
 
 // ─── Request ───
@@ -150,31 +155,31 @@ export interface EventRequest {
   locationAddress: string;
   locationDetail?: string;
   isPublic?: boolean;
-}
-
-export interface WeddingRequest {
-  eventId: number;
+  // Wedding-specific (optional — only sent for WEDDING type)
   notice?: string;
   parkingInfo?: string;
   mealInfo?: string;
   greeting?: string;
 }
 
-export interface HostRequest {
-  role: HostRole;
-  name: string;
-  email: string;
+export interface WeddingHostData {
   fatherName?: string;
   motherName?: string;
   isFatherAlive?: boolean;
   isMotherAlive?: boolean;
+}
+
+export interface HostRequest {
+  role: HostRole;
+  name: string;
+  email: string;
   contact?: string;
   profileImageUrl?: string;
   introduction?: string;
+  weddingHostData?: WeddingHostData;
 }
 
 export interface ScheduleRequest {
-  time: string;
   title: string;
   description?: string;
   orderIndex: number;
@@ -213,19 +218,23 @@ export interface AnnouncementRequest {
   isPinned: boolean;
 }
 
-export interface RsvpRequest {
-  sessionId: string;
-  attendance: boolean;
-  name: string;
-  side?: string;
-  phone?: string;
-  attendeeCount: number;
-  willEat: boolean;
-  mealCount: number;
-  willRide: boolean;
-  rideCount: number;
-  note?: string;
-  consent: boolean;
+// ─── Combined Create ───
+
+export interface AccountGroupWithAccountsRequest {
+  groupName: string;
+  orderIndex: number;
+  accounts: AccountRequest[];
+}
+
+/** POST /api/events — event + 모든 하위 도메인을 단일 트랜잭션으로 생성 */
+export interface EventFullCreateRequest {
+  event: EventRequest;
+  heroImages?: HeroImageRequest[];
+  schedules?: ScheduleRequest[];
+  accountGroups?: AccountGroupWithAccountsRequest[];
+  transportation?: TransportationRequest[];
+  announcements?: AnnouncementRequest[];
+  hosts?: HostRequest[];
 }
 
 // ─── Aggregated ───
@@ -235,8 +244,7 @@ export interface EventInfoResponse {
   heroImages: HeroImageResponse[];
   transportation: TransportationResponse[];
   announcements: AnnouncementResponse[];
-  wedding: WeddingResponse | null;
-  hosts: HostResponse[];
   schedules: ScheduleResponse[];
   accountGroups: AccountGroupWithAccounts[];
+  detail: WeddingDetailResponse | GatheringDetailResponse | null;
 }
