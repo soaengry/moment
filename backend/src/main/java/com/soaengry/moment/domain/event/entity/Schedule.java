@@ -1,8 +1,9 @@
-package com.soaengry.moment.domain.wedding.entity;
+package com.soaengry.moment.domain.event.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import java.time.LocalTime;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
@@ -15,10 +16,7 @@ public class Schedule {
     private Long id;
 
     @Column(nullable = false)
-    private Long weddingId;
-
-    @Column(nullable = false)
-    private LocalTime time;
+    private Long eventId;
 
     @Column(nullable = false)
     private String title;
@@ -29,20 +27,18 @@ public class Schedule {
     @Column(nullable = false)
     private Integer orderIndex;
 
-    private Schedule(Long weddingId, LocalTime time, String title, String description, Integer orderIndex) {
-        this.weddingId = weddingId;
-        this.time = time;
+    private Schedule(Long eventId, String title, String description, Integer orderIndex) {
+        this.eventId = eventId;
         this.title = title;
         this.description = description;
         this.orderIndex = orderIndex;
     }
 
-    public static Schedule create(Long weddingId, LocalTime time, String title, String description, Integer orderIndex) {
-        return new Schedule(weddingId, time, title, description, orderIndex);
+    public static Schedule create(Long eventId, String title, String description, Integer orderIndex) {
+        return new Schedule(eventId, title, description, orderIndex);
     }
 
-    public void update(LocalTime time, String title, String description, Integer orderIndex) {
-        this.time = time;
+    public void update(String title, String description, Integer orderIndex) {
         this.title = title;
         this.description = description;
         this.orderIndex = orderIndex;
