@@ -1,4 +1,5 @@
 import axiosInstance from "../../../global/api/axiosInstance";
+import { FEED_API } from "../feed.constants";
 import type {
   PostResponse,
   PostRequest,
@@ -23,45 +24,45 @@ export const feedApi = {
   // Posts
   getFeed: async (page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
     const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `/api/feed/posts?page=${page}&size=${size}`
+      `${FEED_API.POSTS}?page=${page}&size=${size}`,
     );
     return data;
   },
 
   getPost: async (postId: number): Promise<PostResponse> => {
-    const { data } = await axiosInstance.get<PostResponse>(`/api/feed/posts/${postId}`);
+    const { data } = await axiosInstance.get<PostResponse>(FEED_API.POST(postId));
     return data;
   },
 
   createPost: async (request: PostRequest): Promise<PostResponse> => {
-    const { data } = await axiosInstance.post<PostResponse>("/api/feed/posts", request);
+    const { data } = await axiosInstance.post<PostResponse>(FEED_API.POSTS, request);
     return data;
   },
 
   updatePost: async (postId: number, request: PostRequest): Promise<PostResponse> => {
-    const { data } = await axiosInstance.put<PostResponse>(`/api/feed/posts/${postId}`, request);
+    const { data } = await axiosInstance.put<PostResponse>(FEED_API.POST(postId), request);
     return data;
   },
 
   deletePost: async (postId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/feed/posts/${postId}`);
+    await axiosInstance.delete(FEED_API.POST(postId));
   },
 
   // Like
   toggleLike: async (postId: number): Promise<{ liked: boolean }> => {
-    const { data } = await axiosInstance.post<{ liked: boolean }>(`/api/feed/posts/${postId}/like`);
+    const { data } = await axiosInstance.post<{ liked: boolean }>(FEED_API.POST_LIKE(postId));
     return data;
   },
 
   // Bookmark
   toggleBookmark: async (postId: number): Promise<{ bookmarked: boolean }> => {
-    const { data } = await axiosInstance.post<{ bookmarked: boolean }>(`/api/feed/posts/${postId}/bookmark`);
+    const { data } = await axiosInstance.post<{ bookmarked: boolean }>(FEED_API.POST_BOOKMARK(postId));
     return data;
   },
 
   getBookmarks: async (page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
     const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `/api/feed/bookmarks?page=${page}&size=${size}`
+      `${FEED_API.BOOKMARKS}?page=${page}&size=${size}`,
     );
     return data;
   },
@@ -69,118 +70,77 @@ export const feedApi = {
   // Comments
   getComments: async (postId: number, page = 0, size = 30): Promise<PageResponse<CommentResponse>> => {
     const { data } = await axiosInstance.get<PageResponse<CommentResponse>>(
-      `/api/feed/posts/${postId}/comments?page=${page}&size=${size}`
+      `${FEED_API.POST_COMMENTS(postId)}?page=${page}&size=${size}`,
     );
     return data;
   },
 
   createComment: async (postId: number, request: CommentRequest): Promise<CommentResponse> => {
     const { data } = await axiosInstance.post<CommentResponse>(
-      `/api/feed/posts/${postId}/comments`,
-      request
+      FEED_API.POST_COMMENTS(postId),
+      request,
     );
     return data;
   },
 
   updateComment: async (commentId: number, request: CommentRequest): Promise<CommentResponse> => {
-    const { data } = await axiosInstance.put<CommentResponse>(`/api/feed/comments/${commentId}`, request);
+    const { data } = await axiosInstance.put<CommentResponse>(FEED_API.COMMENT(commentId), request);
     return data;
   },
 
   deleteComment: async (commentId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/feed/comments/${commentId}`);
+    await axiosInstance.delete(FEED_API.COMMENT(commentId));
   },
 
-  // Wedding Feed
-  getWeddingFeed: async (weddingId: number, page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
+  // Event Feed
+  getEventFeed: async (eventId: number, page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
     const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `/api/weddings/${weddingId}/feed/posts?page=${page}&size=${size}`
+      `${FEED_API.EVENT_POSTS(eventId)}?page=${page}&size=${size}`,
     );
     return data;
   },
 
-  createWeddingPost: async (weddingId: number, request: PostRequest): Promise<PostResponse> => {
+  createEventPost: async (eventId: number, request: PostRequest): Promise<PostResponse> => {
     const { data } = await axiosInstance.post<PostResponse>(
-      `/api/weddings/${weddingId}/feed/posts`,
-      request
-    );
-    return data;
-  },
-
-  updateWeddingPost: async (weddingId: number, postId: number, request: PostRequest): Promise<PostResponse> => {
-    const { data } = await axiosInstance.put<PostResponse>(
-      `/api/weddings/${weddingId}/feed/posts/${postId}`,
-      request
-    );
-    return data;
-  },
-
-  deleteWeddingPost: async (weddingId: number, postId: number): Promise<void> => {
-    await axiosInstance.delete(`/api/weddings/${weddingId}/feed/posts/${postId}`);
-  },
-
-  toggleWeddingLike: async (weddingId: number, postId: number): Promise<{ liked: boolean }> => {
-    const { data } = await axiosInstance.post<{ liked: boolean }>(
-      `/api/weddings/${weddingId}/feed/posts/${postId}/like`
-    );
-    return data;
-  },
-
-  toggleWeddingBookmark: async (weddingId: number, postId: number): Promise<{ bookmarked: boolean }> => {
-    const { data } = await axiosInstance.post<{ bookmarked: boolean }>(
-      `/api/weddings/${weddingId}/feed/posts/${postId}/bookmark`
-    );
-    return data;
-  },
-
-  getWeddingComments: async (weddingId: number, postId: number, page = 0, size = 30): Promise<PageResponse<CommentResponse>> => {
-    const { data } = await axiosInstance.get<PageResponse<CommentResponse>>(
-      `/api/weddings/${weddingId}/feed/posts/${postId}/comments?page=${page}&size=${size}`
-    );
-    return data;
-  },
-
-  createWeddingComment: async (weddingId: number, postId: number, request: CommentRequest): Promise<CommentResponse> => {
-    const { data } = await axiosInstance.post<CommentResponse>(
-      `/api/weddings/${weddingId}/feed/posts/${postId}/comments`,
-      request
+      FEED_API.EVENT_POSTS(eventId),
+      request,
     );
     return data;
   },
 
   // My Page
-  getMyPosts: async (page = 0, size = 20, weddingId?: number): Promise<PageResponse<PostResponse>> => {
+  getMyPosts: async (page = 0, size = 20, eventId?: number): Promise<PageResponse<PostResponse>> => {
     const params = new URLSearchParams({ page: String(page), size: String(size) });
-    if (weddingId != null) params.set("weddingId", String(weddingId));
+    if (eventId != null) params.set("eventId", String(eventId));
     const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `/api/feed/my/posts?${params}`
+      `${FEED_API.MY_POSTS}?${params}`,
     );
     return data;
   },
 
-  getMyBookmarks: async (page = 0, size = 20, weddingId?: number): Promise<PageResponse<PostResponse>> => {
+  getMyBookmarks: async (page = 0, size = 20, eventId?: number): Promise<PageResponse<PostResponse>> => {
     const params = new URLSearchParams({ page: String(page), size: String(size) });
-    if (weddingId != null) params.set("weddingId", String(weddingId));
+    if (eventId != null) params.set("eventId", String(eventId));
     const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `/api/feed/my/bookmarks?${params}`
+      `${FEED_API.MY_BOOKMARKS}?${params}`,
     );
     return data;
   },
 
-  getMyLikes: async (page = 0, size = 20, weddingId?: number): Promise<PageResponse<PostResponse>> => {
+  getMyLikes: async (page = 0, size = 20, eventId?: number): Promise<PageResponse<PostResponse>> => {
     const params = new URLSearchParams({ page: String(page), size: String(size) });
-    if (weddingId != null) params.set("weddingId", String(weddingId));
+    if (eventId != null) params.set("eventId", String(eventId));
     const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `/api/feed/my/likes?${params}`
+      `${FEED_API.MY_LIKES}?${params}`,
     );
     return data;
   },
 
-  getMyComments: async (page = 0, size = 20, weddingId?: number): Promise<PageResponse<CommentResponse>> => {
+  getMyComments: async (page = 0, size = 20, eventId?: number): Promise<PageResponse<CommentResponse>> => {
     const params = new URLSearchParams({ page: String(page), size: String(size) });
-    if (weddingId != null) params.set("weddingId", String(weddingId));
+    if (eventId != null) params.set("eventId", String(eventId));
     const { data } = await axiosInstance.get<PageResponse<CommentResponse>>(
-      `/api/feed/my/comments?${params}`
+      `${FEED_API.MY_COMMENTS}?${params}`,
     );
     return data;
   },
