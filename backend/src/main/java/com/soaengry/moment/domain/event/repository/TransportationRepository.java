@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface TransportationRepository extends JpaRepository<Transportation, Long> {
     List<Transportation> findByEventIdOrderByOrderIndex(Long eventId);
+    void deleteByEventId(Long eventId);
 }

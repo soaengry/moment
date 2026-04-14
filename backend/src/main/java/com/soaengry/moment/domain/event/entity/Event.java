@@ -1,26 +1,39 @@
 package com.soaengry.moment.domain.event.entity;
 
+import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "events", indexes = {
-        @Index(name = "idx_event_slug", columnList = "slug"),
-        @Index(name = "idx_event_user_id", columnList = "userId")
-})
+@Table(name = "events",
+        indexes = {
+                @Index(name = "idx_event_user_id", columnList = "userId")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_events_slug", columnNames = "slug")
+        }
+)
 public class Event extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_events_users_user_id"))
+    private User user;
 
     @Column(nullable = false, length = 50)
     private String title;
@@ -32,19 +45,15 @@ public class Event extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime date;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String locationName;
 
-    @Column(nullable = false, length = 255)
     private String locationAddress;
-
-    @Column(length = 255)
     private String locationDetail;
-
     private Double locationLat;
     private Double locationLng;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, unique = true, length = 50)
     private String slug;
 
     private LocalDateTime deletedAt;
@@ -52,11 +61,14 @@ public class Event extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isPublic = false;
 
+    @OneToMany(mappedBy = "event", cascade = {CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
+    private List<HeroImage> heroImages = new ArrayList<>();
+
     @Builder
-    private Event(Long userId, String title, EventType type, LocalDateTime date,
+    private Event(User user, String title, EventType type, LocalDateTime date,
                   String locationName, String locationAddress, String locationDetail,
                   Double locationLat, Double locationLng, String slug, boolean isPublic) {
-        this.userId = userId;
+        this.user = user;
         this.title = title;
         this.type = type;
         this.date = date;
@@ -69,9 +81,13 @@ public class Event extends BaseTimeEntity {
         this.isPublic = isPublic;
     }
 
-    public void updateTitle(String title) { this.title = title; }
+    public void updateTitle(String title) {
+        this.title = title;
+    }
 
-    public void updateDate(LocalDateTime date) { this.date = date; }
+    public void updateDate(LocalDateTime date) {
+        this.date = date;
+    }
 
     public void updateLocation(String locationName, String locationAddress, String locationDetail,
                                Double locationLat, Double locationLng) {
@@ -82,9 +98,12 @@ public class Event extends BaseTimeEntity {
         this.locationLng = locationLng;
     }
 
-    public void updateIsPublic(boolean isPublic) { this.isPublic = isPublic; }
+    public void updateSlug(String slug) {
+        this.slug = slug;
+    }
 
-    public void softDelete() { this.deletedAt = LocalDateTime.now(); }
+    public void updateIsPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
 
-    public boolean isDeleted() { return this.deletedAt != null; }
 }
