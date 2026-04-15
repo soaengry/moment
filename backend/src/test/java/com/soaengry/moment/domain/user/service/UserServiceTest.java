@@ -1,4 +1,4 @@
-package com.soaengry.moment.user.service;
+package com.soaengry.moment.domain.user.service;
 
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
@@ -9,16 +9,14 @@ import com.soaengry.moment.domain.user.exception.UserErrorCode;
 import com.soaengry.moment.domain.user.exception.UserException;
 import com.soaengry.moment.domain.user.repository.RefreshTokenRepository;
 import com.soaengry.moment.domain.user.repository.UserRepository;
-import com.soaengry.moment.domain.user.service.AuthService;
-import com.soaengry.moment.domain.user.service.UserService;
 import com.soaengry.moment.global.exception.CustomException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;

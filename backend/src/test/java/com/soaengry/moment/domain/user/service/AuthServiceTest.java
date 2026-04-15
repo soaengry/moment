@@ -1,4 +1,4 @@
-package com.soaengry.moment.user.service;
+package com.soaengry.moment.domain.user.service;
 
 import com.soaengry.moment.domain.email.entity.EmailVerification;
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
@@ -11,7 +11,6 @@ import com.soaengry.moment.domain.user.exception.UserErrorCode;
 import com.soaengry.moment.domain.user.exception.UserException;
 import com.soaengry.moment.domain.user.repository.RefreshTokenRepository;
 import com.soaengry.moment.domain.user.repository.UserRepository;
-import com.soaengry.moment.domain.user.service.AuthService;
 import com.soaengry.moment.global.security.JwtProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

@@ -1,4 +1,4 @@
-package com.soaengry.moment.wedding.repository;
+package com.soaengry.moment.domain.wedding.repository;
 
 import com.soaengry.moment.config.TestSchemaConfig;
 import com.soaengry.moment.domain.event.entity.Event;
@@ -7,7 +7,6 @@ import com.soaengry.moment.domain.event.repository.EventRepository;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.wedding.entity.Wedding;
-import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

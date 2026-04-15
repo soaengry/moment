@@ -1,4 +1,4 @@
-package com.soaengry.moment.user.controller;
+package com.soaengry.moment.domain.user.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
