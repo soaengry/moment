@@ -1,4 +1,4 @@
-package com.soaengry.moment.wedding.repository;
+package com.soaengry.moment.domain.wedding.repository;
 
 import com.soaengry.moment.config.TestSchemaConfig;
 import com.soaengry.moment.domain.event.entity.Account;

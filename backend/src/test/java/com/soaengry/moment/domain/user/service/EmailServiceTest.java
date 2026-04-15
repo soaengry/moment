@@ -1,4 +1,4 @@
-package com.soaengry.moment.user.service;
+package com.soaengry.moment.domain.user.service;
 
 import com.soaengry.moment.domain.email.service.EmailService;
 import jakarta.mail.internet.MimeMessage;

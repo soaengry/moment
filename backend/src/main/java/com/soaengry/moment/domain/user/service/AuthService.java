@@ -62,11 +62,11 @@ public class AuthService {
         User user = request.toEntity(encodedPassword);
         user = userRepository.save(user);
 
-        // 이메일 인증 토큰 생성 (UUID 사용)
-        String verificationToken = generateVerificationToken(user.getEmail());
-
-        // 이메일 발송 (토큰 링크)
-        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+//        // 이메일 인증 토큰 생성 (UUID 사용)
+//        String verificationToken = generateVerificationToken(user.getEmail());
+//
+//        // 이메일 발송 (토큰 링크)
+//        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
 
         // 자동 로그인을 위한 JWT 토큰 생성
         String deviceId = UUID.randomUUID().toString();
