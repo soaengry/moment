@@ -75,3 +75,5 @@ coverage
 .claude/
 */.claude/
 tasks/
+CLAUDE.md
+*/CLAUDE.md
