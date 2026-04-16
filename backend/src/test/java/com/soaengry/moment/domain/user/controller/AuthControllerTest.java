@@ -12,6 +12,9 @@ import com.soaengry.moment.domain.user.service.AuthService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,7 +109,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("GET /api/auth/verify-email - 이메일 인증 성공")
     void verifyEmail_Success() throws Exception {
-        // given
+        // given: 회원가입 후 EmailVerification 레코드를 직접 생성 (signup은 이메일 발송 비활성화 상태)
         SignupRequest signupRequest = new SignupRequest(
                 "test@example.com",
                 "Test1234!@",
@@ -114,8 +117,13 @@ class AuthControllerTest {
         );
         authService.signup(signupRequest);
 
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
+        EmailVerification verification = emailVerificationRepository.save(
+                EmailVerification.builder()
+                        .email("test@example.com")
+                        .verificationCode(UUID.randomUUID().toString())
+                        .expiresAt(LocalDateTime.now().plusHours(1))
+                        .build()
+        );
 
         // when & then
         mockMvc.perform(get("/api/auth/verify-email")
@@ -136,10 +144,6 @@ class AuthControllerTest {
                 "테스터"
         );
         authService.signup(signupRequest);
-
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
-        authService.verifyEmailByToken(verification.getVerificationCode());
 
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
@@ -198,10 +202,6 @@ class AuthControllerTest {
         );
         authService.signup(signupRequest);
 
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
-        authService.verifyEmailByToken(verification.getVerificationCode());
-
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
                 "Test1234!@",
@@ -242,10 +242,6 @@ class AuthControllerTest {
                 "테스터"
         );
         authService.signup(signupRequest);
-
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
-        authService.verifyEmailByToken(verification.getVerificationCode());
 
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",

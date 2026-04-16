@@ -121,10 +121,6 @@ class UserControllerTest {
         );
         SignupResponse signupResponse = authService.signup(signupRequest);
 
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
-        authService.verifyEmailByToken(verification.getVerificationCode());
-
         // 회원 탈퇴
         authService.logoutAll(signupResponse.userId());
         userRepository.findById(signupResponse.userId()).ifPresent(User::softDelete);

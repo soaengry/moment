@@ -23,6 +23,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -119,7 +122,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("이메일 인증 성공")
     void verifyEmail_Success() {
-        // given
+        // given: 회원가입 후 EmailVerification 레코드를 직접 생성 (signup은 이메일 발송 비활성화 상태)
         SignupRequest signupRequest = new SignupRequest(
                 "test@example.com",
                 "Test1234!@",
@@ -127,8 +130,13 @@ class AuthServiceTest {
         );
         authService.signup(signupRequest);
 
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
+        EmailVerification verification = emailVerificationRepository.save(
+                EmailVerification.builder()
+                        .email("test@example.com")
+                        .verificationCode(UUID.randomUUID().toString())
+                        .expiresAt(LocalDateTime.now().plusHours(1))
+                        .build()
+        );
 
         // when
         authService.verifyEmailByToken(verification.getVerificationCode());
@@ -144,7 +152,7 @@ class AuthServiceTest {
     @DisplayName("로그인 성공")
     void login_Success() {
         // given
-        // 1. 회원가입
+        // 1. 회원가입 (login()은 isEmailVerified를 검사하지 않으므로 이메일 인증 불필요)
         SignupRequest signupRequest = new SignupRequest(
                 "test@example.com",
                 "Test1234!@",
@@ -152,12 +160,7 @@ class AuthServiceTest {
         );
         authService.signup(signupRequest);
 
-        // 2. 이메일 인증
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
-        authService.verifyEmailByToken(verification.getVerificationCode());
-
-        // 3. 로그인
+        // 2. 로그인
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
                 "Test1234!@",
@@ -224,10 +227,6 @@ class AuthServiceTest {
         );
         authService.signup(signupRequest);
 
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
-        authService.verifyEmailByToken(verification.getVerificationCode());
-
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
                 "Test1234!@",
@@ -275,10 +274,6 @@ class AuthServiceTest {
                 "테스터"
         );
         authService.signup(signupRequest);
-
-        EmailVerification verification = emailVerificationRepository
-                .findLatestByEmail("test@example.com").orElseThrow();
-        authService.verifyEmailByToken(verification.getVerificationCode());
 
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
