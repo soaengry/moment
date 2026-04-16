@@ -27,9 +27,12 @@ public class ChatService {
     private final AttendanceRepository attendanceRepository;
     private final S3Service s3Service;
 
-    public Page<ChatMessageResponse> getMessages(Long eventId, Pageable pageable) {
+    public Page<ChatMessageResponse> getMessages(Long eventId, Long userId, Pageable pageable) {
         if (!eventRepository.existsById(eventId)) {
             throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
+        }
+        if (userId == null || !attendanceRepository.existsByUserIdAndEventId(userId, eventId)) {
+            throw new ChatException(ChatErrorCode.UNAUTHORIZED_ACCESS);
         }
         return chatMessageRepository.findByEventIdOrderByCreatedAtDesc(eventId, pageable)
                 .map(ChatMessageResponse::from);

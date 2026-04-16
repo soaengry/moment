@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -26,17 +27,18 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
 
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-
-                if (jwtProvider.validateToken(token)) {
-                    Long userId = jwtProvider.getUserIdFromToken(token);
-                    accessor.setUser(userId::toString);
-                    log.info("WebSocket 인증 성공 - userId: {}", userId);
-                } else {
-                    log.warn("WebSocket 인증 실패 - 유효하지 않은 토큰");
-                }
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new MessagingException("WebSocket 인증 실패 - Authorization 헤더 없음");
             }
+
+            String token = authHeader.substring(7);
+            if (!jwtProvider.validateToken(token)) {
+                throw new MessagingException("WebSocket 인증 실패 - 유효하지 않은 토큰");
+            }
+
+            Long userId = jwtProvider.getUserIdFromToken(token);
+            accessor.setUser(userId::toString);
+            log.info("WebSocket 인증 성공 - userId: {}", userId);
         }
 
         return message;

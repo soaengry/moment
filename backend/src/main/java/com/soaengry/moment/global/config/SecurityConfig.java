@@ -56,14 +56,14 @@ public class SecurityConfig {
                                 "/oauth2/**"
                         ).permitAll()
                         // 초대장 공개 정보 조회는 비인증 허용 (비공개 이벤트는 서비스에서 접근 제어)
-                        .requestMatchers(HttpMethod.GET, "/api/events/*/info").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/*").permitAll()
                         // 방명록: 서비스에서 권한 검증
                         .requestMatchers(HttpMethod.GET, "/api/weddings/*/guestbook/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/weddings/*/guestbook/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/weddings/*/guestbook/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/weddings/*/guestbook/**").permitAll()
-                        // 채팅 메시지 조회는 공개
-                        .requestMatchers(HttpMethod.GET, "/api/weddings/*/chat/**").permitAll()
+                        // 채팅 메시지 조회는 참석자만 (서비스에서 attendance 검증)
+                        .requestMatchers(HttpMethod.GET, "/api/events/*/chat/**").authenticated()
                         // 피드: GET은 공개, CUD는 인증 필요
                         .requestMatchers(HttpMethod.GET, "/api/weddings/*/feed/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/weddings/*/feed/**").authenticated()

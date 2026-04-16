@@ -23,8 +23,9 @@ public class ChatController {
     @GetMapping("/messages")
     public ResponseEntity<Page<ChatMessageResponse>> getMessages(
             @PathVariable Long eventId,
+            @AuthenticationPrincipal Long userId,
             @PageableDefault(size = 50) Pageable pageable) {
-        Page<ChatMessageResponse> responses = chatService.getMessages(eventId, pageable);
+        Page<ChatMessageResponse> responses = chatService.getMessages(eventId, userId, pageable);
         return ResponseEntity.ok(responses);
     }
 
