@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,7 +56,9 @@ public class EventController {
     public ResponseEntity<EventInfoResponse> getEventInfo(
             @PathVariable String slug,
             Authentication authentication) {
-        Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
+        Long userId = (authentication != null && !(authentication instanceof AnonymousAuthenticationToken))
+                ? (Long) authentication.getPrincipal()
+                : null;
         return ResponseEntity.ok(eventService.getEventInfoBySlug(slug, userId));
     }
 }
