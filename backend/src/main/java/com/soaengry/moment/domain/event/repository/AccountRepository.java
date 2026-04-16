@@ -12,6 +12,9 @@ import java.util.List;
 public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findByAccountGroupIdOrderByOrderIndex(Long accountGroupId);
 
+    @Query("SELECT a FROM Account a WHERE a.accountGroupId IN :groupIds ORDER BY a.orderIndex ASC")
+    List<Account> findByAccountGroupIdInOrderByOrderIndex(@Param("groupIds") List<Long> groupIds);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT COUNT(a) FROM Account a WHERE a.accountGroupId = :accountGroupId")
     long countByAccountGroupIdForUpdate(@Param("accountGroupId") Long accountGroupId);
