@@ -1,5 +1,6 @@
 import { type FC, useState, useEffect, useCallback } from "react";
 import { feedApi } from "../api/feedApi";
+import { handleApiError } from "../../../global/utils/errorHandler";
 import type { PostResponse } from "../types";
 import PostCard from "./PostCard";
 import PostComposer from "./PostComposer";
@@ -32,8 +33,9 @@ const WeddingFeedTab: FC<Props> = ({ eventId }) => {
       }
       setHasMore(!res.last);
       setPage(pageNum);
-    } catch { /* silent */ }
-    finally { setIsLoading(false); }
+    } catch (error) {
+      handleApiError(error, "게시글을 불러오지 못했습니다.");
+    } finally { setIsLoading(false); }
   }, [eventId]);
 
   useEffect(() => {

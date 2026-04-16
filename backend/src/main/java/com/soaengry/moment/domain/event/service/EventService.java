@@ -67,11 +67,7 @@ public class EventService {
     public void validateViewAccess(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
-        if (event.isPublic()) return;
-        if (userId == null) throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
-        if (event.getUser().getId().equals(userId)) return;
-        if (attendanceRepository.existsByUserIdAndEventId(userId, eventId)) return;
-        throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
+        validateViewAccess(event, userId);
     }
 
     private KakaoGeocodingService.Coordinate resolveCoordinate(String address) {
@@ -618,13 +614,8 @@ public class EventService {
 
         EventDetailResponse detail = null;
         if (event.getType() == EventType.WEDDING) {
-            List<WeddingHostCombinedResponse> hosts = Optional.ofNullable(request.hosts())
-                    .orElse(Collections.emptyList()).stream()
-                    .map(h -> {
-                        HostResponse hostResponse = createHost(eventId, userId, h);
-                        WeddingHost weddingHost = weddingHostRepository.findByHostId(hostResponse.getId()).orElse(null);
-                        return WeddingHostCombinedResponse.of(hostResponse, weddingHost);
-                    }).toList();
+            List<WeddingHostCombinedResponse> hosts = createHostsFromRequest(
+                    eventId, userId, Optional.ofNullable(request.hosts()).orElse(Collections.emptyList()));
             Wedding wedding = weddingRepository.findByEventId(eventId)
                     .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
             detail = WeddingDetailResponse.builder()
@@ -652,24 +643,8 @@ public class EventService {
             accountRepository.deleteByAccountGroupIdIn(existingGroupIds);
             accountGroupRepository.deleteByEventId(eventId);
         }
-        if (request.accountGroups() != null && request.accountGroups().size() > MAX_ACCOUNT_GROUPS) {
-            throw new EventException(EventErrorCode.ACCOUNT_GROUP_LIMIT_EXCEEDED);
-        }
-        List<AccountGroupWithAccountsResponse> accountGroups = Optional.ofNullable(request.accountGroups())
-                .orElse(Collections.emptyList()).stream()
-                .map(groupReq -> {
-                    AccountGroup group = accountGroupRepository.save(
-                            AccountGroup.create(eventId, groupReq.groupName(), groupReq.orderIndex()));
-                    List<AccountResponse> accounts = Optional.ofNullable(groupReq.accounts())
-                            .orElse(Collections.emptyList()).stream()
-                            .map(accReq -> {
-                                long count = accountRepository.countByAccountGroupIdForUpdate(group.getId());
-                                if (count >= MAX_ACCOUNTS_PER_GROUP)
-                                    throw new EventException(EventErrorCode.ACCOUNT_LIMIT_EXCEEDED);
-                                return AccountResponse.from(accountRepository.save(accReq.toEntity(group.getId(), (int) count)));
-                            }).toList();
-                    return AccountGroupWithAccountsResponse.of(AccountGroupResponse.from(group), accounts);
-                }).toList();
+        List<AccountGroupWithAccountsResponse> accountGroups =
+                saveAccountGroupsFromRequest(eventId, request.accountGroups());
 
         // 7. Transportation 교체
         transportationRepository.deleteByEventId(eventId);
@@ -736,13 +711,8 @@ public class EventService {
                     .build();
             weddingRepository.save(wedding);
 
-            List<WeddingHostCombinedResponse> hosts = request.hosts().stream()
-                    .map(h -> {
-                        HostResponse hostResponse = createHost(event.getId(), userId, h);
-                        WeddingHost weddingHost = weddingHostRepository.findByHostId(hostResponse.getId()).orElse(null);
-                        return WeddingHostCombinedResponse.of(hostResponse, weddingHost);
-                    })
-                    .toList();
+            List<WeddingHostCombinedResponse> hosts = createHostsFromRequest(
+                    event.getId(), userId, Optional.ofNullable(request.hosts()).orElse(Collections.emptyList()));
 
             detail = WeddingDetailResponse.builder()
                     .weddingId(wedding.getId())
@@ -766,33 +736,8 @@ public class EventService {
         }
 
         // AccountGroups
-        if (request.accountGroups() != null && request.accountGroups().size() > MAX_ACCOUNT_GROUPS) {
-            throw new EventException(EventErrorCode.ACCOUNT_GROUP_LIMIT_EXCEEDED);
-        }
-
-        List<AccountGroupWithAccountsResponse> accountGroups = Optional.ofNullable(request.accountGroups())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(groupReq -> {
-                    AccountGroup group = accountGroupRepository.save(
-                            AccountGroup.create(eventId, groupReq.groupName(), groupReq.orderIndex()));
-
-                    List<AccountResponse> accounts = Optional.ofNullable(groupReq.accounts())
-                            .orElse(Collections.emptyList())
-                            .stream()
-                            .map(accReq -> {
-                                long count = accountRepository.countByAccountGroupIdForUpdate(group.getId());
-                                if (count >= MAX_ACCOUNTS_PER_GROUP) {
-                                    throw new EventException(EventErrorCode.ACCOUNT_LIMIT_EXCEEDED);
-                                }
-                                Account saved = accountRepository.save(accReq.toEntity(group.getId(), (int) count));
-                                return AccountResponse.from(saved);
-                            })
-                            .toList();
-
-                    return AccountGroupWithAccountsResponse.of(AccountGroupResponse.from(group), accounts);
-                })
-                .toList();
+        List<AccountGroupWithAccountsResponse> accountGroups =
+                saveAccountGroupsFromRequest(eventId, request.accountGroups());
 
         return new EventInfoResponse(EventResponse.from(event),
                 heroImages,
@@ -801,5 +746,42 @@ public class EventService {
                 schedules,
                 accountGroups,
                 detail);
+    }
+
+    private List<WeddingHostCombinedResponse> createHostsFromRequest(
+            Long eventId, Long userId, List<HostRequest> hostRequests) {
+        return hostRequests.stream()
+                .map(h -> {
+                    HostResponse hostResponse = createHost(eventId, userId, h);
+                    WeddingHost weddingHost = weddingHostRepository.findByHostId(hostResponse.getId()).orElse(null);
+                    return WeddingHostCombinedResponse.of(hostResponse, weddingHost);
+                })
+                .toList();
+    }
+
+    private List<AccountGroupWithAccountsResponse> saveAccountGroupsFromRequest(
+            Long eventId, List<AccountGroupWithAccountsRequest> accountGroupRequests) {
+        if (accountGroupRequests != null && accountGroupRequests.size() > MAX_ACCOUNT_GROUPS) {
+            throw new EventException(EventErrorCode.ACCOUNT_GROUP_LIMIT_EXCEEDED);
+        }
+        return Optional.ofNullable(accountGroupRequests)
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(groupReq -> {
+                    AccountGroup group = accountGroupRepository.save(
+                            AccountGroup.create(eventId, groupReq.groupName(), groupReq.orderIndex()));
+                    List<AccountResponse> accounts = Optional.ofNullable(groupReq.accounts())
+                            .orElse(Collections.emptyList())
+                            .stream()
+                            .map(accReq -> {
+                                long count = accountRepository.countByAccountGroupIdForUpdate(group.getId());
+                                if (count >= MAX_ACCOUNTS_PER_GROUP)
+                                    throw new EventException(EventErrorCode.ACCOUNT_LIMIT_EXCEEDED);
+                                return AccountResponse.from(accountRepository.save(accReq.toEntity(group.getId(), (int) count)));
+                            })
+                            .toList();
+                    return AccountGroupWithAccountsResponse.of(AccountGroupResponse.from(group), accounts);
+                })
+                .toList();
     }
 }

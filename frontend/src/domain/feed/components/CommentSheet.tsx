@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { bottomSheet, modalBackdrop, staggerContainer, staggerItem } from "../../../global/constants/animations";
 import { IoClose, IoSend, IoTrash } from "react-icons/io5";
 import { feedApi } from "../api/feedApi";
+import { handleApiError } from "../../../global/utils/errorHandler";
 import type { CommentResponse } from "../types";
 
 interface Props {
@@ -24,8 +25,9 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId, onCom
     try {
       const res = await feedApi.getComments(postId);
       setComments(res.content);
-    } catch { /* silent */ }
-    finally { setIsLoading(false); }
+    } catch (error) {
+      handleApiError(error, "댓글을 불러오지 못했습니다.");
+    } finally { setIsLoading(false); }
   }, [postId]);
 
   useEffect(() => {
@@ -40,8 +42,9 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId, onCom
       setContent("");
       fetchComments();
       onCommentCountChange?.(postId, 1);
-    } catch { /* silent */ }
-    finally { setIsSubmitting(false); }
+    } catch (error) {
+      handleApiError(error, "댓글 작성에 실패했습니다.");
+    } finally { setIsSubmitting(false); }
   };
 
   const handleDelete = async (commentId: number) => {
@@ -49,7 +52,9 @@ const CommentSheet: FC<Props> = ({ postId, isOpen, onClose, currentUserId, onCom
       await feedApi.deleteComment(commentId);
       fetchComments();
       onCommentCountChange?.(postId, -1);
-    } catch { /* silent */ }
+    } catch (error) {
+      handleApiError(error, "댓글 삭제에 실패했습니다.");
+    }
   };
 
   const formatTime = (dateStr: string) => {

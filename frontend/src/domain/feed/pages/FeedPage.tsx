@@ -8,6 +8,7 @@ import PostComposer from "../components/PostComposer";
 import CommentSheet from "../components/CommentSheet";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
+import { handleApiError } from "../../../global/utils/errorHandler";
 import { IoArrowBack, IoBookmarkOutline, IoClose } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 
@@ -38,8 +39,9 @@ const FeedPage: FC = () => {
       }
       setHasMore(!res.last);
       setPage(pageNum);
-    } catch { /* silent */ }
-    finally { setIsLoading(false); }
+    } catch (error) {
+      handleApiError(error, "게시글을 불러오지 못했습니다.");
+    } finally { setIsLoading(false); }
   }, [activeTab]);
 
   useEffect(() => {

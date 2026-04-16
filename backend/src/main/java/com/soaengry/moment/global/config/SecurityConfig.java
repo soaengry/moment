@@ -40,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/favicon.ico",
                                 "/hc",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
                                 "/env",
                                 "/api/auth/signup",
                                 "/api/auth/login",
