@@ -28,7 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -183,44 +185,63 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public EventInfoResponse getEventInfoBySlug(String slug, Long userId) {
-        Event eventEntity = eventRepository.findBySlug(slug)
+        Event event = eventRepository.findBySlug(slug)
                 .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
-        return getEventInfo(eventEntity.getId(), userId);
+        validateViewAccess(event, userId);
+        return buildEventInfoResponse(event);
     }
 
-    @Transactional(readOnly = true)
-    public EventInfoResponse getEventInfo(Long eventId, Long userId) {
-        EventResponse event = getEvent(eventId);
-        validateViewAccess(eventId, userId);
+    // 이미 로드된 Event 엔티티로 접근 권한을 검사한다 (findById 중복 호출 방지).
+    private void validateViewAccess(Event event, Long userId) {
+        if (event.isPublic()) return;
+        if (userId == null) throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
+        if (event.getUser().getId().equals(userId)) return;
+        if (attendanceRepository.existsByUserIdAndEventId(userId, event.getId())) return;
+        throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
+    }
 
-        // 공통 필드 조회
+    private EventInfoResponse buildEventInfoResponse(Event event) {
+        Long eventId = event.getId();
+        EventResponse eventResponse = EventResponse.from(event);
+
         List<HeroImageResponse> heroImages = getHeroImages(eventId);
         List<TransportationResponse> transportation = getTransportations(eventId);
         List<AnnouncementResponse> announcements = getAnnouncements(eventId);
         List<ScheduleResponse> schedules = getSchedules(eventId);
+        List<AccountGroupWithAccountsResponse> accountGroups = buildAccountGroups(eventId);
+        EventDetailResponse detail = getDetail(eventResponse);
 
-        List<AccountGroupWithAccountsResponse> accountGroups = accountGroupRepository
-                .findByEventIdOrderByOrderIndex(eventId).stream()
+        return new EventInfoResponse(eventResponse, heroImages, transportation,
+                announcements, schedules, accountGroups, detail);
+    }
+
+    // accountGroupId 목록을 한 번에 조회해 N+1 쿼리를 방지한다.
+    private List<AccountGroupWithAccountsResponse> buildAccountGroups(Long eventId) {
+        List<AccountGroup> groups = accountGroupRepository.findByEventIdOrderByOrderIndex(eventId);
+        if (groups.isEmpty()) return List.of();
+
+        List<Long> groupIds = groups.stream().map(AccountGroup::getId).toList();
+        Map<Long, List<Account>> accountsByGroupId = accountRepository
+                .findByAccountGroupIdInOrderByOrderIndex(groupIds).stream()
+                .collect(Collectors.groupingBy(Account::getAccountGroupId));
+
+        return groups.stream()
                 .map(group -> {
-                    AccountGroupResponse groupResponse = AccountGroupResponse.from(group);
-                    List<AccountResponse> accounts = accountRepository
-                            .findByAccountGroupIdOrderByOrderIndex(group.getId()).stream()
+                    List<AccountResponse> accounts = accountsByGroupId
+                            .getOrDefault(group.getId(), List.of()).stream()
                             .map(AccountResponse::from)
                             .toList();
-                    return AccountGroupWithAccountsResponse.of(groupResponse, accounts);
+                    return AccountGroupWithAccountsResponse.of(AccountGroupResponse.from(group), accounts);
                 })
                 .toList();
+    }
 
-        EventDetailResponse detail = getDetail(event);
-
-        return new EventInfoResponse(event,
-                heroImages,
-                transportation,
-                announcements,
-                schedules,
-                accountGroups,
-                detail
-        );
+    @Transactional(readOnly = true)
+    public EventInfoResponse getEventInfo(Long eventId, Long userId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+        validateViewAccess(event, userId);
+        return buildEventInfoResponse(event);
     }
 
     @Transactional(readOnly = true)
@@ -230,13 +251,8 @@ public class EventService {
             Wedding wedding = weddingRepository.findByEventId(event.id())
                     .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
 
-            List<WeddingHostCombinedResponse> hosts = hostRepository.findByEventId(event.id()).stream()
-                    .map(host -> {
-                        HostResponse hostResponse = HostResponse.from(host);
-                        WeddingHost weddingHost = weddingHostRepository.findByHostId(host.getId()).orElse(null);
-                        return WeddingHostCombinedResponse.of(hostResponse, weddingHost);
-                    })
-                    .toList();
+            List<Host> hostEntities = hostRepository.findByEventId(event.id());
+            List<WeddingHostCombinedResponse> hosts = buildWeddingHostResponses(hostEntities);
 
             return WeddingDetailResponse.builder()
                     .weddingId(wedding.getId())
@@ -258,7 +274,21 @@ public class EventService {
         }
 
         return null;
+    }
 
+    // hostId 목록을 한 번에 조회해 N+1 쿼리를 방지한다.
+    private List<WeddingHostCombinedResponse> buildWeddingHostResponses(List<Host> hosts) {
+        if (hosts.isEmpty()) return List.of();
+
+        List<Long> hostIds = hosts.stream().map(Host::getId).toList();
+        Map<Long, WeddingHost> weddingHostByHostId = weddingHostRepository.findByHostIdIn(hostIds).stream()
+                .collect(Collectors.toMap(WeddingHost::getHostId, wh -> wh));
+
+        return hosts.stream()
+                .map(host -> WeddingHostCombinedResponse.of(
+                        HostResponse.from(host),
+                        weddingHostByHostId.get(host.getId())))
+                .toList();
     }
 
     // ─── HeroImage ───
@@ -445,12 +475,7 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public List<WeddingHostCombinedResponse> getWeddingHosts(Long eventId) {
-        return hostRepository.findByEventId(eventId).stream()
-                .map(host -> {
-                    WeddingHost weddingHost = weddingHostRepository.findByHostId(host.getId()).orElse(null);
-                    return WeddingHostCombinedResponse.of(HostResponse.from(host), weddingHost);
-                })
-                .toList();
+        return buildWeddingHostResponses(hostRepository.findByEventId(eventId));
     }
 
     @Transactional(readOnly = true)

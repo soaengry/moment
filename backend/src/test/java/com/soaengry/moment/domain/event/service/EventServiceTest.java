@@ -275,6 +275,51 @@ class EventServiceTest {
     }
 
     @Test
+    @DisplayName("slug로 결혼 이벤트 정보 조회 - 복수 계좌그룹·WeddingHost 배치 로딩 검증")
+    void getEventInfoBySlug_wedding_batchLoading_success() {
+        // given: createEventWithDetails로 Wedding 엔티티 + 호스트 2명(WeddingHost 포함) 생성
+        EventCreateRequest createReq = new EventCreateRequest(
+                weddingRequest("batch-wedding"),
+                null, null, null, null, null,
+                List.of(
+                        new HostRequest(Host.HostRole.GROOM, "김철수", null, null, null, null,
+                                new HostRequest.WeddingHostData("김아버지", "김어머니", true, true)),
+                        new HostRequest(Host.HostRole.BRIDE, "이영희", null, null, null, null,
+                                new HostRequest.WeddingHostData("이아버지", "이어머니", true, false))
+                )
+        );
+        Long eventId = eventService.createEventWithDetails(OWNER_ID, createReq).event().id();
+
+        // given: 계좌그룹 2개(각 2계좌, 1계좌) 추가
+        AccountGroupResponse groomGroup = eventService.createAccountGroup(eventId, OWNER_ID,
+                new AccountGroupRequest("신랑측", 0));
+        eventService.createAccount(groomGroup.id(), OWNER_ID,
+                new AccountRequest("카카오뱅크", "090", "3333-01-000001", "김철수", null, null));
+        eventService.createAccount(groomGroup.id(), OWNER_ID,
+                new AccountRequest("신한은행", "088", "110-123-456789", "김철수", null, null));
+
+        AccountGroupResponse brideGroup = eventService.createAccountGroup(eventId, OWNER_ID,
+                new AccountGroupRequest("신부측", 1));
+        eventService.createAccount(brideGroup.id(), OWNER_ID,
+                new AccountRequest("국민은행", "004", "220-222-222222", "이영희", null, null));
+
+        // when: N+1 없는 배치 경로로 조회
+        EventInfoResponse result = eventService.getEventInfoBySlug("batch-wedding", OWNER_ID);
+
+        // then: 계좌그룹 2개
+        assertThat(result.accountGroups()).hasSize(2);
+        assertThat(result.accountGroups().get(0).accounts()).hasSize(2);
+        assertThat(result.accountGroups().get(1).accounts()).hasSize(1);
+
+        // then: 웨딩 호스트 2명, WeddingHost 데이터 포함
+        assertThat(result.detail()).isInstanceOf(WeddingDetailResponse.class);
+        WeddingDetailResponse detail = (WeddingDetailResponse) result.detail();
+        assertThat(detail.getHosts()).hasSize(2);
+        assertThat(detail.getHosts().stream().anyMatch(h -> "김아버지".equals(h.getFatherName()))).isTrue();
+        assertThat(detail.getHosts().stream().anyMatch(h -> Boolean.FALSE.equals(h.getIsMotherAlive()))).isTrue();
+    }
+
+    @Test
     @DisplayName("ID로 이벤트 정보 조회 성공 - 소유자는 private 이벤트 접근 가능")
     void getEventInfo_success_ownerAccessPrivate() {
         EventRequest privateReq = new EventRequest(
