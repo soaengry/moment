@@ -13,7 +13,7 @@ import {
 } from "react-icons/io5";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
 import type { UserResponse } from "../../domain/auth/types";
-import { attendanceApi } from "../../domain/attendance/api/AttendanceApi";
+import { attendanceApi } from "../../domain/attendance/api/attendanceApi";
 import { feedApi } from "../../domain/feed/api/feedApi";
 import type { AttendanceResponse } from "../../domain/attendance/types";
 import type { PostResponse } from "../../domain/feed/types";

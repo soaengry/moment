@@ -2,7 +2,7 @@ import { type FC, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { eventApi } from "../api/eventApi";
-import { attendanceApi } from "../../attendance/api/AttendanceApi";
+import { attendanceApi } from "../../attendance/api/attendanceApi";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import type { EventType } from "../types";
 import TemplateSelectStep from "../components/create/TemplateSelectStep";

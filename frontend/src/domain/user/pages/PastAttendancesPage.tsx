@@ -1,7 +1,7 @@
 import { type FC, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoArrowBack, IoChevronForward } from "react-icons/io5";
-import { attendanceApi } from "../../attendance/api/AttendanceApi";
+import { attendanceApi } from "../../attendance/api/attendanceApi";
 import type { AttendanceResponse } from "../../attendance/types";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 import { formatMonthDay } from "../../../global/utils/date";
