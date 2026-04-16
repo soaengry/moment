@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public record ChatMessageResponse(
         String id,
-        Long weddingId,
+        Long eventId,
         Long userId,
         String nickname,
         String profileImageUrl,
@@ -18,7 +18,7 @@ public record ChatMessageResponse(
     public static ChatMessageResponse from(ChatMessage message) {
         return new ChatMessageResponse(
                 message.getId(),
-                message.getWeddingId(),
+                message.getEventId(),
                 message.getUserId(),
                 message.getNickname(),
                 message.getProfileImageUrl(),

@@ -16,7 +16,7 @@ interface Props {
   editingPost?: PostResponse | null;
   onPostUpdated?: (post: PostResponse) => void;
   onCancel?: () => void;
-  weddingId?: number;
+  eventId?: number;
 }
 
 const PostComposer: FC<Props> = ({
@@ -24,13 +24,24 @@ const PostComposer: FC<Props> = ({
   editingPost,
   onPostUpdated,
   onCancel,
-  weddingId,
+  eventId,
 }) => {
   const [content, setContent] = useState(editingPost?.content ?? "");
   const [images, setImages] = useState<ImageItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imagesRef = useRef<ImageItem[]>(images);
+  imagesRef.current = images;
+
+  // 언마운트 시 생성된 blob URL을 모두 해제한다
+  useEffect(() => {
+    return () => {
+      imagesRef.current
+        .filter((img) => img.file)
+        .forEach((img) => URL.revokeObjectURL(img.preview));
+    };
+  }, []);
 
   const maxChars = 200;
   const maxImages = 4;
@@ -97,17 +108,16 @@ const PostComposer: FC<Props> = ({
       };
 
       if (editingPost) {
-        const updated = weddingId
-          ? await feedApi.updateWeddingPost(weddingId, editingPost.id, request)
-          : await feedApi.updatePost(editingPost.id, request);
+        const updated = await feedApi.updatePost(editingPost.id, request);
         onPostUpdated?.(updated);
       } else {
-        const created = weddingId
-          ? await feedApi.createWeddingPost(weddingId, request)
+        const created = eventId
+          ? await feedApi.createEventPost(eventId, request)
           : await feedApi.createPost(request);
         onPostCreated?.(created);
       }
 
+      images.filter((img) => img.file).forEach((img) => URL.revokeObjectURL(img.preview));
       setContent("");
       setImages([]);
     } catch {

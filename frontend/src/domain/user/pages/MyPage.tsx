@@ -2,11 +2,12 @@ import { type FC, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { authApi } from "../../auth/api/authApi";
-import { scheduleApi } from "../../schedule/api/scheduleApi";
+import { attendanceApi } from "../../attendance/api/attendanceApi";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
-import type { AttendanceResponse } from "../../schedule/types";
-import Calendar from "../../schedule/components/Calendar";
+import type { AttendanceResponse } from "../../attendance/types";
+import Calendar from "../../attendance/components/Calendar";
 import { ToastContainer } from "react-toastify";
+import { formatMonthDay } from "../../../global/utils/date";
 import {
   IoArrowBack,
   IoCreateOutline,
@@ -48,14 +49,12 @@ const MyPage: FC = () => {
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        const all = await scheduleApi.getMyAttendances();
+        const all = await attendanceApi.getMyAttendances();
         const now = new Date();
         const upcoming = all
-          .filter((s) => new Date(s.weddingDate) >= now)
+          .filter((s) => new Date(s.date) >= now)
           .sort(
-            (a, b) =>
-              new Date(a.weddingDate).getTime() -
-              new Date(b.weddingDate).getTime(),
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
           )
           .slice(0, 3);
         setUpcomingSchedules(upcoming);
@@ -121,15 +120,6 @@ const MyPage: FC = () => {
     },
   ];
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-    const weekday = weekdays[d.getDay()];
-    return `${month}월 ${day}일 (${weekday})`;
-  };
-
   return (
     <div className="min-h-screen bg-[#faf9f6]">
       <div className="max-w-lg mx-auto">
@@ -177,7 +167,9 @@ const MyPage: FC = () => {
                 <span>이메일 인증</span>
               </div>
               {user.isEmailVerified ? (
-                <span className="text-xs text-green-600 font-medium">인증됨</span>
+                <span className="text-xs text-green-600 font-medium">
+                  인증됨
+                </span>
               ) : (
                 <button
                   onClick={handleSendVerification}
@@ -207,7 +199,7 @@ const MyPage: FC = () => {
               upcomingSchedules.map((schedule) => (
                 <button
                   key={schedule.id}
-                  onClick={() => navigate(`/wedding/${schedule.invitationId}`)}
+                  onClick={() => navigate(`/event/${schedule.slug}`)}
                   className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
                 >
                   <div className="text-left">
@@ -215,7 +207,7 @@ const MyPage: FC = () => {
                       {schedule.title}
                     </p>
                     <p className="text-[11px] text-gray-400 mt-0.5">
-                      {formatDate(schedule.weddingDate)} · {schedule.venueName}
+                      {formatMonthDay(schedule.date)} · {schedule.locationName}
                     </p>
                   </div>
                   <IoChevronForward size={16} className="text-gray-300" />

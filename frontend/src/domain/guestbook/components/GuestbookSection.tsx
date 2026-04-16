@@ -16,6 +16,7 @@ import {
   IoTrash,
 } from "react-icons/io5";
 import { guestbookApi } from "../api/guestbookApi";
+import { formatDotDate } from "../../../global/utils/date";
 import type { GuestbookEntry, GuestbookRequest } from "../types";
 
 interface Props {
@@ -227,11 +228,6 @@ const GuestbookSection: FC<Props> = ({
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
-  };
-
   const canSubmit =
     authorName.trim() !== "" &&
     content.trim() !== "" &&
@@ -261,6 +257,7 @@ const GuestbookSection: FC<Props> = ({
           <div className="flex items-center gap-3">
             <input
               type="password"
+              autoComplete="off"
               placeholder={isLoggedIn ? "비밀번호" : "비밀번호 *"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -357,7 +354,7 @@ const GuestbookSection: FC<Props> = ({
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-gray-300">
-                        {formatDate(entry.createdAt)}
+                        {formatDotDate(entry.createdAt)}
                       </span>
                       {/* 비로그인 작성 글(userId 없음): ⋮ 드롭다운 메뉴 */}
                       {entry.userId === null && (
@@ -474,6 +471,7 @@ const GuestbookSection: FC<Props> = ({
               </h3>
               <input
                 type="password"
+                autoComplete="off"
                 placeholder="비밀번호"
                 value={modalPassword}
                 onChange={(e) => {

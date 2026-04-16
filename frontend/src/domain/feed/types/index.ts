@@ -13,7 +13,7 @@ export interface PostResponse {
   commentCount: number;
   isLiked: boolean;
   isBookmarked: boolean;
-  weddingId: number | null;
+  eventId: number | null;
   createdAt: string;
   updatedAt: string;
 }

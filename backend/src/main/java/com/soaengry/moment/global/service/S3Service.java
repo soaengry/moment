@@ -1,7 +1,7 @@
 package com.soaengry.moment.global.service;
 
-import com.soaengry.moment.global.exception.CustomException;
 import com.soaengry.moment.global.exception.ErrorCode;
+import com.soaengry.moment.global.exception.FileException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,7 +60,7 @@ public class S3Service {
 
         } catch (IOException e) {
             log.error("S3 업로드 실패", e);
-            throw new CustomException(ErrorCode.FILE_UPLOAD_FAILED, "파일 업로드에 실패했습니다");
+            throw new FileException(ErrorCode.FILE_UPLOAD_FAILED, "파일 업로드에 실패했습니다");
         }
     }
 
@@ -114,7 +114,7 @@ public class S3Service {
 
         } catch (IOException e) {
             log.error("S3 업로드 실패", e);
-            throw new CustomException(ErrorCode.FILE_UPLOAD_FAILED, "파일 업로드에 실패했습니다");
+            throw new FileException(ErrorCode.FILE_UPLOAD_FAILED, "파일 업로드에 실패했습니다");
         }
     }
 
@@ -146,7 +146,7 @@ public class S3Service {
 
         } catch (IOException e) {
             log.error("S3 채팅 이미지 업로드 실패", e);
-            throw new CustomException(ErrorCode.FILE_UPLOAD_FAILED, "파일 업로드에 실패했습니다");
+            throw new FileException(ErrorCode.FILE_UPLOAD_FAILED, "파일 업로드에 실패했습니다");
         }
     }
 
@@ -155,18 +155,18 @@ public class S3Service {
      */
     private void validateImageFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new CustomException(ErrorCode.FILE_EMPTY, "파일이 비어있습니다");
+            throw new FileException(ErrorCode.FILE_EMPTY, "파일이 비어있습니다");
         }
 
         // 파일 크기 검증
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new CustomException(ErrorCode.FILE_SIZE_EXCEEDED, "파일 크기는 10MB를 초과할 수 없습니다");
+            throw new FileException(ErrorCode.FILE_SIZE_EXCEEDED, "파일 크기는 10MB를 초과할 수 없습니다");
         }
 
         // 파일 타입 검증
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
-            throw new CustomException(ErrorCode.FILE_UNSUPPORTED_FORMAT,
+            throw new FileException(ErrorCode.FILE_UNSUPPORTED_FORMAT,
                     "지원하지 않는 파일 형식입니다. (jpg, png, webp만 가능)");
         }
     }

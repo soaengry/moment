@@ -7,9 +7,9 @@ import com.soaengry.moment.domain.chat.entity.ChatMessage;
 import com.soaengry.moment.domain.chat.exception.ChatErrorCode;
 import com.soaengry.moment.domain.chat.exception.ChatException;
 import com.soaengry.moment.domain.chat.repository.ChatMessageRepository;
+import com.soaengry.moment.domain.event.repository.EventRepository;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
-import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
 import com.soaengry.moment.global.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,16 +22,19 @@ import org.springframework.web.multipart.MultipartFile;
 public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
-    private final WeddingRepository weddingRepository;
+    private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final AttendanceRepository attendanceRepository;
     private final S3Service s3Service;
 
-    public Page<ChatMessageResponse> getMessages(Long weddingId, Pageable pageable) {
-        if (!weddingRepository.existsById(weddingId)) {
+    public Page<ChatMessageResponse> getMessages(Long eventId, Long userId, Pageable pageable) {
+        if (!eventRepository.existsById(eventId)) {
             throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
         }
-        return chatMessageRepository.findByWeddingIdOrderByCreatedAtDesc(weddingId, pageable)
+        if (userId == null || !attendanceRepository.existsByUserIdAndEventId(userId, eventId)) {
+            throw new ChatException(ChatErrorCode.UNAUTHORIZED_ACCESS);
+        }
+        return chatMessageRepository.findByEventIdOrderByCreatedAtDesc(eventId, pageable)
                 .map(ChatMessageResponse::from);
     }
 
@@ -39,11 +42,11 @@ public class ChatService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ChatException(ChatErrorCode.UNAUTHORIZED_ACCESS));
 
-        if (!weddingRepository.existsById(request.weddingId())) {
+        if (!eventRepository.existsById(request.eventId())) {
             throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
         }
 
-        if (!attendanceRepository.existsByUserIdAndWeddingId(userId, request.weddingId())) {
+        if (!attendanceRepository.existsByUserIdAndEventId(userId, request.eventId())) {
             throw new ChatException(ChatErrorCode.UNAUTHORIZED_ACCESS);
         }
 
@@ -52,7 +55,7 @@ public class ChatService {
                 : ChatMessage.MessageType.CHAT;
 
         ChatMessage message = ChatMessage.create(
-                request.weddingId(),
+                request.eventId(),
                 user.getId(),
                 user.getNickname(),
                 user.getProfileImageUrl(),
@@ -64,8 +67,8 @@ public class ChatService {
         return ChatMessageResponse.from(chatMessageRepository.save(message));
     }
 
-    public String uploadChatImage(Long weddingId, Long userId, MultipartFile file) {
-        if (!weddingRepository.existsById(weddingId)) {
+    public String uploadChatImage(Long eventId, Long userId, MultipartFile file) {
+        if (!eventRepository.existsById(eventId)) {
             throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
         }
         if (!userRepository.existsById(userId)) {

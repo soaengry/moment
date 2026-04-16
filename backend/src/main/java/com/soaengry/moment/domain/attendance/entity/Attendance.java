@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "attendances", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"userId", "weddingId"})
+        @UniqueConstraint(columnNames = {"userId", "eventId"})
 })
 public class Attendance extends BaseTimeEntity {
 
@@ -22,14 +22,14 @@ public class Attendance extends BaseTimeEntity {
     private Long userId;
 
     @Column(nullable = false)
-    private Long weddingId;
+    private Long eventId;
 
-    private Attendance(Long userId, Long weddingId) {
+    private Attendance(Long userId, Long eventId) {
         this.userId = userId;
-        this.weddingId = weddingId;
+        this.eventId = eventId;
     }
 
-    public static Attendance create(Long userId, Long weddingId) {
-        return new Attendance(userId, weddingId);
+    public static Attendance create(Long userId, Long eventId) {
+        return new Attendance(userId, eventId);
     }
 }

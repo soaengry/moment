@@ -4,17 +4,13 @@ import com.soaengry.moment.domain.wedding.entity.Gallery;
 
 public record GalleryRequest(
         String imageUrl,
-        String thumbnailUrl,
-        String caption,
-        Integer orderIndex
+        String thumbnailUrl
 ) {
     public Gallery toEntity(Long weddingId) {
         return Gallery.create(
                 weddingId,
                 imageUrl,
-                thumbnailUrl != null ? thumbnailUrl : imageUrl,
-                caption,
-                orderIndex
+                thumbnailUrl != null ? thumbnailUrl : imageUrl
         );
     }
 }

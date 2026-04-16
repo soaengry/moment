@@ -22,6 +22,6 @@ public class ChatWebSocketController {
     public void sendMessage(@Payload ChatMessageRequest request, Principal principal) {
         Long userId = Long.parseLong(principal.getName());
         ChatMessageResponse response = chatService.saveMessage(userId, request);
-        messagingTemplate.convertAndSend("/topic/chat/wedding/" + request.weddingId(), response);
+        messagingTemplate.convertAndSend("/topic/chat/event/" + request.eventId(), response);
     }
 }

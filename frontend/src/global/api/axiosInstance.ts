@@ -61,7 +61,8 @@ axiosInstance.interceptors.response.use(
 
     const isAuthRequest =
       originalRequest.url === AUTH_API.REFRESH ||
-      originalRequest.url === AUTH_API.LOGIN;
+      originalRequest.url === AUTH_API.LOGIN ||
+      originalRequest.url === AUTH_API.OAUTH2_TOKEN;
 
     if (isAuthRequest) {
       tokenStorage.clearTokens();

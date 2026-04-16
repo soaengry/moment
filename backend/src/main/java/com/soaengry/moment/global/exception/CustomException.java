@@ -1,18 +1,14 @@
 package com.soaengry.moment.global.exception;
 
-import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
-@Getter
-public class CustomException extends RuntimeException {
-    private final ErrorCode errorCode;
+public abstract class CustomException extends RuntimeException {
 
-    public CustomException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
+    protected CustomException(String code, String message, HttpStatus httpStatus) {
+        super(message);
     }
 
-    public CustomException(ErrorCode errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
+    protected CustomException(String code, String message, HttpStatus httpStatus, Throwable cause) {
+        super(message, cause);
     }
 }

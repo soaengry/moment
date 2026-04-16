@@ -1,0 +1,280 @@
+package com.soaengry.moment.domain.user.controller;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.soaengry.moment.domain.email.entity.EmailVerification;
+import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
+import com.soaengry.moment.domain.user.dto.request.LoginRequest;
+import com.soaengry.moment.domain.user.dto.request.RefreshRequest;
+import com.soaengry.moment.domain.user.dto.request.SignupRequest;
+import com.soaengry.moment.domain.user.repository.UserRepository;
+import com.soaengry.moment.domain.user.service.AuthService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.junit.jupiter.api.BeforeEach;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Transactional
+class AuthControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private EmailVerificationRepository emailVerificationRepository;
+
+    @Autowired
+    private AuthService authService;
+
+    @PersistenceContext
+    private EntityManager em;
+
+    @BeforeEach
+    void setUp() {
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=0").executeUpdate();
+        userRepository.deleteAll();
+        emailVerificationRepository.deleteAll();
+        em.createNativeQuery("SET FOREIGN_KEY_CHECKS=1").executeUpdate();
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/signup - 회원가입 성공")
+    void signup_Success() throws Exception {
+        // given
+        SignupRequest request = new SignupRequest(
+                "test@example.com",
+                "Test1234!@",
+                "테스터"
+        );
+
+        // when & then
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.userId").exists())
+                .andExpect(jsonPath("$.data.email").value("test@example.com"))
+                .andExpect(jsonPath("$.data.message").exists())
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists())
+                .andExpect(jsonPath("$.data.expiresIn").exists());
+
+        System.out.println("✅ 회원가입 API 테스트 통과");
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/signup - 유효성 검증 실패 (잘못된 비밀번호)")
+    void signup_Fail_InvalidPassword() throws Exception {
+        // given
+        SignupRequest request = new SignupRequest(
+                "test@example.com",
+                "weak",
+                "테스터"
+        );
+
+        // when & then
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        System.out.println("✅ 비밀번호 검증 실패 테스트 통과");
+    }
+
+    @Test
+    @DisplayName("GET /api/auth/verify-email - 이메일 인증 성공")
+    void verifyEmail_Success() throws Exception {
+        // given: 회원가입 후 EmailVerification 레코드를 직접 생성 (signup은 이메일 발송 비활성화 상태)
+        SignupRequest signupRequest = new SignupRequest(
+                "test@example.com",
+                "Test1234!@",
+                "테스터"
+        );
+        authService.signup(signupRequest);
+
+        EmailVerification verification = emailVerificationRepository.save(
+                EmailVerification.builder()
+                        .email("test@example.com")
+                        .verificationCode(UUID.randomUUID().toString())
+                        .expiresAt(LocalDateTime.now().plusHours(1))
+                        .build()
+        );
+
+        // when & then
+        mockMvc.perform(get("/api/auth/verify-email")
+                        .param("token", verification.getVerificationCode()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("이메일 인증이 완료되었습니다")));
+
+        System.out.println("✅ 이메일 인증 API 테스트 통과");
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/login - 로그인 성공")
+    void login_Success() throws Exception {
+        // given
+        SignupRequest signupRequest = new SignupRequest(
+                "test@example.com",
+                "Test1234!@",
+                "테스터"
+        );
+        authService.signup(signupRequest);
+
+        LoginRequest loginRequest = new LoginRequest(
+                "test@example.com",
+                "Test1234!@",
+                "device-123",
+                "Chrome on Windows"
+        );
+
+        // when & then
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists())
+                .andExpect(jsonPath("$.data.expiresIn").exists());
+
+        System.out.println("✅ 로그인 API 테스트 통과");
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/login - 잘못된 비밀번호로 로그인 실패")
+    void login_Fail_WrongPassword() throws Exception {
+        // given
+        SignupRequest signupRequest = new SignupRequest(
+                "test@example.com",
+                "Test1234!@",
+                "테스터"
+        );
+        authService.signup(signupRequest);
+
+        LoginRequest loginRequest = new LoginRequest(
+                "test@example.com",
+                "WrongPassword123!",
+                null,
+                null
+        );
+
+        // when & then
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isUnauthorized());
+
+        System.out.println("✅ 잘못된 비밀번호 로그인 테스트 통과");
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/refresh - 토큰 갱신 성공")
+    void refresh_Success() throws Exception {
+        // given
+        SignupRequest signupRequest = new SignupRequest(
+                "test@example.com",
+                "Test1234!@",
+                "테스터"
+        );
+        authService.signup(signupRequest);
+
+        LoginRequest loginRequest = new LoginRequest(
+                "test@example.com",
+                "Test1234!@",
+                "device-123",
+                "Chrome"
+        );
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String loginResponseBody = loginResult.getResponse().getContentAsString();
+        JsonNode loginJson = objectMapper.readTree(loginResponseBody);
+        String refreshToken = loginJson.at("/data/refreshToken").asText();
+
+        RefreshRequest refreshRequest = new RefreshRequest(refreshToken);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(refreshRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists());
+
+        System.out.println("✅ 토큰 갱신 API 테스트 통과");
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/logout - 로그아웃 성공")
+    void logout_Success() throws Exception {
+        // given
+        SignupRequest signupRequest = new SignupRequest(
+                "test@example.com",
+                "Test1234!@",
+                "테스터"
+        );
+        authService.signup(signupRequest);
+
+        LoginRequest loginRequest = new LoginRequest(
+                "test@example.com",
+                "Test1234!@",
+                "device-123",
+                "Chrome"
+        );
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String loginResponseBody = loginResult.getResponse().getContentAsString();
+        JsonNode loginJson = objectMapper.readTree(loginResponseBody);
+        String accessToken = loginJson.at("/data/accessToken").asText();
+        String refreshToken = loginJson.at("/data/refreshToken").asText();
+
+        RefreshRequest logoutRequest = new RefreshRequest(refreshToken);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + accessToken)
+                        .content(objectMapper.writeValueAsString(logoutRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.message").value("로그아웃되었습니다"));
+
+        System.out.println("✅ 로그아웃 API 테스트 통과");
+    }
+}
+
+// Test DTO
+record TokenResponse(String accessToken, String refreshToken, Long expiresIn) {
+}

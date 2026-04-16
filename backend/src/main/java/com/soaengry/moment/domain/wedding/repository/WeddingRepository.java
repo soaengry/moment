@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface WeddingRepository extends JpaRepository<Wedding, Long> {
-    Optional<Wedding> findByInvitationId(String invitationId);
-
-    boolean existsByInvitationId(String invitationId);
+    Optional<Wedding> findByEventId(Long eventId);
+    boolean existsByEventId(Long eventId);
 }

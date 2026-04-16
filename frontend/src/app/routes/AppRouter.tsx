@@ -15,20 +15,20 @@ import {
   MyBookmarksPage,
   MyLikesPage,
   MyCommentsPage,
-  PastSchedulesPage,
+  PastAttendancesPage,
 } from "../../domain/user/pages";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
 import BottomNav from "../../global/components/BottomNav";
 import { HomePage } from "../../global/pages";
 import {
-  WeddingInfoPage,
-  WeddingCreatePage,
-  WeddingEditPage,
-} from "../../domain/wedding/pages";
+  EventInfoPage,
+  EventCreatePage,
+  EventEditPage,
+} from "../../domain/event/pages";
 import { FeedPage } from "../../domain/feed/pages";
 import { ChatPage } from "../../domain/chat/pages";
-import MySchedulePage from "../../domain/schedule/pages/MySchedulePage";
+import MyAttendancePage from "../../domain/attendance/pages/MyAttendancePage";
 
 const AppRouter: FC = () => {
   return (
@@ -49,25 +49,25 @@ const AppRouter: FC = () => {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/restore-account" element={<RestoreAccountPage />} />
         <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
-        <Route path="/wedding/:invitationId" element={<WeddingInfoPage />} />
-        <Route path="/wedding/:invitationId/feed" element={<WeddingInfoPage />} />
-        <Route path="/wedding/:invitationId/guestbook" element={<WeddingInfoPage />} />
+        <Route path="/event/:slug" element={<EventInfoPage />} />
+        <Route path="/event/:slug/feed" element={<EventInfoPage />} />
+        <Route path="/event/:slug/guestbook" element={<EventInfoPage />} />
 
         {/* 로그인 필요 페이지 */}
 
         <Route
-          path="/wedding/create"
+          path="/event/create"
           element={
             <ProtectedRoute>
-              <WeddingCreatePage />
+              <EventCreatePage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/wedding/:invitationId/edit"
+          path="/event/:slug/edit"
           element={
             <ProtectedRoute>
-              <WeddingEditPage />
+              <EventEditPage />
             </ProtectedRoute>
           }
         />
@@ -79,15 +79,12 @@ const AppRouter: FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/wedding/:invitationId/chat"
-          element={<ChatPage />}
-        />
+        <Route path="/event/:slug/chat" element={<ChatPage />} />
         <Route
           path="/my-schedule"
           element={
             <ProtectedRoute>
-              <MySchedulePage />
+              <MyAttendancePage />
             </ProtectedRoute>
           }
         />
@@ -127,7 +124,7 @@ const AppRouter: FC = () => {
           path="/my-page/past-schedules"
           element={
             <ProtectedRoute>
-              <PastSchedulesPage />
+              <PastAttendancesPage />
             </ProtectedRoute>
           }
         />

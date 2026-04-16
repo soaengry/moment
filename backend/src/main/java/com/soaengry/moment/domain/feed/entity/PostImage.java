@@ -16,7 +16,8 @@ public class PostImage {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
+    @JoinColumn(name = "post_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_post_images_posts_post_id"))
     private Post post;
 
     @Column(nullable = false, length = 500)

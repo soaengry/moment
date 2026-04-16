@@ -1,5 +1,10 @@
 package com.soaengry.moment.domain.feed.service;
 
+import com.soaengry.moment.domain.attendance.repository.AttendanceRepository;
+import com.soaengry.moment.domain.event.entity.Event;
+import com.soaengry.moment.domain.event.exception.EventErrorCode;
+import com.soaengry.moment.domain.event.exception.EventException;
+import com.soaengry.moment.domain.event.repository.EventRepository;
 import com.soaengry.moment.domain.feed.dto.request.CommentRequest;
 import com.soaengry.moment.domain.feed.dto.request.PostRequest;
 import com.soaengry.moment.domain.feed.dto.response.CommentResponse;
@@ -30,6 +35,8 @@ public class FeedService {
     private final PostLikeRepository postLikeRepository;
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final AttendanceRepository attendanceRepository;
 
     // ==================== Post ====================
 
@@ -40,20 +47,36 @@ public class FeedService {
 
         Post post = Post.create(user, request.content());
         postRepository.save(post);
-
-        if (request.imageUrls() != null) {
-            for (int i = 0; i < request.imageUrls().size(); i++) {
-                PostImage image = PostImage.create(post, request.imageUrls().get(i), i);
-                post.addImage(image);
-            }
-        }
+        attachImages(post, request.imageUrls());
 
         return PostResponse.from(post, false, false);
     }
 
     public Page<PostResponse> getFeed(Long userId, Pageable pageable) {
-        Page<Post> posts = postRepository.findAllWithUserAndImages(pageable);
-        return enrichPostResponses(posts, userId);
+        Page<Long> postIds = postRepository.findVisiblePostIds(userId, pageable);
+        if (postIds.isEmpty()) {
+            return postIds.map(id -> null);
+        }
+        List<Long> ids = postIds.getContent();
+        Map<Long, Post> postMap = postRepository.findWithUserAndImagesByIds(ids)
+                .stream().collect(Collectors.toMap(Post::getId, p -> p));
+
+        Set<Long> likedSet = Collections.emptySet();
+        Set<Long> bookmarkedSet = Collections.emptySet();
+        if (userId != null) {
+            likedSet = postLikeRepository.findByUserIdAndPostIdIn(userId, ids)
+                    .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+            bookmarkedSet = bookmarkRepository.findByUserIdAndPostIdIn(userId, ids)
+                    .stream().map(b -> b.getPost().getId()).collect(Collectors.toSet());
+        }
+        final Set<Long> finalLiked = likedSet;
+        final Set<Long> finalBookmarked = bookmarkedSet;
+
+        return postIds.map(id -> {
+            Post post = postMap.get(id);
+            if (post == null) return null;
+            return PostResponse.from(post, finalLiked.contains(id), finalBookmarked.contains(id));
+        });
     }
 
     public Page<PostResponse> getUserPosts(Long userId, Long targetUserId, Pageable pageable) {
@@ -82,13 +105,7 @@ public class FeedService {
 
         post.update(request.content());
         post.clearImages();
-
-        if (request.imageUrls() != null) {
-            for (int i = 0; i < request.imageUrls().size(); i++) {
-                PostImage image = PostImage.create(post, request.imageUrls().get(i), i);
-                post.addImage(image);
-            }
-        }
+        attachImages(post, request.imageUrls());
 
         boolean isLiked = postLikeRepository.existsByPostIdAndUserId(postId, userId);
         boolean isBookmarked = bookmarkRepository.existsByPostIdAndUserId(postId, userId);
@@ -150,17 +167,7 @@ public class FeedService {
 
     public Page<PostResponse> getBookmarkedPosts(Long userId, Pageable pageable) {
         Page<Long> postIds = bookmarkRepository.findBookmarkedPostIdsByUserId(userId, pageable);
-        List<Post> posts = postRepository.findAllById(postIds.getContent());
-
-        Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
-        Set<Long> likedPostIds = postLikeRepository.findByUserIdAndPostIdIn(userId, postIds.getContent())
-                .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
-
-        return postIds.map(id -> {
-            Post post = postMap.get(id);
-            if (post == null) return null;
-            return PostResponse.from(post, likedPostIds.contains(id), true);
-        });
+        return mapBookmarkedPostIds(postIds, userId);
     }
 
     // ==================== Comment ====================
@@ -214,52 +221,44 @@ public class FeedService {
     // ==================== Wedding Feed ====================
 
     @Transactional
-    public PostResponse createWeddingPost(Long userId, Long weddingId, PostRequest request) {
+    public PostResponse createEventPost(Long userId, Long eventId, PostRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new FeedException(FeedErrorCode.UNAUTHORIZED_ACCESS));
 
-        Post post = Post.create(user, request.content(), weddingId);
+        Post post = Post.create(user, request.content(), eventId);
         postRepository.save(post);
-
-        if (request.imageUrls() != null) {
-            for (int i = 0; i < request.imageUrls().size(); i++) {
-                PostImage image = PostImage.create(post, request.imageUrls().get(i), i);
-                post.addImage(image);
-            }
-        }
+        attachImages(post, request.imageUrls());
 
         return PostResponse.from(post, false, false);
     }
 
-    public Page<PostResponse> getWeddingFeed(Long weddingId, Long userId, Pageable pageable) {
-        Page<Post> posts = postRepository.findByWeddingIdWithUserAndImages(weddingId, pageable);
+    public Page<PostResponse> getEventFeed(Long eventId, Long userId, Pageable pageable) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+        if (!event.isPublic()) {
+            if (userId == null
+                    || (!event.getUser().getId().equals(userId) && !attendanceRepository.existsByUserIdAndEventId(userId, eventId))) {
+                throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
+            }
+        }
+        Page<Post> posts = postRepository.findByEventIdWithUserAndImages(eventId, pageable);
         return enrichPostResponses(posts, userId);
     }
 
     // ==================== My Page ====================
 
-    public Page<PostResponse> getMyPosts(Long userId, Long weddingId, Pageable pageable) {
-        Page<Post> posts = postRepository.findByUserIdAndOptionalWeddingId(userId, weddingId, pageable);
+    public Page<PostResponse> getMyPosts(Long userId, Long eventId, Pageable pageable) {
+        Page<Post> posts = postRepository.findByUserIdAndOptionalEventId(userId, eventId, pageable);
         return enrichPostResponses(posts, userId);
     }
 
-    public Page<PostResponse> getMyBookmarks(Long userId, Long weddingId, Pageable pageable) {
-        Page<Long> postIds = bookmarkRepository.findBookmarkedPostIdsByUserIdAndOptionalWeddingId(userId, weddingId, pageable);
-        List<Post> posts = postRepository.findAllById(postIds.getContent());
-
-        Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
-        Set<Long> likedPostIds = postLikeRepository.findByUserIdAndPostIdIn(userId, postIds.getContent())
-                .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
-
-        return postIds.map(id -> {
-            Post post = postMap.get(id);
-            if (post == null) return null;
-            return PostResponse.from(post, likedPostIds.contains(id), true);
-        });
+    public Page<PostResponse> getMyBookmarks(Long userId, Long eventId, Pageable pageable) {
+        Page<Long> postIds = bookmarkRepository.findBookmarkedPostIdsByUserIdAndOptionalEventId(userId, eventId, pageable);
+        return mapBookmarkedPostIds(postIds, userId);
     }
 
-    public Page<PostResponse> getMyLikes(Long userId, Long weddingId, Pageable pageable) {
-        Page<Long> postIds = postLikeRepository.findLikedPostIdsByUserIdAndOptionalWeddingId(userId, weddingId, pageable);
+    public Page<PostResponse> getMyLikes(Long userId, Long eventId, Pageable pageable) {
+        Page<Long> postIds = postLikeRepository.findLikedPostIdsByUserIdAndOptionalEventId(userId, eventId, pageable);
         List<Post> posts = postRepository.findAllById(postIds.getContent());
 
         Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
@@ -273,12 +272,31 @@ public class FeedService {
         });
     }
 
-    public Page<CommentResponse> getMyComments(Long userId, Long weddingId, Pageable pageable) {
-        return commentRepository.findByUserIdAndOptionalWeddingId(userId, weddingId, pageable)
+    public Page<CommentResponse> getMyComments(Long userId, Long eventId, Pageable pageable) {
+        return commentRepository.findByUserIdAndOptionalEventId(userId, eventId, pageable)
                 .map(CommentResponse::from);
     }
 
     // ==================== Helper ====================
+
+    private void attachImages(Post post, List<String> imageUrls) {
+        if (imageUrls == null) return;
+        for (int i = 0; i < imageUrls.size(); i++) {
+            post.addImage(PostImage.create(post, imageUrls.get(i), i));
+        }
+    }
+
+    private Page<PostResponse> mapBookmarkedPostIds(Page<Long> postIds, Long userId) {
+        List<Post> posts = postRepository.findAllById(postIds.getContent());
+        Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
+        Set<Long> likedPostIds = postLikeRepository.findByUserIdAndPostIdIn(userId, postIds.getContent())
+                .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+        return postIds.map(id -> {
+            Post post = postMap.get(id);
+            if (post == null) return null;
+            return PostResponse.from(post, likedPostIds.contains(id), true);
+        });
+    }
 
     private Page<PostResponse> enrichPostResponses(Page<Post> posts, Long userId) {
         if (userId == null) {

@@ -99,6 +99,7 @@ const ChangePasswordPage: FC = () => {
             <input
               id="currentPassword"
               type="password"
+              autoComplete="current-password"
               placeholder="현재 비밀번호"
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
               {...register("currentPassword")}
@@ -120,6 +121,7 @@ const ChangePasswordPage: FC = () => {
             <input
               id="newPassword"
               type="password"
+              autoComplete="new-password"
               placeholder="영문, 숫자, 특수문자 포함 8자 이상"
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
               {...register("newPassword")}
@@ -141,6 +143,7 @@ const ChangePasswordPage: FC = () => {
             <input
               id="newPasswordConfirm"
               type="password"
+              autoComplete="new-password"
               placeholder="새 비밀번호를 다시 입력해주세요"
               className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 transition-colors"
               {...register("newPasswordConfirm")}
