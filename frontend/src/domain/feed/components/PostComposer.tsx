@@ -31,6 +31,17 @@ const PostComposer: FC<Props> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imagesRef = useRef<ImageItem[]>(images);
+  imagesRef.current = images;
+
+  // 언마운트 시 생성된 blob URL을 모두 해제한다
+  useEffect(() => {
+    return () => {
+      imagesRef.current
+        .filter((img) => img.file)
+        .forEach((img) => URL.revokeObjectURL(img.preview));
+    };
+  }, []);
 
   const maxChars = 200;
   const maxImages = 4;
@@ -106,6 +117,7 @@ const PostComposer: FC<Props> = ({
         onPostCreated?.(created);
       }
 
+      images.filter((img) => img.file).forEach((img) => URL.revokeObjectURL(img.preview));
       setContent("");
       setImages([]);
     } catch {
