@@ -1,4 +1,4 @@
-import { type FC, useState, useEffect, useCallback } from "react";
+import { type FC, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 import { feedApi } from "../../feed/api/feedApi";
@@ -7,16 +7,16 @@ import PostCard from "../../feed/components/PostCard";
 import CommentSheet from "../../feed/components/CommentSheet";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
+import { usePaginatedPosts } from "../hooks/usePaginatedPosts";
 
 const MyBookmarksPage: FC = () => {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const headerVisible = useScrollVisibility();
-  const [posts, setPosts] = useState<PostResponse[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [commentPostId, setCommentPostId] = useState<number | null>(null);
+
+  const { posts, page, hasMore, isLoading, fetchPosts, setPosts } =
+    usePaginatedPosts(feedApi.getMyBookmarks, "북마크를 불러오지 못했습니다.");
 
   const handleCommentCountChange = (postId: number, delta: number) => {
     setPosts((prev) =>
@@ -25,25 +25,6 @@ const MyBookmarksPage: FC = () => {
       ),
     );
   };
-
-  const fetchPosts = useCallback(async (pageNum: number, append = false) => {
-    setIsLoading(true);
-    try {
-      const res = await feedApi.getMyBookmarks(pageNum);
-      if (append) {
-        setPosts((prev) => [...prev, ...res.content]);
-      } else {
-        setPosts(res.content);
-      }
-      setHasMore(!res.last);
-      setPage(pageNum);
-    } catch { /* silent */ }
-    finally { setIsLoading(false); }
-  }, []);
-
-  useEffect(() => {
-    fetchPosts(0);
-  }, [fetchPosts]);
 
   return (
     <div className="max-w-lg mx-auto min-h-screen bg-[#faf9f6]">
@@ -57,7 +38,7 @@ const MyBookmarksPage: FC = () => {
       </header>
 
       <div>
-        {posts.map((post) => (
+        {posts.map((post: PostResponse) => (
           <PostCard
             key={post.id}
             post={post}

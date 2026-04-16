@@ -5,6 +5,7 @@ import { feedApi } from "../../feed/api/feedApi";
 import { formatRelativeTime } from "../../../global/utils/date";
 import type { CommentResponse } from "../../feed/types";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
+import { handleApiError } from "../../../global/utils/errorHandler";
 
 const MyCommentsPage: FC = () => {
   const navigate = useNavigate();
@@ -25,8 +26,9 @@ const MyCommentsPage: FC = () => {
       }
       setHasMore(!res.last);
       setPage(pageNum);
-    } catch { /* silent */ }
-    finally { setIsLoading(false); }
+    } catch (error) {
+      handleApiError(error, "댓글을 불러오지 못했습니다.");
+    } finally { setIsLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -37,7 +39,9 @@ const MyCommentsPage: FC = () => {
     try {
       await feedApi.deleteComment(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
-    } catch { /* silent */ }
+    } catch (error) {
+      handleApiError(error, "댓글 삭제에 실패했습니다.");
+    }
   };
 
   return (

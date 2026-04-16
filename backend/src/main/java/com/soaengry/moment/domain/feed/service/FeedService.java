@@ -64,10 +64,8 @@ public class FeedService {
         Set<Long> likedSet = Collections.emptySet();
         Set<Long> bookmarkedSet = Collections.emptySet();
         if (userId != null) {
-            likedSet = postLikeRepository.findByUserIdAndPostIdIn(userId, ids)
-                    .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
-            bookmarkedSet = bookmarkRepository.findByUserIdAndPostIdIn(userId, ids)
-                    .stream().map(b -> b.getPost().getId()).collect(Collectors.toSet());
+            likedSet = toLikedPostIds(userId, ids);
+            bookmarkedSet = toBookmarkedPostIds(userId, ids);
         }
         final Set<Long> finalLiked = likedSet;
         final Set<Long> finalBookmarked = bookmarkedSet;
@@ -262,8 +260,7 @@ public class FeedService {
         List<Post> posts = postRepository.findAllById(postIds.getContent());
 
         Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
-        Set<Long> bookmarkedPostIds = bookmarkRepository.findByUserIdAndPostIdIn(userId, postIds.getContent())
-                .stream().map(b -> b.getPost().getId()).collect(Collectors.toSet());
+        Set<Long> bookmarkedPostIds = toBookmarkedPostIds(userId, postIds.getContent());
 
         return postIds.map(id -> {
             Post post = postMap.get(id);
@@ -279,6 +276,16 @@ public class FeedService {
 
     // ==================== Helper ====================
 
+    private Set<Long> toLikedPostIds(Long userId, List<Long> postIds) {
+        return postLikeRepository.findByUserIdAndPostIdIn(userId, postIds)
+                .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+    }
+
+    private Set<Long> toBookmarkedPostIds(Long userId, List<Long> postIds) {
+        return bookmarkRepository.findByUserIdAndPostIdIn(userId, postIds)
+                .stream().map(b -> b.getPost().getId()).collect(Collectors.toSet());
+    }
+
     private void attachImages(Post post, List<String> imageUrls) {
         if (imageUrls == null) return;
         for (int i = 0; i < imageUrls.size(); i++) {
@@ -289,8 +296,7 @@ public class FeedService {
     private Page<PostResponse> mapBookmarkedPostIds(Page<Long> postIds, Long userId) {
         List<Post> posts = postRepository.findAllById(postIds.getContent());
         Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
-        Set<Long> likedPostIds = postLikeRepository.findByUserIdAndPostIdIn(userId, postIds.getContent())
-                .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+        Set<Long> likedPostIds = toLikedPostIds(userId, postIds.getContent());
         return postIds.map(id -> {
             Post post = postMap.get(id);
             if (post == null) return null;
@@ -304,10 +310,8 @@ public class FeedService {
         }
 
         List<Long> postIds = posts.getContent().stream().map(Post::getId).toList();
-        Set<Long> likedPostIds = postLikeRepository.findByUserIdAndPostIdIn(userId, postIds)
-                .stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
-        Set<Long> bookmarkedPostIds = bookmarkRepository.findByUserIdAndPostIdIn(userId, postIds)
-                .stream().map(b -> b.getPost().getId()).collect(Collectors.toSet());
+        Set<Long> likedPostIds = toLikedPostIds(userId, postIds);
+        Set<Long> bookmarkedPostIds = toBookmarkedPostIds(userId, postIds);
 
         return posts.map(post -> PostResponse.from(
                 post,

@@ -13,6 +13,7 @@ import {
 } from "react-icons/io5";
 import type { PostResponse } from "../types";
 import { feedApi } from "../api/feedApi";
+import { formatRelativeTime } from "../../../global/utils/date";
 import ImageViewer from "./ImageViewer";
 
 interface Props {
@@ -39,7 +40,6 @@ const PostCard: FC<Props> = ({
 
   // 스와이프 상태
   const [swipeX, setSwipeX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
   const isDraggingRef = useRef(false);
   const isSwipingRef = useRef(false);
@@ -75,25 +75,10 @@ const PostCard: FC<Props> = ({
     }
   };
 
-  const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - d.getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "방금";
-    if (mins < 60) return `${mins}분`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}시간`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}일`;
-    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
-  };
-
   // 이미지 스와이프 핸들러
   const handleImageTouchStart = (e: React.TouchEvent) => {
     startXRef.current = e.touches[0].clientX;
     isDraggingRef.current = true;
-    setIsDragging(true);
     isSwipingRef.current = false;
     setSwipeX(0);
   };
@@ -122,7 +107,6 @@ const PostCard: FC<Props> = ({
   const handleImageTouchEnd = () => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-    setIsDragging(false);
 
     const threshold = 50;
     if (swipeX < -threshold && imageIndex < post.imageUrls.length - 1) {
@@ -163,7 +147,7 @@ const PostCard: FC<Props> = ({
               {post.author.nickname}
             </p>
             <p className="text-[10px] text-gray-400">
-              {formatTime(post.createdAt)}
+              {formatRelativeTime(post.createdAt)}
             </p>
           </div>
         </div>
@@ -219,7 +203,7 @@ const PostCard: FC<Props> = ({
               className="flex h-full"
               style={{
                 transform: `translateX(calc(-${imageIndex * 100}% + ${swipeX}px))`,
-                transition: isDragging
+                transition: swipeX !== 0
                   ? "none"
                   : "transform 300ms ease-out",
               }}

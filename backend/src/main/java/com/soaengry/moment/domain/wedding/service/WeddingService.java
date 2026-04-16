@@ -4,7 +4,6 @@ import com.soaengry.moment.domain.event.entity.Event;
 import com.soaengry.moment.domain.event.exception.EventErrorCode;
 import com.soaengry.moment.domain.event.exception.EventException;
 import com.soaengry.moment.domain.event.repository.EventRepository;
-import com.soaengry.moment.domain.event.repository.ScheduleRepository;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.domain.wedding.dto.request.WeddingHostRequest;
 import com.soaengry.moment.domain.wedding.dto.request.WeddingRequest;
@@ -27,7 +26,6 @@ public class WeddingService {
 
     private final WeddingRepository weddingRepository;
     private final WeddingHostRepository weddingHostRepository;
-    private final ScheduleRepository scheduleRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
@@ -96,19 +94,6 @@ public class WeddingService {
         wedding.update(request.notice(), request.parkingInfo(), request.mealInfo(), request.greeting());
         return WeddingResponse.from(wedding);
     }
-//
-//    @Transactional(readOnly = true)
-//    public WeddingInfoResponse getWeddingInfo(Long weddingId) {
-//        Wedding wedding = weddingRepository.findById(weddingId)
-//                .orElseThrow(() -> new WeddingException(WeddingErrorCode.WEDDING_NOT_FOUND));
-//        Long eventId = wedding.getEvent().getId();
-//
-//        List<ScheduleResponse> schedules = scheduleRepository.findByEventIdOrderByOrderIndex(eventId).stream()
-//                .map(ScheduleResponse::from)
-//                .toList();
-//
-//        return new WeddingInfoResponse(WeddingResponse.from(wedding), schedules);
-//    }
 
     // ─── WeddingHost CRUD ───
 
