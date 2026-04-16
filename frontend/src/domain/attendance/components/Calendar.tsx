@@ -1,7 +1,7 @@
 import { type FC, useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
-import { attendanceApi } from "../api/AttendanceApi";
+import { attendanceApi } from "../api/attendanceApi";
 import type { AttendanceResponse } from "../types";
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";

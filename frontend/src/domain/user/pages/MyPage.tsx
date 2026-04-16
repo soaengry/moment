@@ -2,7 +2,7 @@ import { type FC, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 import { authApi } from "../../auth/api/authApi";
-import { attendanceApi } from "../../attendance/api/AttendanceApi";
+import { attendanceApi } from "../../attendance/api/attendanceApi";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 import type { AttendanceResponse } from "../../attendance/types";
 import Calendar from "../../attendance/components/Calendar";
