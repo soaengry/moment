@@ -122,14 +122,42 @@ CREATE DATABASE moment CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 JPA `ddl-auto: update` 설정으로 애플리케이션 시작 시 테이블이 자동 생성됩니다.  
 초기 은행 데이터를 삽입하려면:
 
+**로컬 환경**
 ```bash
 mysql -u root -p moment < src/main/resources/db/seed_banks.sql
 ```
 
-개발 환경에서 전체 스키마를 초기화하려면:
+**EC2 Docker 환경** (백엔드·MySQL 컨테이너가 분리된 경우)
+
+SQL 파일은 백엔드 컨테이너 JAR 안에 번들되어 있으므로 호스트에서 직접 접근이 불가합니다.
 
 ```bash
+# 방법 1 — sh로 JAR에서 직접 추출 후 MySQL 컨테이너에 파이프
+docker exec moment-dev sh -c \
+  "unzip -p /app.jar BOOT-INF/classes/db/seed_banks.sql" \
+  | docker exec -i moment-mysql-dev \
+    mysql -u root -p<비밀번호> moment_dev
+
+# 방법 2 — JAR를 호스트로 복사 후 추출 (unzip이 컨테이너에 없는 경우)
+docker cp moment-dev:/app.jar /tmp/app.jar
+unzip -p /tmp/app.jar BOOT-INF/classes/db/seed_banks.sql > /tmp/seed_banks.sql
+docker exec -i moment-mysql-dev mysql -u root -p<비밀번호> moment_dev < /tmp/seed_banks.sql
+```
+
+> MySQL 비밀번호 확인: `docker exec moment-mysql-dev printenv MYSQL_ROOT_PASSWORD`
+
+개발 환경에서 전체 스키마를 초기화하려면:
+
+**로컬 환경**
+```bash
 mysql -u root -p moment < src/main/resources/db/reset_schema.sql
+```
+
+**EC2 Docker 환경**
+```bash
+docker cp moment-dev:/app.jar /tmp/app.jar
+unzip -p /tmp/app.jar BOOT-INF/classes/db/reset_schema.sql > /tmp/reset_schema.sql
+docker exec -i moment-mysql-dev mysql -u root -p<비밀번호> moment_dev < /tmp/reset_schema.sql
 ```
 
 ### 빌드 및 실행
