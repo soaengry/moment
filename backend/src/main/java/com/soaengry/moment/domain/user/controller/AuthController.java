@@ -11,6 +11,7 @@ import com.soaengry.moment.domain.user.dto.response.CheckNicknameResponse;
 import com.soaengry.moment.domain.user.dto.response.LogoutResponse;
 import com.soaengry.moment.domain.user.dto.response.ResendVerificationResponse;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
+import com.soaengry.moment.domain.user.dto.response.VerificationStatusResponse;
 import com.soaengry.moment.domain.user.dto.response.TokenResponse;
 import com.soaengry.moment.domain.user.exception.UserErrorCode;
 import com.soaengry.moment.domain.user.exception.UserException;
@@ -127,6 +128,28 @@ public class AuthController {
             throw new UserException(UserErrorCode.AUTH_INVALID_CREDENTIALS, "유효하지 않거나 만료된 OAuth2 코드입니다");
         }
         return ResponseEntity.ok(TokenResponse.of(tokens[0], tokens[1], jwtProperties.accessTokenExpiration() / 1000));
+    }
+
+    /**
+     * 회원가입 전 이메일 인증 발송
+     */
+    @PostMapping("/send-signup-verification")
+    public ResponseEntity<ResendVerificationResponse> sendSignupVerification(
+            @Valid @RequestBody ResendVerificationRequest request
+    ) {
+        authService.sendSignupVerificationEmail(request.email());
+        return ResponseEntity.ok(new ResendVerificationResponse("인증 메일을 발송했습니다"));
+    }
+
+    /**
+     * 이메일 인증 상태 조회 (회원가입 전용)
+     */
+    @GetMapping("/verification-status")
+    public ResponseEntity<VerificationStatusResponse> getVerificationStatus(
+            @RequestParam("email") String email
+    ) {
+        boolean verified = authService.isEmailVerifiedForSignup(email);
+        return ResponseEntity.ok(new VerificationStatusResponse(verified));
     }
 
     /**

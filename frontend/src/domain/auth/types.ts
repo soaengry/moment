@@ -68,6 +68,10 @@ export interface CheckResponse {
   exists: boolean;
 }
 
+export interface VerificationStatusResponse {
+  isVerified: boolean;
+}
+
 // ─── Auth Store ───
 
 export interface AuthState {

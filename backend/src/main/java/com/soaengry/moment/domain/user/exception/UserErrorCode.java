@@ -31,7 +31,8 @@ public enum UserErrorCode {
     TOKEN_NOT_FOUND("토큰을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
 
     // 권한 없음
-    INVALID_PASSWORD("비밀번호가 올바르지 않습니다", HttpStatus.FORBIDDEN);
+    INVALID_PASSWORD("비밀번호가 올바르지 않습니다", HttpStatus.FORBIDDEN),
+    SIGNUP_EMAIL_NOT_VERIFIED("이메일 인증을 완료한 후 회원가입이 가능합니다", HttpStatus.FORBIDDEN);
 
     private final String message;
     private final HttpStatus httpStatus;

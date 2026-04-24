@@ -25,5 +25,8 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
             "AND ev.isVerified = false ORDER BY ev.createdAt DESC")
     Optional<EmailVerification> findByVerificationCode(@Param("code") String code);
 
+    @Query("SELECT ev FROM EmailVerification ev WHERE ev.email = :email AND ev.isVerified = true ORDER BY ev.createdAt DESC")
+    Optional<EmailVerification> findVerifiedByEmail(@Param("email") String email);
+
     void deleteByEmail(String email);
 }

@@ -9,6 +9,7 @@ import type {
   UserResponse,
   MessageResponse,
   CheckResponse,
+  VerificationStatusResponse,
   UpdateProfileRequest,
   ChangePasswordRequest,
   RestoreAccountRequest,
@@ -29,6 +30,22 @@ export const authApi = {
     const { data } = await axiosInstance.get<MessageResponse>(
       AUTH_API.VERIFY_EMAIL,
       { params: { token } },
+    );
+    return data;
+  },
+
+  sendSignupVerification: async (email: string): Promise<MessageResponse> => {
+    const { data } = await axiosInstance.post<MessageResponse>(
+      AUTH_API.SEND_SIGNUP_VERIFICATION,
+      { email },
+    );
+    return data;
+  },
+
+  getVerificationStatus: async (email: string): Promise<VerificationStatusResponse> => {
+    const { data } = await axiosInstance.get<VerificationStatusResponse>(
+      AUTH_API.VERIFICATION_STATUS,
+      { params: { email } },
     );
     return data;
   },

@@ -57,16 +57,18 @@ public class AuthService {
             throw new UserException(UserErrorCode.DUPLICATE_NICKNAME);
         }
 
-        // 사용자 생성
+        // 이메일 인증 완료 여부 확인
+        emailVerificationRepository.findVerifiedByEmail(request.email())
+                .orElseThrow(() -> new UserException(UserErrorCode.SIGNUP_EMAIL_NOT_VERIFIED));
+
+        // 사용자 생성 (이미 인증 완료이므로 isEmailVerified = true)
         String encodedPassword = passwordEncoder.encode(request.password());
         User user = request.toEntity(encodedPassword);
+        user.verifyEmail();
         user = userRepository.save(user);
 
-//        // 이메일 인증 토큰 생성 (UUID 사용)
-//        String verificationToken = generateVerificationToken(user.getEmail());
-//
-//        // 이메일 발송 (토큰 링크)
-//        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+        // 인증에 사용된 토큰 정리
+        emailVerificationRepository.deleteByEmail(request.email());
 
         // 자동 로그인을 위한 JWT 토큰 생성
         String deviceId = UUID.randomUUID().toString();
@@ -89,6 +91,36 @@ public class AuthService {
                 refreshToken,
                 accessTokenExpiration
         );
+    }
+
+    /**
+     * 회원가입 전 이메일 인증 발송
+     */
+    @Transactional
+    public void sendSignupVerificationEmail(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new UserException(UserErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 기존 미인증 토큰 삭제 후 새로 발급
+        emailVerificationRepository.deleteByEmail(email);
+        EmailVerification verification = EmailVerification.builder()
+                .email(email)
+                .verificationCode(UUID.randomUUID().toString())
+                .expiresAt(LocalDateTime.now().plusMinutes(30))
+                .build();
+        emailVerificationRepository.save(verification);
+        emailService.sendVerificationEmail(email, verification.getVerificationCode());
+
+        log.info("회원가입 이메일 인증 발송 - 이메일: {}", email);
+    }
+
+    /**
+     * 이메일 인증 상태 조회 (회원가입 전용)
+     */
+    @Transactional(readOnly = true)
+    public boolean isEmailVerifiedForSignup(String email) {
+        return emailVerificationRepository.findVerifiedByEmail(email).isPresent();
     }
 
     /**
@@ -157,12 +189,11 @@ public class AuthService {
         // 인증 처리
         verification.verify();
 
-        // 사용자 이메일 인증 상태 업데이트
-        User user = userRepository.findByEmail(verification.getEmail())
-                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-        user.verifyEmail();
-
-        log.info("이메일 인증 완료 (토큰 방식) - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+        // 이미 가입된 경우에만 사용자 인증 상태 업데이트 (가입 전 인증 시에는 signup()에서 처리)
+        userRepository.findByEmail(verification.getEmail()).ifPresent(user -> {
+            user.verifyEmail();
+            log.info("이메일 인증 완료 (토큰 방식) - 사용자 ID: {}, 이메일: {}", user.getId(), user.getEmail());
+        });
     }
 
     /**
