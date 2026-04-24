@@ -200,7 +200,7 @@ public class AuthController {
      */
     @GetMapping("/check-email-verified")
     public ResponseEntity<CheckEmailVerifiedResponse> checkEmailVerified(@RequestParam String email) {
-        boolean verified = authService.isEmailVerified(email);
+        boolean verified = authService.isEmailVerifiedForSignup(email);
         return ResponseEntity.ok(new CheckEmailVerifiedResponse(verified));
     }
 
