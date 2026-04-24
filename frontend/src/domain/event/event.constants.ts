@@ -4,6 +4,7 @@ export const EVENT_API = {
   UPDATE_DETAILS: (id: number) => `/api/events/${id}/details`,
   INFO: (slug: string) => `/api/events/${slug}`,
   CHECK_SLUG: "/api/events/check-slug",
+  SEARCH: "/api/events/search",
 } as const;
 
 export const EVENT_VALIDATION = {

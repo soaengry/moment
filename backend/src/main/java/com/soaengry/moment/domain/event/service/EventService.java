@@ -187,6 +187,14 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<EventResponse> searchBySlug(String query, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return eventRepository
+                .findBySlugContainingIgnoreCaseAndIsPublicTrueOrderByCreatedAtDesc(query.trim(), pageable)
+                .map(EventResponse::from);
+    }
+
+    @Transactional(readOnly = true)
     public boolean checkSlugExists(String slug) {
         return eventRepository.existsBySlug(slug);
     }

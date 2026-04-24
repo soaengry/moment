@@ -4,7 +4,9 @@ import type {
   EventInfoResponse,
   EventFullCreateRequest,
   CheckSlugResponse,
+  EventResponse,
 } from "../types";
+import type { PageResponse } from "../../feed/types/index";
 
 export const eventApi = {
   createEventWithDetails: async (
@@ -43,6 +45,14 @@ export const eventApi = {
   getEventInfo: async (slug: string): Promise<EventInfoResponse> => {
     const { data } = await axiosInstance.get<EventInfoResponse>(
       EVENT_API.INFO(slug),
+    );
+    return data;
+  },
+
+  searchEvents: async (q: string, page: number, size = 10): Promise<PageResponse<EventResponse>> => {
+    const { data } = await axiosInstance.get<PageResponse<EventResponse>>(
+      EVENT_API.SEARCH,
+      { params: { q, page, size } },
     );
     return data;
   },
