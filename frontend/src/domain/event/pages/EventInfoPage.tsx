@@ -15,18 +15,20 @@ import {
   AnnouncementSection,
 } from "../components";
 import GuestbookSection from "../../guestbook/components/GuestbookSection";
+import RsvpSection from "../../rsvp/components/RsvpSection";
 import WeddingFeedTab from "../../feed/components/WeddingFeedTab";
 import EventHeader from "../components/EventHeader";
 import EventBottomNav from "../components/EventBottomNav";
 import { tokenStorage, parseJwt } from "../../auth/auth.utils";
 import { useAuthStore } from "../../auth/store/useAuthStore";
 
-type WeddingTab = "info" | "feed" | "guestbook";
+type WeddingTab = "info" | "feed" | "guestbook" | "rsvp";
 
 const TAB_LABELS: Record<WeddingTab, string> = {
   info: "정보",
   feed: "피드",
   guestbook: "방명록",
+  rsvp: "참석여부",
 };
 
 const EventInfoPage: FC = () => {
@@ -37,6 +39,7 @@ const EventInfoPage: FC = () => {
   const activeTab = useMemo((): WeddingTab => {
     if (location.pathname.endsWith("/feed")) return "feed";
     if (location.pathname.endsWith("/guestbook")) return "guestbook";
+    if (location.pathname.endsWith("/rsvp")) return "rsvp";
     return "info";
   }, [location.pathname]);
 
@@ -152,6 +155,12 @@ const EventInfoPage: FC = () => {
               currentUserId={currentUserId}
               hostUserIds={hostUserIds}
             />
+          </div>
+        )}
+
+        {activeTab === "rsvp" && weddingDetail && (
+          <div className="px-4 py-6">
+            <RsvpSection weddingId={weddingDetail.weddingId} />
           </div>
         )}
 

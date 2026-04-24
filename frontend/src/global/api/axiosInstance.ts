@@ -46,9 +46,10 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => {
     // ApiResponse 형식에서 data 필드 자동 추출
-    if (response.data && typeof response.data === 'object' && 'status' in response.data && 'data' in response.data) {
+    // data 키가 없는 경우(null 응답 시 @JsonInclude(NON_NULL)으로 제외)도 null로 처리
+    if (response.data && typeof response.data === 'object' && 'status' in response.data) {
       const apiResponse = response.data as ApiResponse<unknown>;
-      response.data = apiResponse.data;
+      response.data = 'data' in apiResponse ? apiResponse.data : null;
     }
     return response;
   },

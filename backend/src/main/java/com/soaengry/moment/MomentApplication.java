@@ -16,6 +16,7 @@ import java.util.TimeZone;
         "com.soaengry.moment.domain.event.repository",
         "com.soaengry.moment.domain.wedding.repository",
         "com.soaengry.moment.domain.invitation.repository",
+        "com.soaengry.moment.domain.rsvp.repository",
         "com.soaengry.moment.domain.email.repository",
         "com.soaengry.moment.domain.guestbook.repository",
         "com.soaengry.moment.domain.feed.repository",

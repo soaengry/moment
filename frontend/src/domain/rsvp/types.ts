@@ -1,0 +1,81 @@
+export type RsvpAttendance = "YES" | "NO";
+export type RsvpSide = "BRIDE" | "GROOM";
+
+export interface RsvpMeal {
+  willEat: boolean;
+  mealCount: number;
+}
+
+export interface RsvpShuttle {
+  willRide: boolean;
+  rideCount: number;
+}
+
+export interface RsvpCreateRequest {
+  weddingId: number;
+  attendance: RsvpAttendance;
+  name: string;
+  side: RsvpSide;
+  phone: string;
+  attendeeCount: number;
+  meal: RsvpMeal;
+  shuttle: RsvpShuttle;
+  note: string;
+  consent: boolean;
+}
+
+export interface RsvpUpdateRequest {
+  attendance: RsvpAttendance;
+  name: string;
+  side: RsvpSide;
+  phone: string;
+  attendeeCount: number;
+  meal: RsvpMeal;
+  shuttle: RsvpShuttle;
+  note: string;
+}
+
+export interface RsvpResponse {
+  id: number;
+  weddingId: number;
+  sessionId: string;
+  attendance: RsvpAttendance;
+  name: string;
+  side: RsvpSide;
+  phone: string;
+  attendeeCount: number;
+  meal: RsvpMeal;
+  shuttle: RsvpShuttle;
+  note: string | null;
+  consent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RsvpStatsResponse {
+  totalRsvpCount: number;
+  attendingCount: number;
+  totalAttendeeCount: number;
+  totalMealCount: number;
+  totalShuttleCount: number;
+}
+
+export interface RsvpListResponse {
+  items: RsvpResponse[];
+  totalCount: number;
+  page: number;
+  size: number;
+  hasNext: boolean;
+}
+
+export interface RsvpFormValues {
+  attendance: RsvpAttendance;
+  name: string;
+  side: RsvpSide;
+  phone: string;
+  attendeeCount: number;
+  meal: RsvpMeal;
+  shuttle: RsvpShuttle;
+  note: string;
+  consent: boolean;
+}

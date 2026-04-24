@@ -66,6 +66,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/weddings/*/guestbook/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/weddings/*/guestbook/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/weddings/*/guestbook/**").permitAll()
+                        // RSVP: 생성·조회는 공개, 수정·삭제·통계·목록은 인증 필요
+                        .requestMatchers(HttpMethod.POST, "/api/rsvp").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/rsvp/me").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/rsvp/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/rsvp/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/rsvp/stats").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/rsvp/list").authenticated()
                         // 채팅 메시지 조회는 참석자만 (서비스에서 attendance 검증)
                         .requestMatchers(HttpMethod.GET, "/api/events/*/chat/**").authenticated()
                         // 피드: GET은 공개, CUD는 인증 필요
