@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,13 +62,24 @@ public class Event extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isPublic = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private RecurrenceType recurrenceType = RecurrenceType.NONE;
+
+    @Column(length = 30)
+    private String recurrenceDays;
+
+    @Column
+    private LocalDate recurrenceEndDate;
+
     @OneToMany(mappedBy = "event", cascade = {CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
     private List<HeroImage> heroImages = new ArrayList<>();
 
     @Builder
     private Event(User user, String title, EventType type, LocalDateTime date,
                   String locationName, String locationAddress, String locationDetail,
-                  Double locationLat, Double locationLng, String slug, boolean isPublic) {
+                  Double locationLat, Double locationLng, String slug, boolean isPublic,
+                  RecurrenceType recurrenceType, String recurrenceDays, LocalDate recurrenceEndDate) {
         this.user = user;
         this.title = title;
         this.type = type;
@@ -79,6 +91,9 @@ public class Event extends BaseTimeEntity {
         this.locationLng = locationLng;
         this.slug = slug;
         this.isPublic = isPublic;
+        this.recurrenceType = recurrenceType != null ? recurrenceType : RecurrenceType.NONE;
+        this.recurrenceDays = recurrenceDays;
+        this.recurrenceEndDate = recurrenceEndDate;
     }
 
     public void updateTitle(String title) {
@@ -104,6 +119,12 @@ public class Event extends BaseTimeEntity {
 
     public void updateIsPublic(boolean isPublic) {
         this.isPublic = isPublic;
+    }
+
+    public void updateRecurrence(RecurrenceType recurrenceType, String recurrenceDays, LocalDate recurrenceEndDate) {
+        this.recurrenceType = recurrenceType != null ? recurrenceType : RecurrenceType.NONE;
+        this.recurrenceDays = recurrenceDays;
+        this.recurrenceEndDate = recurrenceEndDate;
     }
 
 }

@@ -3,6 +3,50 @@ import { DAYS_OF_WEEK } from "../attendance.constants";
 import type { AttendanceResponse } from "../types";
 import EventBlock from "./EventBlock";
 
+function getOccurrencesInMonth(a: AttendanceResponse, year: number, month: number): number[] {
+  const start = new Date(a.date);
+  const type = a.recurrenceType ?? "NONE";
+
+  if (type === "NONE") {
+    return start.getFullYear() === year && start.getMonth() === month
+      ? [start.getDate()]
+      : [];
+  }
+
+  const end = a.recurrenceEndDate
+    ? new Date(a.recurrenceEndDate + "T23:59:59")
+    : (() => { const d = new Date(start); d.setFullYear(d.getFullYear() + 2); return d; })();
+
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0);
+  if (start > monthEnd || end < monthStart) return [];
+
+  const dates: number[] = [];
+  const lastDay = monthEnd.getDate();
+
+  if (type === "WEEKLY") {
+    const dow = start.getDay();
+    for (let d = 1; d <= lastDay; d++) {
+      const date = new Date(year, month, d);
+      if (date.getDay() === dow && date >= start && date <= end) dates.push(d);
+    }
+  } else if (type === "MONTHLY") {
+    const day = start.getDate();
+    if (day <= lastDay) {
+      const date = new Date(year, month, day);
+      if (date >= start && date <= end) dates.push(day);
+    }
+  } else if (type === "CUSTOM_DAYS") {
+    const days = (a.recurrenceDays ?? "").split(",").map(Number).filter(n => !isNaN(n));
+    for (let d = 1; d <= lastDay; d++) {
+      const date = new Date(year, month, d);
+      if (days.includes(date.getDay()) && date >= start && date <= end) dates.push(d);
+    }
+  }
+
+  return dates;
+}
+
 interface CalendarGridProps {
   year: number;
   month: number;
@@ -29,9 +73,8 @@ const CalendarGrid: FC<CalendarGridProps> = ({
 
     const byDate = new Map<number, AttendanceResponse[]>();
     for (const a of attendances) {
-      const date = new Date(a.date);
-      if (date.getFullYear() === year && date.getMonth() === month) {
-        const day = date.getDate();
+      const occurrences = getOccurrencesInMonth(a, year, month);
+      for (const day of occurrences) {
         if (!byDate.has(day)) byDate.set(day, []);
         byDate.get(day)!.push(a);
       }
@@ -92,7 +135,7 @@ const CalendarGrid: FC<CalendarGridProps> = ({
                   <div className="mt-0.5 space-y-0.5">
                     {dayAttendances.map((a, idx) => (
                       <EventBlock
-                        key={a.id}
+                        key={`${a.id}-${day}`}
                         attendance={a}
                         colorIndex={idx}
                         onClick={onBlockClick}

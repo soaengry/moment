@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -92,13 +93,19 @@ public class EventService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
 
+        LocalDate recurrenceEndDate = request.recurrenceEndDate() != null && !request.recurrenceEndDate().isBlank()
+                ? LocalDate.parse(request.recurrenceEndDate()) : null;
+
         Event.EventBuilder builder = Event.builder()
                 .user(user)
                 .title(request.title())
                 .type(request.type())
                 .date(request.date())
                 .slug(request.slug())
-                .isPublic(request.isPublic() != null && request.isPublic());
+                .isPublic(request.isPublic() != null && request.isPublic())
+                .recurrenceType(request.recurrenceType())
+                .recurrenceDays(request.recurrenceDays())
+                .recurrenceEndDate(recurrenceEndDate);
 
         if (request.locationAddress() != null && !request.locationAddress().isBlank()) {
             KakaoGeocodingService.Coordinate coord = resolveCoordinate(request.locationAddress());
@@ -132,6 +139,11 @@ public class EventService {
                     coord.lat(), coord.lng());
         }
         event.updateIsPublic(request.isPublic() != null && request.isPublic());
+        if (request.recurrenceType() != null) {
+            LocalDate recurrenceEndDate = request.recurrenceEndDate() != null && !request.recurrenceEndDate().isBlank()
+                    ? LocalDate.parse(request.recurrenceEndDate()) : null;
+            event.updateRecurrence(request.recurrenceType(), request.recurrenceDays(), recurrenceEndDate);
+        }
         return EventResponse.from(event);
     }
 

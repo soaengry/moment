@@ -19,7 +19,10 @@ public record AttendanceResponse(
         String brideName,
         String groomProfileImageUrl,
         String brideProfileImageUrl,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String recurrenceType,
+        String recurrenceDays,
+        String recurrenceEndDate
 ) {
 
     public static AttendanceResponse from(Attendance attendance, Event event, List<Host> hosts) {
@@ -50,7 +53,10 @@ public record AttendanceResponse(
                 brideName,
                 groomProfileImageUrl,
                 brideProfileImageUrl,
-                attendance.getCreatedAt()
+                attendance.getCreatedAt(),
+                event.getRecurrenceType() != null ? event.getRecurrenceType().name() : "NONE",
+                event.getRecurrenceDays(),
+                event.getRecurrenceEndDate() != null ? event.getRecurrenceEndDate().toString() : null
         );
     }
 }

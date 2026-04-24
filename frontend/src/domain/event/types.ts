@@ -4,6 +4,7 @@ export type HostRole = "GROOM" | "BRIDE" | "HOST";
 export type EventType = "WEDDING" | "GATHERING";
 export type TransportType = "SUBWAY" | "BUS" | "SHUTTLE";
 export type InvitationStatus = "INVITED" | "ACCEPTED" | "DECLINED";
+export type RecurrenceType = "NONE" | "WEEKLY" | "MONTHLY" | "CUSTOM_DAYS";
 
 // ─── Response ───
 
@@ -160,6 +161,10 @@ export interface EventRequest {
   parkingInfo?: string;
   mealInfo?: string;
   greeting?: string;
+  // Gathering recurrence (optional — only sent for GATHERING type)
+  recurrenceType?: RecurrenceType;
+  recurrenceDays?: string;       // "0,1,2" comma-separated day indices (0=Sun)
+  recurrenceEndDate?: string;    // "YYYY-MM-DD"
 }
 
 export interface WeddingHostData {

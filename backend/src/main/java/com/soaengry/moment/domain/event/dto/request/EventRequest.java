@@ -1,6 +1,7 @@
 package com.soaengry.moment.domain.event.dto.request;
 
 import com.soaengry.moment.domain.event.entity.EventType;
+import com.soaengry.moment.domain.event.entity.RecurrenceType;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -24,6 +25,10 @@ public record EventRequest(
         String notice,
         String parkingInfo,
         String mealInfo,
-        String greeting
+        String greeting,
+
+        RecurrenceType recurrenceType,
+        String recurrenceDays,
+        String recurrenceEndDate
 ) {
 }
