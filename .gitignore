@@ -72,8 +72,7 @@ coverage
 .nyc_output
 
 # Claude Code (로컬 설정/메모리 — 커밋 불필요)
-.claude/
-*/.claude/
+.claude
 tasks/
 CLAUDE.md
 */CLAUDE.md

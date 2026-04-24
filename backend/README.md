@@ -70,7 +70,7 @@ backend/src/main/java/com/soaengry/moment/
 ```env
 # Database
 MYSQL_URL=jdbc:mysql://localhost:3306/moment
-MYSQL_USERNAME=root
+MYSQL_USERNAME=username
 MYSQL_PASSWORD=your_password
 
 # MongoDB (채팅)
@@ -179,8 +179,6 @@ docker exec -i moment-mysql-dev mysql -u root -p<비밀번호> moment_dev < /tmp
 ./gradlew build -x test
 ```
 
-서버 기동 후 `http://localhost:8080/health` 에서 상태를 확인할 수 있습니다.
-
 ---
 
 ## API 응답 형식
@@ -213,7 +211,7 @@ docker exec -i moment-mysql-dev mysql -u root -p<비밀번호> moment_dev < /tmp
 
 ```
 POST /api/auth/login
-  → Access Token (24h) + Refresh Token (7d) 발급
+  → Access Token + Refresh Token 발급
 
 POST /api/auth/refresh
   → Refresh Token으로 Access Token 갱신

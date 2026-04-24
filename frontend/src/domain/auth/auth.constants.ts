@@ -7,6 +7,8 @@ export const AUTH_API = {
   LOGOUT: "/api/auth/logout",
   CHECK_EMAIL: "/api/auth/check-email",
   CHECK_NICKNAME: "/api/auth/check-nickname",
+  SEND_SIGNUP_VERIFICATION: "/api/auth/send-signup-verification",
+  VERIFICATION_STATUS: "/api/auth/verification-status",
   OAUTH2_TOKEN: "/api/auth/oauth2/token",
 } as const;
 
