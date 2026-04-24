@@ -102,7 +102,6 @@ public class AuthService {
             throw new UserException(UserErrorCode.DUPLICATE_EMAIL);
         }
 
-        // 기존 미인증 토큰 삭제 후 새로 발급
         emailVerificationRepository.deleteByEmail(email);
         EmailVerification verification = EmailVerification.builder()
                 .email(email)

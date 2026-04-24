@@ -6,6 +6,7 @@ export const AUTH_API = {
   REFRESH: "/api/auth/refresh",
   LOGOUT: "/api/auth/logout",
   CHECK_EMAIL: "/api/auth/check-email",
+  CHECK_EMAIL_VERIFIED: "/api/auth/check-email-verified",
   CHECK_NICKNAME: "/api/auth/check-nickname",
   SEND_SIGNUP_VERIFICATION: "/api/auth/send-signup-verification",
   VERIFICATION_STATUS: "/api/auth/verification-status",
