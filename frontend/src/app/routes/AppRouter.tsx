@@ -20,7 +20,7 @@ import {
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../../global/components/Layout";
 import BottomNav from "../../global/components/BottomNav";
-import { HomePage } from "../../global/pages";
+import { HomePage, SearchPage } from "../../global/pages";
 import {
   EventInfoPage,
   EventCreatePage,
@@ -44,6 +44,7 @@ const AppRouter: FC = () => {
             </Layout>
           }
         />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
