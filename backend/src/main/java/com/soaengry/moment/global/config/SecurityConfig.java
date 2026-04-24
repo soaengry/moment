@@ -60,7 +60,8 @@ public class SecurityConfig {
                                 "/login/oauth2/**",
                                 "/oauth2/**"
                         ).permitAll()
-                        // 초대장 공개 정보 조회는 비인증 허용 (비공개 이벤트는 서비스에서 접근 제어)
+                        // 초대장 공개 정보 조회 및 검색은 비인증 허용
+                        .requestMatchers(HttpMethod.GET, "/api/events/search").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/events/*").permitAll()
                         // 방명록: 서비스에서 권한 검증
                         .requestMatchers(HttpMethod.GET, "/api/weddings/*/guestbook/**").permitAll()

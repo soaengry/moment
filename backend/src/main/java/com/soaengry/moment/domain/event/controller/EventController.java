@@ -4,9 +4,11 @@ import com.soaengry.moment.domain.event.dto.request.CheckSlugRequest;
 import com.soaengry.moment.domain.event.dto.request.EventCreateRequest;
 import com.soaengry.moment.domain.event.dto.response.CheckSlugResponse;
 import com.soaengry.moment.domain.event.dto.response.EventInfoResponse;
+import com.soaengry.moment.domain.event.dto.response.EventResponse;
 import com.soaengry.moment.domain.event.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -45,6 +47,14 @@ public class EventController {
         Long userId = (Long) authentication.getPrincipal();
         eventService.deleteEvent(eventId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<EventResponse>> searchEvents(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(eventService.searchBySlug(q, page, size));
     }
 
     @PostMapping("/check-slug")
