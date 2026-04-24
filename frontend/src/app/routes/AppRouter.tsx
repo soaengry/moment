@@ -52,6 +52,7 @@ const AppRouter: FC = () => {
         <Route path="/event/:slug" element={<EventInfoPage />} />
         <Route path="/event/:slug/feed" element={<EventInfoPage />} />
         <Route path="/event/:slug/guestbook" element={<EventInfoPage />} />
+        <Route path="/event/:slug/rsvp" element={<EventInfoPage />} />
 
         {/* 로그인 필요 페이지 */}
 

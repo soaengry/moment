@@ -1,17 +1,24 @@
-package com.soaengry.moment.domain.invitation.entity;
+package com.soaengry.moment.domain.rsvp.entity;
 
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.wedding.entity.Wedding;
 import com.soaengry.moment.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "rsvps", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"session_id", "wedding_id"})
-})
+@Table(
+    name = "rsvps",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uq_rsvps_session_wedding",
+        columnNames = {"session_id", "wedding_id"}
+    )
+)
 public class Rsvp extends BaseTimeEntity {
 
     @Id
@@ -31,14 +38,16 @@ public class Rsvp extends BaseTimeEntity {
             foreignKey = @ForeignKey(name = "fk_rsvps_users_user_id"))
     private User user;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private String attendance;
+    private RsvpAttendance attendance;
 
     @Column(nullable = false, length = 50)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String side;
+    private RsvpSide side;
 
     @Column(nullable = false, length = 20)
     private String phone;
@@ -65,8 +74,8 @@ public class Rsvp extends BaseTimeEntity {
     private Boolean consent = false;
 
     @Builder
-    private Rsvp(Wedding wedding, String sessionId, User user, String attendance,
-                 String name, String side, String phone, Integer attendeeCount,
+    private Rsvp(Wedding wedding, String sessionId, User user, RsvpAttendance attendance,
+                 String name, RsvpSide side, String phone, Integer attendeeCount,
                  Boolean willEat, Integer mealCount, Boolean willRide, Integer rideCount,
                  String note, Boolean consent) {
         this.wedding = wedding;
@@ -85,4 +94,18 @@ public class Rsvp extends BaseTimeEntity {
         this.consent = consent != null ? consent : false;
     }
 
+    public void update(RsvpAttendance attendance, String name, RsvpSide side, String phone,
+                       int attendeeCount, boolean willEat, int mealCount,
+                       boolean willRide, int rideCount, String note) {
+        this.attendance = attendance;
+        this.name = name;
+        this.side = side;
+        this.phone = phone;
+        this.attendeeCount = attendeeCount;
+        this.willEat = willEat;
+        this.mealCount = mealCount;
+        this.willRide = willRide;
+        this.rideCount = rideCount;
+        this.note = note;
+    }
 }

@@ -11,11 +11,13 @@ import {
   IoBookOutline,
   IoChatbubbles,
   IoChatbubblesOutline,
+  IoCheckmarkCircleOutline,
+  IoCheckmarkCircle,
 } from "react-icons/io5";
 import { useScrollVisibility } from "../../../global/hooks/useScrollVisibility";
 import type { EventType } from "../types";
 
-export type WeddingTab = "info" | "feed" | "guestbook" | "chat" | "mypage";
+export type WeddingTab = "info" | "feed" | "guestbook" | "chat" | "mypage" | "rsvp";
 
 interface Props {
   eventId: number;
@@ -66,10 +68,17 @@ const EventBottomNav: FC<Props> = ({
       activeIcon: IoChatbubbles,
       action: () => navigate(`${basePath}/chat`),
     },
+    {
+      key: "rsvp" as const,
+      label: "참석여부",
+      icon: IoCheckmarkCircleOutline,
+      activeIcon: IoCheckmarkCircle,
+      action: () => navigate(`${basePath}/rsvp`),
+    },
   ];
 
   const items = eventType === "GATHERING"
-    ? allItems.filter((item) => item.key !== "guestbook")
+    ? allItems.filter((item) => item.key !== "guestbook" && item.key !== "rsvp")
     : allItems;
 
   return (

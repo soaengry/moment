@@ -6,6 +6,7 @@ import com.soaengry.moment.domain.email.exception.EmailException;
 import com.soaengry.moment.domain.event.exception.EventException;
 import com.soaengry.moment.domain.feed.exception.FeedException;
 import com.soaengry.moment.domain.guestbook.exception.GuestbookException;
+import com.soaengry.moment.domain.rsvp.exception.RsvpException;
 import com.soaengry.moment.domain.user.exception.UserException;
 import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import com.soaengry.moment.global.common.ApiResponse;
@@ -132,6 +133,19 @@ public class GlobalExceptionHandler {
         log.warn("Chat Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
 
         HttpStatus status = determineHttpStatusFromCode(e.getErrorCode().name());
+        ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
+
+        return ResponseEntity.status(status).body(ApiResponse.error(errorCode));
+    }
+
+    /**
+     * RsvpException 처리
+     */
+    @ExceptionHandler(RsvpException.class)
+    public ResponseEntity<ApiResponse<?>> handleRsvpException(RsvpException e) {
+        log.warn("Rsvp Exception: {} - {}", e.getErrorCode().name(), e.getMessage());
+
+        HttpStatus status = e.getErrorCode().getHttpStatus();
         ErrorCode errorCode = ErrorCode.from(e.getErrorCode().name(), e.getMessage(), status);
 
         return ResponseEntity.status(status).body(ApiResponse.error(errorCode));

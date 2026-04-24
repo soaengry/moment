@@ -69,8 +69,8 @@ const BottomNav: FC = () => {
     return null;
   }
 
-  // event 하위 페이지 (채팅, 피드, 방명록, 편집 포함) — EventBottomNav 사용
-  if (/^\/event\/[^/]+\/(chat|feed|guestbook|edit)/.test(location.pathname)) {
+  // event 하위 페이지 (채팅, 피드, 방명록, 참석여부, 편집 포함) — EventBottomNav 사용
+  if (/^\/event\/[^/]+\/(chat|feed|guestbook|rsvp|edit)/.test(location.pathname)) {
     return null;
   }
 
