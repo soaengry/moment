@@ -1,3 +1,5 @@
+import type { RecurrenceType } from "../event/types";
+
 // ─── Response ───
 
 export interface AttendanceResponse {
@@ -13,6 +15,9 @@ export interface AttendanceResponse {
   groomProfileImageUrl: string | null;
   brideProfileImageUrl: string | null;
   createdAt: string;
+  recurrenceType?: RecurrenceType;
+  recurrenceDays?: string | null;
+  recurrenceEndDate?: string | null;
 }
 
 // ─── Request ───

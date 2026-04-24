@@ -3,11 +3,20 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import DaumPostcodeEmbed from "react-daum-postcode";
-import type { EventRequest, EventType } from "../../types";
+import type { EventRequest, EventType, RecurrenceType } from "../../types";
 import { EVENT_VALIDATION } from "../../event.constants";
 import { eventApi } from "../../api/eventApi";
 import { TEMPLATE_LABELS } from "../../utils/templateLabels";
 import { inputCls, labelCls, errorCls } from "../../../../global/styles/formStyles";
+
+const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+
+const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
+  { value: "NONE", label: "반복없음" },
+  { value: "WEEKLY", label: "매주" },
+  { value: "MONTHLY", label: "매달" },
+  { value: "CUSTOM_DAYS", label: "요일선택" },
+];
 
 interface Props {
   initialData: EventRequest | null;
@@ -36,6 +45,8 @@ const eventSchema = z.object({
   locationName: z.string().min(1, "장소 이름을 입력해주세요."),
   locationAddress: z.string().min(1, "주소를 입력해주세요."),
   locationDetail: z.string().optional(),
+  recurrenceType: z.enum(["NONE", "WEEKLY", "MONTHLY", "CUSTOM_DAYS"]),
+  recurrenceEndDate: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof eventSchema>;
@@ -51,6 +62,7 @@ const BasicInfoStep: FC<Props> = ({ initialData, templateType, onSubmit }) => {
     handleSubmit,
     setValue,
     getValues,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(eventSchema),
@@ -62,12 +74,27 @@ const BasicInfoStep: FC<Props> = ({ initialData, templateType, onSubmit }) => {
       locationName: initialData?.locationName ?? "",
       locationAddress: initialData?.locationAddress ?? "",
       locationDetail: initialData?.locationDetail ?? "",
+      recurrenceType: (initialData?.recurrenceType ?? "NONE") as FormValues["recurrenceType"],
+      recurrenceEndDate: initialData?.recurrenceEndDate ?? "",
     },
   });
 
   const [showPostcode, setShowPostcode] = useState(false);
   const [slugDupError, setSlugDupError] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? false);
+  const [selectedDays, setSelectedDays] = useState<number[]>(
+    initialData?.recurrenceDays
+      ? initialData.recurrenceDays.split(",").map(Number).filter(n => !isNaN(n))
+      : [],
+  );
+
+  const recurrenceType = watch("recurrenceType");
+
+  const toggleDay = (day: number) => {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort(),
+    );
+  };
 
   const handleSlugBlur = async () => {
     const slug = getValues("slug");
@@ -95,7 +122,6 @@ const BasicInfoStep: FC<Props> = ({ initialData, templateType, onSubmit }) => {
   const onFormSubmit = (values: FormValues) => {
     if (slugDupError) return;
 
-    // LocalDateTime 형식으로 전송 (타임존 변환 없이 KST 그대로)
     const date = `${values.date}T${values.eventTime || "00:00"}:00`;
 
     const request: EventRequest = {
@@ -107,6 +133,17 @@ const BasicInfoStep: FC<Props> = ({ initialData, templateType, onSubmit }) => {
       locationDetail: values.locationDetail || undefined,
       isPublic,
     };
+
+    if (templateType === "GATHERING") {
+      request.recurrenceType = values.recurrenceType;
+      if (values.recurrenceType === "CUSTOM_DAYS") {
+        request.recurrenceDays = selectedDays.join(",");
+      }
+      if (values.recurrenceType !== "NONE" && values.recurrenceEndDate) {
+        request.recurrenceEndDate = values.recurrenceEndDate;
+      }
+    }
+
     onSubmit(request);
   };
 
@@ -243,6 +280,62 @@ const BasicInfoStep: FC<Props> = ({ initialData, templateType, onSubmit }) => {
             />
           </button>
         </div>
+
+        {templateType === "GATHERING" && (
+          <div className="space-y-3 pt-1">
+            <p className="text-sm font-medium text-gray-700">반복 설정</p>
+            <div className="grid grid-cols-4 gap-2">
+              {RECURRENCE_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex items-center justify-center py-2 rounded-lg border-2 text-xs font-medium cursor-pointer transition-all ${
+                    recurrenceType === opt.value
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={opt.value}
+                    {...register("recurrenceType")}
+                    className="sr-only"
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+
+            {recurrenceType === "CUSTOM_DAYS" && (
+              <div className="flex gap-1.5 flex-wrap">
+                {DAY_LABELS.map((label, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => toggleDay(i)}
+                    className={`w-9 h-9 rounded-full text-xs font-medium border-2 transition-all ${
+                      selectedDays.includes(i)
+                        ? "border-primary bg-primary text-white"
+                        : "border-gray-200 text-gray-500 hover:border-gray-300"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {recurrenceType !== "NONE" && (
+              <div>
+                <label className={labelCls}>반복 종료일 (선택)</label>
+                <input
+                  type="date"
+                  {...register("recurrenceEndDate")}
+                  className={inputCls}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <button
