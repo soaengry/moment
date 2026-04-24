@@ -12,12 +12,14 @@ import com.soaengry.moment.domain.wedding.entity.Wedding;
 import com.soaengry.moment.domain.wedding.exception.WeddingErrorCode;
 import com.soaengry.moment.domain.wedding.exception.WeddingException;
 import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
+import com.soaengry.moment.global.common.CursorPageResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -45,13 +47,16 @@ public class GuestbookService {
         return GuestbookResponse.from(guestbookEntryRepository.save(entry));
     }
 
-    public Page<GuestbookResponse> getEntries(Long weddingId, Long currentUserId, boolean isAdmin, Pageable pageable) {
-        if (isAdmin || isHostOfWedding(weddingId, currentUserId)) {
-            return guestbookEntryRepository.findByWeddingIdOrderByCreatedAtDesc(weddingId, pageable)
-                    .map(GuestbookResponse::from);
-        }
-        return guestbookEntryRepository.findVisibleEntriesForUser(weddingId, currentUserId, pageable)
-                .map(GuestbookResponse::from);
+    public CursorPageResponse<GuestbookResponse> getEntries(Long weddingId, Long currentUserId, boolean isAdmin, Long cursor, int size) {
+        List<GuestbookEntry> entries = (isAdmin || isHostOfWedding(weddingId, currentUserId))
+                ? guestbookEntryRepository.findByWeddingIdCursor(weddingId, cursor, PageRequest.of(0, size + 1))
+                : guestbookEntryRepository.findVisibleEntriesForUserCursor(weddingId, currentUserId, cursor, PageRequest.of(0, size + 1));
+
+        boolean hasNext = entries.size() > size;
+        List<GuestbookEntry> page = hasNext ? entries.subList(0, size) : entries;
+        Long nextCursor = hasNext ? page.get(page.size() - 1).getId() : null;
+        List<GuestbookResponse> content = page.stream().map(GuestbookResponse::from).toList();
+        return new CursorPageResponse<>(content, nextCursor, hasNext);
     }
 
     @Transactional

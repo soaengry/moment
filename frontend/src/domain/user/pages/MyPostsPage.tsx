@@ -15,8 +15,8 @@ const MyPostsPage: FC = () => {
   const headerVisible = useScrollVisibility();
   const [commentPostId, setCommentPostId] = useState<number | null>(null);
 
-  const { posts, page, hasMore, isLoading, fetchPosts, setPosts } =
-    usePaginatedPosts(feedApi.getMyPosts, "게시글을 불러오지 못했습니다.");
+  const { items: posts, hasMore, isLoading, loadMore, reset, setItems: setPosts } =
+    usePaginatedPosts<PostResponse>(feedApi.getMyPosts, "게시글을 불러오지 못했습니다.");
 
   const handleCommentCountChange = (postId: number, delta: number) => {
     setPosts((prev) =>
@@ -43,7 +43,7 @@ const MyPostsPage: FC = () => {
             key={post.id}
             post={post}
             currentUserId={user?.id}
-            onPostDeleted={() => fetchPosts(0)}
+            onPostDeleted={() => reset()}
             onCommentClick={setCommentPostId}
           />
         ))}
@@ -51,7 +51,7 @@ const MyPostsPage: FC = () => {
 
       {hasMore && (
         <button
-          onClick={() => fetchPosts(page + 1, true)}
+          onClick={loadMore}
           disabled={isLoading}
           className="w-full py-4 text-xs text-gray-400"
         >

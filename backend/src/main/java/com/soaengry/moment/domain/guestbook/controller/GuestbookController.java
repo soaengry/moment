@@ -4,12 +4,10 @@ import com.soaengry.moment.domain.guestbook.dto.request.GuestbookRequest;
 import com.soaengry.moment.domain.guestbook.dto.response.GuestbookResponse;
 import com.soaengry.moment.domain.guestbook.service.GuestbookService;
 import com.soaengry.moment.global.common.ApiResponse;
+import com.soaengry.moment.global.common.CursorPageResponse;
 import com.soaengry.moment.global.common.SuccessCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -32,13 +30,13 @@ public class GuestbookController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<GuestbookResponse>> getEntries(
+    public ResponseEntity<CursorPageResponse<GuestbookResponse>> getEntries(
             @PathVariable Long weddingId,
-            @PageableDefault(size = 20) Pageable pageable,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size,
             Authentication authentication) {
-        Page<GuestbookResponse> responses = guestbookService.getEntries(
-                weddingId, extractUserId(authentication), isAdmin(authentication), pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(guestbookService.getEntries(
+                weddingId, extractUserId(authentication), isAdmin(authentication), cursor, size));
     }
 
     @PutMapping("/{entryId}")

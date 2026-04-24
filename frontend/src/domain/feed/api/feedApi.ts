@@ -5,7 +5,7 @@ import type {
   PostRequest,
   CommentResponse,
   CommentRequest,
-  PageResponse,
+  CursorPageResponse,
 } from "../types";
 
 export const feedApi = {
@@ -22,9 +22,11 @@ export const feedApi = {
   },
 
   // Posts
-  getFeed: async (page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
-    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `${FEED_API.POSTS}?page=${page}&size=${size}`,
+  getFeed: async (cursor?: number, size = 20): Promise<CursorPageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
+    const { data } = await axiosInstance.get<CursorPageResponse<PostResponse>>(
+      `${FEED_API.POSTS}?${params}`,
     );
     return data;
   },
@@ -60,17 +62,21 @@ export const feedApi = {
     return data;
   },
 
-  getBookmarks: async (page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
-    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `${FEED_API.BOOKMARKS}?page=${page}&size=${size}`,
+  getBookmarks: async (cursor?: number, size = 20): Promise<CursorPageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
+    const { data } = await axiosInstance.get<CursorPageResponse<PostResponse>>(
+      `${FEED_API.BOOKMARKS}?${params}`,
     );
     return data;
   },
 
   // Comments
-  getComments: async (postId: number, page = 0, size = 30): Promise<PageResponse<CommentResponse>> => {
-    const { data } = await axiosInstance.get<PageResponse<CommentResponse>>(
-      `${FEED_API.POST_COMMENTS(postId)}?page=${page}&size=${size}`,
+  getComments: async (postId: number, cursor?: number, size = 30): Promise<CursorPageResponse<CommentResponse>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
+    const { data } = await axiosInstance.get<CursorPageResponse<CommentResponse>>(
+      `${FEED_API.POST_COMMENTS(postId)}?${params}`,
     );
     return data;
   },
@@ -93,9 +99,11 @@ export const feedApi = {
   },
 
   // Event Feed
-  getEventFeed: async (eventId: number, page = 0, size = 20): Promise<PageResponse<PostResponse>> => {
-    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
-      `${FEED_API.EVENT_POSTS(eventId)}?page=${page}&size=${size}`,
+  getEventFeed: async (eventId: number, cursor?: number, size = 20): Promise<CursorPageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
+    const { data } = await axiosInstance.get<CursorPageResponse<PostResponse>>(
+      `${FEED_API.EVENT_POSTS(eventId)}?${params}`,
     );
     return data;
   },
@@ -109,37 +117,41 @@ export const feedApi = {
   },
 
   // My Page
-  getMyPosts: async (page = 0, size = 20, eventId?: number): Promise<PageResponse<PostResponse>> => {
-    const params = new URLSearchParams({ page: String(page), size: String(size) });
+  getMyPosts: async (cursor?: number, size = 20, eventId?: number): Promise<CursorPageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
     if (eventId != null) params.set("eventId", String(eventId));
-    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
+    const { data } = await axiosInstance.get<CursorPageResponse<PostResponse>>(
       `${FEED_API.MY_POSTS}?${params}`,
     );
     return data;
   },
 
-  getMyBookmarks: async (page = 0, size = 20, eventId?: number): Promise<PageResponse<PostResponse>> => {
-    const params = new URLSearchParams({ page: String(page), size: String(size) });
+  getMyBookmarks: async (cursor?: number, size = 20, eventId?: number): Promise<CursorPageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
     if (eventId != null) params.set("eventId", String(eventId));
-    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
+    const { data } = await axiosInstance.get<CursorPageResponse<PostResponse>>(
       `${FEED_API.MY_BOOKMARKS}?${params}`,
     );
     return data;
   },
 
-  getMyLikes: async (page = 0, size = 20, eventId?: number): Promise<PageResponse<PostResponse>> => {
-    const params = new URLSearchParams({ page: String(page), size: String(size) });
+  getMyLikes: async (cursor?: number, size = 20, eventId?: number): Promise<CursorPageResponse<PostResponse>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
     if (eventId != null) params.set("eventId", String(eventId));
-    const { data } = await axiosInstance.get<PageResponse<PostResponse>>(
+    const { data } = await axiosInstance.get<CursorPageResponse<PostResponse>>(
       `${FEED_API.MY_LIKES}?${params}`,
     );
     return data;
   },
 
-  getMyComments: async (page = 0, size = 20, eventId?: number): Promise<PageResponse<CommentResponse>> => {
-    const params = new URLSearchParams({ page: String(page), size: String(size) });
+  getMyComments: async (cursor?: number, size = 20, eventId?: number): Promise<CursorPageResponse<CommentResponse>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
     if (eventId != null) params.set("eventId", String(eventId));
-    const { data } = await axiosInstance.get<PageResponse<CommentResponse>>(
+    const { data } = await axiosInstance.get<CursorPageResponse<CommentResponse>>(
       `${FEED_API.MY_COMMENTS}?${params}`,
     );
     return data;

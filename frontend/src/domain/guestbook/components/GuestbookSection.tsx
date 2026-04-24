@@ -31,7 +31,7 @@ const GuestbookSection: FC<Props> = ({
   hostUserIds,
 }) => {
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
-  const [page, setPage] = useState(0);
+  const [nextCursor, setNextCursor] = useState<number | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -80,17 +80,17 @@ const GuestbookSection: FC<Props> = ({
   }, [menuOpenId]);
 
   const fetchEntries = useCallback(
-    async (pageNum: number, append = false) => {
+    async (cursor?: number, append = false) => {
       setIsLoading(true);
       try {
-        const res = await guestbookApi.getEntries(weddingId, pageNum);
+        const res = await guestbookApi.getEntries(weddingId, cursor);
         if (append) {
           setEntries((prev) => [...prev, ...res.content]);
         } else {
           setEntries(res.content);
         }
-        setHasMore(!res.last);
-        setPage(pageNum);
+        setNextCursor(res.nextCursor ?? undefined);
+        setHasMore(res.hasNext);
       } catch {
         // silent
       } finally {
@@ -101,7 +101,7 @@ const GuestbookSection: FC<Props> = ({
   );
 
   useEffect(() => {
-    fetchEntries(0);
+    fetchEntries(undefined);
   }, [fetchEntries]);
 
   const isLoggedIn = currentUserId !== null;
@@ -123,7 +123,7 @@ const GuestbookSection: FC<Props> = ({
       setContent("");
       setPassword("");
       setIsSecret(false);
-      fetchEntries(0);
+      fetchEntries(undefined);
     } catch {
       // silent
     } finally {
@@ -146,7 +146,7 @@ const GuestbookSection: FC<Props> = ({
       setEditingId(null);
       setEditContent("");
       setEditPassword(null);
-      fetchEntries(0);
+      fetchEntries(undefined);
     } catch {
       alert("수정에 실패했습니다. 비밀번호를 확인해주세요.");
     }
@@ -156,7 +156,7 @@ const GuestbookSection: FC<Props> = ({
   const handleDelete = async (entryId: number, pw?: string) => {
     try {
       await guestbookApi.deleteEntry(weddingId, entryId, pw);
-      fetchEntries(0);
+      fetchEntries(undefined);
     } catch {
       alert("삭제에 실패했습니다. 비밀번호를 확인해주세요.");
     }
@@ -434,7 +434,7 @@ const GuestbookSection: FC<Props> = ({
       {/* 더보기 */}
       {hasMore && (
         <button
-          onClick={() => fetchEntries(page + 1, true)}
+          onClick={() => fetchEntries(nextCursor, true)}
           disabled={isLoading}
           className="w-full mt-4 py-3 text-xs text-gray-400 border border-gray-100 rounded-xl hover:bg-gray-50"
         >
