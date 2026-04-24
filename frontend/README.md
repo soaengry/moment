@@ -3,6 +3,18 @@
 React 19 + TypeScript 기반 Moment 플랫폼의 SPA 클라이언트입니다.  
 DDD(Domain-Driven Design) 구조로 설계되었으며, Zustand 상태 관리, Axios 인터셉터 기반 자동 토큰 갱신, WebSocket 채팅을 지원합니다.
 
+![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript_5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite_7-646CFF?style=flat-square&logo=vite&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router_7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand_5-433E38?style=flat-square&logo=zustand&logoColor=white)
+![React Hook Form](https://img.shields.io/badge/React_Hook_Form_7-EC5990?style=flat-square&logo=reacthookform&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod_4-3E67B1?style=flat-square&logo=zod&logoColor=white)
+![Axios](https://img.shields.io/badge/Axios_1-5A29E4?style=flat-square&logo=axios&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion_12-0055FF?style=flat-square&logo=framer&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint_9-4B32C3?style=flat-square&logo=eslint&logoColor=white)
+
 ---
 
 ## 기술 스택

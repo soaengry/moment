@@ -7,6 +7,7 @@ import com.soaengry.moment.domain.user.dto.request.RefreshRequest;
 import com.soaengry.moment.domain.user.dto.request.ResendVerificationRequest;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
 import com.soaengry.moment.domain.user.dto.response.CheckEmailResponse;
+import com.soaengry.moment.domain.user.dto.response.CheckEmailVerifiedResponse;
 import com.soaengry.moment.domain.user.dto.response.CheckNicknameResponse;
 import com.soaengry.moment.domain.user.dto.response.LogoutResponse;
 import com.soaengry.moment.domain.user.dto.response.ResendVerificationResponse;
@@ -192,6 +193,15 @@ public class AuthController {
     public ResponseEntity<LogoutResponse> logout(@Valid @RequestBody RefreshRequest request) {
         authService.logout(request.refreshToken());
         return ResponseEntity.ok(new LogoutResponse("로그아웃되었습니다"));
+    }
+
+    /**
+     * 이메일 인증 완료 여부 조회
+     */
+    @GetMapping("/check-email-verified")
+    public ResponseEntity<CheckEmailVerifiedResponse> checkEmailVerified(@RequestParam String email) {
+        boolean verified = authService.isEmailVerified(email);
+        return ResponseEntity.ok(new CheckEmailVerifiedResponse(verified));
     }
 
     /**

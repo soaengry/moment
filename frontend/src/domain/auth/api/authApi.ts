@@ -93,6 +93,14 @@ export const authApi = {
     return data;
   },
 
+  checkEmailVerified: async (email: string): Promise<{ verified: boolean }> => {
+    const { data } = await axiosInstance.get<{ verified: boolean }>(
+      AUTH_API.CHECK_EMAIL_VERIFIED,
+      { params: { email } },
+    );
+    return data;
+  },
+
   checkNickname: async (nickname: string): Promise<CheckResponse> => {
     const { data } = await axiosInstance.post<CheckResponse>(
       AUTH_API.CHECK_NICKNAME,
