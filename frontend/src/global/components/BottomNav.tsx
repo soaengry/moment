@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { IoHomeOutline, IoHome } from "react-icons/io5";
 import { IoPersonOutline, IoPerson } from "react-icons/io5";
 import { IoAddCircleOutline, IoAddCircle } from "react-icons/io5";
+import { IoSearchOutline, IoSearch } from "react-icons/io5";
 // import { IoNewspaperOutline, IoNewspaper } from "react-icons/io5";
 import { useScrollVisibility } from "../hooks/useScrollVisibility";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
@@ -23,6 +24,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "홈",
     icon: IoHomeOutline,
     activeIcon: IoHome,
+  },
+  {
+    path: "/search",
+    label: "검색",
+    icon: IoSearchOutline,
+    activeIcon: IoSearch,
   },
   // {
   //   path: "/feed",
