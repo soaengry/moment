@@ -16,6 +16,8 @@ import com.soaengry.moment.domain.feed.repository.*;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -82,6 +84,7 @@ public class FeedService {
         return enrichPostResponses(posts, userId);
     }
 
+    @Cacheable(cacheNames = "posts", key = "#postId + ':' + (#userId ?: 'anon')")
     public PostResponse getPost(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new FeedException(FeedErrorCode.POST_NOT_FOUND));
@@ -92,6 +95,7 @@ public class FeedService {
         return PostResponse.from(post, isLiked, isBookmarked);
     }
 
+    @CacheEvict(cacheNames = "posts", key = "#postId + ':' + (#userId ?: 'anon')")
     @Transactional
     public PostResponse updatePost(Long userId, Long postId, PostRequest request) {
         Post post = postRepository.findById(postId)
@@ -111,6 +115,7 @@ public class FeedService {
         return PostResponse.from(post, isLiked, isBookmarked);
     }
 
+    @CacheEvict(cacheNames = "posts", allEntries = true)
     @Transactional
     public void deletePost(Long userId, Long postId) {
         Post post = postRepository.findById(postId)
@@ -125,6 +130,7 @@ public class FeedService {
 
     // ==================== Like ====================
 
+    @CacheEvict(cacheNames = "posts", key = "#postId + ':' + (#userId ?: 'anon')")
     @Transactional
     public boolean toggleLike(Long userId, Long postId) {
         Post post = postRepository.findById(postId)
@@ -146,6 +152,7 @@ public class FeedService {
 
     // ==================== Bookmark ====================
 
+    @CacheEvict(cacheNames = "posts", key = "#postId + ':' + (#userId ?: 'anon')")
     @Transactional
     public boolean toggleBookmark(Long userId, Long postId) {
         Post post = postRepository.findById(postId)

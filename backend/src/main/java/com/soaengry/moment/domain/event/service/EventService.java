@@ -22,6 +22,9 @@ import com.soaengry.moment.domain.wedding.repository.WeddingHostRepository;
 import com.soaengry.moment.domain.wedding.repository.WeddingRepository;
 import com.soaengry.moment.global.service.KakaoGeocodingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -114,6 +117,7 @@ public class EventService {
         return EventResponse.from(eventRepository.save(event));
     }
 
+    @Cacheable(cacheNames = "events", key = "#eventId")
     @Transactional(readOnly = true)
     public EventResponse getEvent(Long eventId) {
         Event event = eventRepository.findById(eventId)
@@ -121,6 +125,9 @@ public class EventService {
         return EventResponse.from(event);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "events", key = "#eventId")
+    })
     @Transactional
     public EventResponse updateEvent(Long eventId, Long userId, EventRequest request) {
         Event event = validateAndGetEvent(eventId, userId);
@@ -135,6 +142,7 @@ public class EventService {
         return EventResponse.from(event);
     }
 
+    @CacheEvict(cacheNames = "events", key = "#eventId")
     @Transactional
     public void deleteEvent(Long eventId, Long userId) {
         validateAndGetEvent(eventId, userId);
@@ -573,6 +581,7 @@ public class EventService {
      * hosts, weddingHosts, accountGroups, wedding)을 단일 트랜잭션으로 저장한다.
      * 중간에 어느 하나라도 실패하면 전체 롤백된다.
      */
+    @CacheEvict(cacheNames = "events", key = "#eventId")
     @Transactional
     public EventInfoResponse updateEventWithDetails(Long eventId, Long userId, EventCreateRequest request) {
         Event event = validateAndGetEvent(eventId, userId);

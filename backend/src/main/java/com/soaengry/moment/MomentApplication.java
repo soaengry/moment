@@ -3,6 +3,7 @@ package com.soaengry.moment;
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
@@ -10,6 +11,7 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import java.util.TimeZone;
 
 @SpringBootApplication
+@EnableCaching
 @EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 @EnableJpaRepositories(basePackages = {
         "com.soaengry.moment.domain.user.repository",
