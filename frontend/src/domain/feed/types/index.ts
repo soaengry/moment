@@ -36,12 +36,8 @@ export interface CommentRequest {
   content: string;
 }
 
-export interface PageResponse<T> {
+export interface CursorPageResponse<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-  last: boolean;
-  first: boolean;
+  nextCursor: number | null;
+  hasNext: boolean;
 }

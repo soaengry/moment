@@ -5,12 +5,10 @@ import com.soaengry.moment.domain.feed.dto.request.PostRequest;
 import com.soaengry.moment.domain.feed.dto.response.CommentResponse;
 import com.soaengry.moment.domain.feed.dto.response.PostResponse;
 import com.soaengry.moment.domain.feed.service.FeedService;
+import com.soaengry.moment.global.common.CursorPageResponse;
 import org.springframework.lang.Nullable;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -36,12 +34,12 @@ public class FeedController {
     }
 
     @GetMapping("/api/feed")
-    public ResponseEntity<Page<PostResponse>> getFeed(
+    public ResponseEntity<CursorPageResponse<PostResponse>> getFeed(
             Authentication authentication,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
-        Page<PostResponse> responses = feedService.getFeed(userId, pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(feedService.getFeed(userId, cursor, size));
     }
 
     @GetMapping("/api/feed/{postId}")
@@ -95,54 +93,54 @@ public class FeedController {
     }
 
     @GetMapping("/api/feed/bookmarks")
-    public ResponseEntity<Page<PostResponse>> getBookmarkedPosts(
+    public ResponseEntity<CursorPageResponse<PostResponse>> getBookmarkedPosts(
             Authentication authentication,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<PostResponse> responses = feedService.getBookmarkedPosts(userId, pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(feedService.getBookmarkedPosts(userId, cursor, size));
     }
 
     // ==================== My Page ====================
 
     @GetMapping("/api/feed/my/posts")
-    public ResponseEntity<Page<PostResponse>> getMyPosts(
+    public ResponseEntity<CursorPageResponse<PostResponse>> getMyPosts(
             Authentication authentication,
             @RequestParam(required = false) @Nullable Long eventId,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<PostResponse> responses = feedService.getMyPosts(userId, eventId, pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(feedService.getMyPosts(userId, eventId, cursor, size));
     }
 
     @GetMapping("/api/feed/my/bookmarks")
-    public ResponseEntity<Page<PostResponse>> getMyBookmarks(
+    public ResponseEntity<CursorPageResponse<PostResponse>> getMyBookmarks(
             Authentication authentication,
             @RequestParam(required = false) @Nullable Long eventId,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<PostResponse> responses = feedService.getMyBookmarks(userId, eventId, pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(feedService.getMyBookmarks(userId, eventId, cursor, size));
     }
 
     @GetMapping("/api/feed/my/likes")
-    public ResponseEntity<Page<PostResponse>> getMyLikes(
+    public ResponseEntity<CursorPageResponse<PostResponse>> getMyLikes(
             Authentication authentication,
             @RequestParam(required = false) @Nullable Long eventId,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<PostResponse> responses = feedService.getMyLikes(userId, eventId, pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(feedService.getMyLikes(userId, eventId, cursor, size));
     }
 
     @GetMapping("/api/feed/my/comments")
-    public ResponseEntity<Page<CommentResponse>> getMyComments(
+    public ResponseEntity<CursorPageResponse<CommentResponse>> getMyComments(
             Authentication authentication,
             @RequestParam(required = false) @Nullable Long eventId,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = (Long) authentication.getPrincipal();
-        Page<CommentResponse> responses = feedService.getMyComments(userId, eventId, pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(feedService.getMyComments(userId, eventId, cursor, size));
     }
 
     // ==================== Comment ====================
@@ -158,11 +156,11 @@ public class FeedController {
     }
 
     @GetMapping("/api/feed/{postId}/comments")
-    public ResponseEntity<Page<CommentResponse>> getComments(
+    public ResponseEntity<CursorPageResponse<CommentResponse>> getComments(
             @PathVariable Long postId,
-            @PageableDefault(size = 30) Pageable pageable) {
-        Page<CommentResponse> responses = feedService.getComments(postId, pageable);
-        return ResponseEntity.ok(responses);
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "30") int size) {
+        return ResponseEntity.ok(feedService.getComments(postId, cursor, size));
     }
 
     @PutMapping("/api/feed/comments/{commentId}")
@@ -187,13 +185,13 @@ public class FeedController {
     // ==================== Event Feed ====================
 
     @GetMapping("/api/events/{eventId}/feed/posts")
-    public ResponseEntity<Page<PostResponse>> getEventFeed(
+    public ResponseEntity<CursorPageResponse<PostResponse>> getEventFeed(
             @PathVariable Long eventId,
             Authentication authentication,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = authentication != null ? (Long) authentication.getPrincipal() : null;
-        Page<PostResponse> responses = feedService.getEventFeed(eventId, userId, pageable);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(feedService.getEventFeed(eventId, userId, cursor, size));
     }
 
     @PostMapping("/api/events/{eventId}/feed/posts")

@@ -15,13 +15,14 @@ import com.soaengry.moment.domain.feed.exception.FeedException;
 import com.soaengry.moment.domain.feed.repository.*;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
+import com.soaengry.moment.global.common.CursorPageResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,12 +53,16 @@ public class FeedService {
         return PostResponse.from(post, false, false);
     }
 
-    public Page<PostResponse> getFeed(Long userId, Pageable pageable) {
-        Page<Long> postIds = postRepository.findVisiblePostIds(userId, pageable);
-        if (postIds.isEmpty()) {
-            return postIds.map(id -> null);
+    public CursorPageResponse<PostResponse> getFeed(Long userId, Long cursor, int size) {
+        List<Long> postIds = postRepository.findVisiblePostIdsCursor(userId, cursor, PageRequest.of(0, size + 1));
+        boolean hasNext = postIds.size() > size;
+        List<Long> ids = hasNext ? postIds.subList(0, size) : postIds;
+        Long nextCursor = hasNext ? ids.get(ids.size() - 1) : null;
+
+        if (ids.isEmpty()) {
+            return new CursorPageResponse<>(Collections.emptyList(), null, false);
         }
-        List<Long> ids = postIds.getContent();
+
         Map<Long, Post> postMap = postRepository.findWithUserAndImagesByIds(ids)
                 .stream().collect(Collectors.toMap(Post::getId, p -> p));
 
@@ -70,16 +75,16 @@ public class FeedService {
         final Set<Long> finalLiked = likedSet;
         final Set<Long> finalBookmarked = bookmarkedSet;
 
-        return postIds.map(id -> {
-            Post post = postMap.get(id);
-            if (post == null) return null;
-            return PostResponse.from(post, finalLiked.contains(id), finalBookmarked.contains(id));
-        });
-    }
+        List<PostResponse> content = ids.stream()
+                .map(id -> {
+                    Post post = postMap.get(id);
+                    if (post == null) return null;
+                    return PostResponse.from(post, finalLiked.contains(id), finalBookmarked.contains(id));
+                })
+                .filter(Objects::nonNull)
+                .toList();
 
-    public Page<PostResponse> getUserPosts(Long userId, Long targetUserId, Pageable pageable) {
-        Page<Post> posts = postRepository.findByUserIdWithImages(targetUserId, pageable);
-        return enrichPostResponses(posts, userId);
+        return new CursorPageResponse<>(content, nextCursor, hasNext);
     }
 
     public PostResponse getPost(Long postId, Long userId) {
@@ -163,9 +168,9 @@ public class FeedService {
         }
     }
 
-    public Page<PostResponse> getBookmarkedPosts(Long userId, Pageable pageable) {
-        Page<Long> postIds = bookmarkRepository.findBookmarkedPostIdsByUserId(userId, pageable);
-        return mapBookmarkedPostIds(postIds, userId);
+    public CursorPageResponse<PostResponse> getBookmarkedPosts(Long userId, Long cursor, int size) {
+        List<Long> postIds = bookmarkRepository.findBookmarkedPostIdsByUserIdCursor(userId, cursor, PageRequest.of(0, size + 1));
+        return mapBookmarkedPostIds(postIds, userId, size);
     }
 
     // ==================== Comment ====================
@@ -184,9 +189,9 @@ public class FeedService {
         return CommentResponse.from(comment);
     }
 
-    public Page<CommentResponse> getComments(Long postId, Pageable pageable) {
-        return commentRepository.findByPostIdWithUser(postId, pageable)
-                .map(CommentResponse::from);
+    public CursorPageResponse<CommentResponse> getComments(Long postId, Long cursor, int size) {
+        List<Comment> comments = commentRepository.findByPostIdCursor(postId, cursor, PageRequest.of(0, size + 1));
+        return toCursorPage(comments, size, c -> c.getId(), CommentResponse::from);
     }
 
     @Transactional
@@ -230,7 +235,7 @@ public class FeedService {
         return PostResponse.from(post, false, false);
     }
 
-    public Page<PostResponse> getEventFeed(Long eventId, Long userId, Pageable pageable) {
+    public CursorPageResponse<PostResponse> getEventFeed(Long eventId, Long userId, Long cursor, int size) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
         if (!event.isPublic()) {
@@ -239,39 +244,47 @@ public class FeedService {
                 throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
             }
         }
-        Page<Post> posts = postRepository.findByEventIdWithUserAndImages(eventId, pageable);
-        return enrichPostResponses(posts, userId);
+        List<Post> posts = postRepository.findByEventIdCursor(eventId, cursor, PageRequest.of(0, size + 1));
+        return enrichPostResponsesCursor(posts, userId, size);
     }
 
     // ==================== My Page ====================
 
-    public Page<PostResponse> getMyPosts(Long userId, Long eventId, Pageable pageable) {
-        Page<Post> posts = postRepository.findByUserIdAndOptionalEventId(userId, eventId, pageable);
-        return enrichPostResponses(posts, userId);
+    public CursorPageResponse<PostResponse> getMyPosts(Long userId, Long eventId, Long cursor, int size) {
+        List<Post> posts = postRepository.findByUserIdAndOptionalEventIdCursor(userId, eventId, cursor, PageRequest.of(0, size + 1));
+        return enrichPostResponsesCursor(posts, userId, size);
     }
 
-    public Page<PostResponse> getMyBookmarks(Long userId, Long eventId, Pageable pageable) {
-        Page<Long> postIds = bookmarkRepository.findBookmarkedPostIdsByUserIdAndOptionalEventId(userId, eventId, pageable);
-        return mapBookmarkedPostIds(postIds, userId);
+    public CursorPageResponse<PostResponse> getMyBookmarks(Long userId, Long eventId, Long cursor, int size) {
+        List<Long> postIds = bookmarkRepository.findBookmarkedPostIdsByUserIdAndOptionalEventIdCursor(userId, eventId, cursor, PageRequest.of(0, size + 1));
+        return mapBookmarkedPostIds(postIds, userId, size);
     }
 
-    public Page<PostResponse> getMyLikes(Long userId, Long eventId, Pageable pageable) {
-        Page<Long> postIds = postLikeRepository.findLikedPostIdsByUserIdAndOptionalEventId(userId, eventId, pageable);
-        List<Post> posts = postRepository.findAllById(postIds.getContent());
+    public CursorPageResponse<PostResponse> getMyLikes(Long userId, Long eventId, Long cursor, int size) {
+        List<Long> postIds = postLikeRepository.findLikedPostIdsByUserIdAndOptionalEventIdCursor(userId, eventId, cursor, PageRequest.of(0, size + 1));
+        boolean hasNext = postIds.size() > size;
+        List<Long> ids = hasNext ? postIds.subList(0, size) : postIds;
+        Long nextCursor = hasNext ? ids.get(ids.size() - 1) : null;
 
+        List<Post> posts = postRepository.findAllById(ids);
         Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
-        Set<Long> bookmarkedPostIds = toBookmarkedPostIds(userId, postIds.getContent());
+        Set<Long> bookmarkedPostIds = toBookmarkedPostIds(userId, ids);
 
-        return postIds.map(id -> {
-            Post post = postMap.get(id);
-            if (post == null) return null;
-            return PostResponse.from(post, true, bookmarkedPostIds.contains(id));
-        });
+        List<PostResponse> content = ids.stream()
+                .map(id -> {
+                    Post post = postMap.get(id);
+                    if (post == null) return null;
+                    return PostResponse.from(post, true, bookmarkedPostIds.contains(id));
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new CursorPageResponse<>(content, nextCursor, hasNext);
     }
 
-    public Page<CommentResponse> getMyComments(Long userId, Long eventId, Pageable pageable) {
-        return commentRepository.findByUserIdAndOptionalEventId(userId, eventId, pageable)
-                .map(CommentResponse::from);
+    public CursorPageResponse<CommentResponse> getMyComments(Long userId, Long eventId, Long cursor, int size) {
+        List<Comment> comments = commentRepository.findByUserIdAndOptionalEventIdCursor(userId, eventId, cursor, PageRequest.of(0, size + 1));
+        return toCursorPage(comments, size, c -> c.getId(), CommentResponse::from);
     }
 
     // ==================== Helper ====================
@@ -293,30 +306,64 @@ public class FeedService {
         }
     }
 
-    private Page<PostResponse> mapBookmarkedPostIds(Page<Long> postIds, Long userId) {
-        List<Post> posts = postRepository.findAllById(postIds.getContent());
-        Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
-        Set<Long> likedPostIds = toLikedPostIds(userId, postIds.getContent());
-        return postIds.map(id -> {
-            Post post = postMap.get(id);
-            if (post == null) return null;
-            return PostResponse.from(post, likedPostIds.contains(id), true);
-        });
-    }
+    private CursorPageResponse<PostResponse> mapBookmarkedPostIds(List<Long> postIds, Long userId, int size) {
+        boolean hasNext = postIds.size() > size;
+        List<Long> ids = hasNext ? postIds.subList(0, size) : postIds;
+        Long nextCursor = hasNext ? ids.get(ids.size() - 1) : null;
 
-    private Page<PostResponse> enrichPostResponses(Page<Post> posts, Long userId) {
-        if (userId == null) {
-            return posts.map(p -> PostResponse.from(p, false, false));
+        if (ids.isEmpty()) {
+            return new CursorPageResponse<>(Collections.emptyList(), null, false);
         }
 
-        List<Long> postIds = posts.getContent().stream().map(Post::getId).toList();
-        Set<Long> likedPostIds = toLikedPostIds(userId, postIds);
-        Set<Long> bookmarkedPostIds = toBookmarkedPostIds(userId, postIds);
+        List<Post> posts = postRepository.findAllById(ids);
+        Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
+        Set<Long> likedPostIds = toLikedPostIds(userId, ids);
 
-        return posts.map(post -> PostResponse.from(
-                post,
-                likedPostIds.contains(post.getId()),
-                bookmarkedPostIds.contains(post.getId())
-        ));
+        List<PostResponse> content = ids.stream()
+                .map(id -> {
+                    Post post = postMap.get(id);
+                    if (post == null) return null;
+                    return PostResponse.from(post, likedPostIds.contains(id), true);
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new CursorPageResponse<>(content, nextCursor, hasNext);
+    }
+
+    private CursorPageResponse<PostResponse> enrichPostResponsesCursor(List<Post> posts, Long userId, int size) {
+        boolean hasNext = posts.size() > size;
+        List<Post> page = hasNext ? posts.subList(0, size) : posts;
+        Long nextCursor = hasNext ? page.get(page.size() - 1).getId() : null;
+
+        if (page.isEmpty()) {
+            return new CursorPageResponse<>(Collections.emptyList(), null, false);
+        }
+
+        List<PostResponse> content;
+        if (userId == null) {
+            content = page.stream().map(p -> PostResponse.from(p, false, false)).toList();
+        } else {
+            List<Long> postIds = page.stream().map(Post::getId).toList();
+            Set<Long> likedPostIds = toLikedPostIds(userId, postIds);
+            Set<Long> bookmarkedPostIds = toBookmarkedPostIds(userId, postIds);
+            content = page.stream().map(post -> PostResponse.from(
+                    post,
+                    likedPostIds.contains(post.getId()),
+                    bookmarkedPostIds.contains(post.getId())
+            )).toList();
+        }
+
+        return new CursorPageResponse<>(content, nextCursor, hasNext);
+    }
+
+    private <E, R> CursorPageResponse<R> toCursorPage(List<E> items, int size,
+                                                       Function<E, Long> idExtractor,
+                                                       Function<E, R> mapper) {
+        boolean hasNext = items.size() > size;
+        List<E> page = hasNext ? items.subList(0, size) : items;
+        Long nextCursor = hasNext ? idExtractor.apply(page.get(page.size() - 1)) : null;
+        List<R> content = page.stream().map(mapper).toList();
+        return new CursorPageResponse<>(content, nextCursor, hasNext);
     }
 }

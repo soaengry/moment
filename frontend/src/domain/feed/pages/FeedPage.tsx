@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 const FeedPage: FC = () => {
   const [posts, setPosts] = useState<PostResponse[]>([]);
-  const [page, setPage] = useState(0);
+  const [nextCursor, setNextCursor] = useState<number | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"feed" | "bookmarks">("feed");
@@ -25,40 +25,40 @@ const FeedPage: FC = () => {
   const user = useAuthStore((s) => s.user);
   const headerVisible = useScrollVisibility();
 
-  const fetchPosts = useCallback(async (pageNum: number, append = false) => {
+  const fetchPosts = useCallback(async (cursor?: number, append = false) => {
     setIsLoading(true);
     try {
       const res = activeTab === "feed"
-        ? await feedApi.getFeed(pageNum)
-        : await feedApi.getBookmarks(pageNum);
+        ? await feedApi.getFeed(cursor)
+        : await feedApi.getBookmarks(cursor);
 
       if (append) {
         setPosts((prev) => [...prev, ...res.content]);
       } else {
         setPosts(res.content);
       }
-      setHasMore(!res.last);
-      setPage(pageNum);
+      setNextCursor(res.nextCursor ?? undefined);
+      setHasMore(res.hasNext);
     } catch (error) {
       handleApiError(error, "게시글을 불러오지 못했습니다.");
     } finally { setIsLoading(false); }
   }, [activeTab]);
 
   useEffect(() => {
-    fetchPosts(0);
+    fetchPosts(undefined);
   }, [fetchPosts]);
 
   const handlePostCreated = () => {
-    fetchPosts(0);
+    fetchPosts(undefined);
   };
 
   const handlePostUpdated = () => {
     setEditingPost(null);
-    fetchPosts(0);
+    fetchPosts(undefined);
   };
 
   const handlePostDeleted = () => {
-    fetchPosts(0);
+    fetchPosts(undefined);
   };
 
   const handleCommentCountChange = (postId: number, delta: number) => {
@@ -142,7 +142,7 @@ const FeedPage: FC = () => {
         {/* Load more */}
         {hasMore && (
           <button
-            onClick={() => fetchPosts(page + 1, true)}
+            onClick={() => fetchPosts(nextCursor, true)}
             disabled={isLoading}
             className="w-full py-4 text-xs text-gray-400"
           >

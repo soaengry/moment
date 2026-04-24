@@ -1,11 +1,13 @@
 import axiosInstance from "../../../global/api/axiosInstance";
 import { GUESTBOOK_API } from "../guestbook.constants";
-import type { GuestbookEntry, GuestbookRequest, PageResponse } from "../types";
+import type { GuestbookEntry, GuestbookRequest, CursorPageResponse } from "../types";
 
 export const guestbookApi = {
-  getEntries: async (weddingId: number, page = 0, size = 20): Promise<PageResponse<GuestbookEntry>> => {
-    const { data } = await axiosInstance.get<PageResponse<GuestbookEntry>>(
-      `${GUESTBOOK_API.ENTRIES(weddingId)}?page=${page}&size=${size}`
+  getEntries: async (weddingId: number, cursor?: number, size = 20): Promise<CursorPageResponse<GuestbookEntry>> => {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor != null) params.set("cursor", String(cursor));
+    const { data } = await axiosInstance.get<CursorPageResponse<GuestbookEntry>>(
+      `${GUESTBOOK_API.ENTRIES(weddingId)}?${params}`
     );
     return data;
   },

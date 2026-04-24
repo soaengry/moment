@@ -1,7 +1,6 @@
 package com.soaengry.moment.domain.feed.repository;
 
 import com.soaengry.moment.domain.feed.entity.Bookmark;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,9 +17,11 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
     List<Bookmark> findByUserIdAndPostIdIn(Long userId, List<Long> postIds);
 
-    @Query("SELECT b.post.id FROM Bookmark b WHERE b.user.id = :userId ORDER BY b.createdAt DESC")
-    Page<Long> findBookmarkedPostIdsByUserId(@Param("userId") Long userId, Pageable pageable);
+    @Query("SELECT b.post.id FROM Bookmark b WHERE b.user.id = :userId " +
+           "AND (:cursor IS NULL OR b.post.id < :cursor) ORDER BY b.post.id DESC")
+    List<Long> findBookmarkedPostIdsByUserIdCursor(@Param("userId") Long userId, @Param("cursor") Long cursor, Pageable pageable);
 
-    @Query("SELECT b.post.id FROM Bookmark b WHERE b.user.id = :userId AND (:eventId IS NULL OR b.post.eventId = :eventId) ORDER BY b.createdAt DESC")
-    Page<Long> findBookmarkedPostIdsByUserIdAndOptionalEventId(@Param("userId") Long userId, @Param("eventId") Long eventId, Pageable pageable);
+    @Query("SELECT b.post.id FROM Bookmark b WHERE b.user.id = :userId " +
+           "AND (:eventId IS NULL OR b.post.eventId = :eventId) AND (:cursor IS NULL OR b.post.id < :cursor) ORDER BY b.post.id DESC")
+    List<Long> findBookmarkedPostIdsByUserIdAndOptionalEventIdCursor(@Param("userId") Long userId, @Param("eventId") Long eventId, @Param("cursor") Long cursor, Pageable pageable);
 }

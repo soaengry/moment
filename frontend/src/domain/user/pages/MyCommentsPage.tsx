@@ -11,28 +11,28 @@ const MyCommentsPage: FC = () => {
   const navigate = useNavigate();
   const headerVisible = useScrollVisibility();
   const [comments, setComments] = useState<CommentResponse[]>([]);
-  const [page, setPage] = useState(0);
+  const [nextCursor, setNextCursor] = useState<number | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchComments = useCallback(async (pageNum: number, append = false) => {
+  const fetchComments = useCallback(async (cursor?: number, append = false) => {
     setIsLoading(true);
     try {
-      const res = await feedApi.getMyComments(pageNum);
+      const res = await feedApi.getMyComments(cursor);
       if (append) {
         setComments((prev) => [...prev, ...res.content]);
       } else {
         setComments(res.content);
       }
-      setHasMore(!res.last);
-      setPage(pageNum);
+      setNextCursor(res.nextCursor ?? undefined);
+      setHasMore(res.hasNext);
     } catch (error) {
       handleApiError(error, "댓글을 불러오지 못했습니다.");
     } finally { setIsLoading(false); }
   }, []);
 
   useEffect(() => {
-    fetchComments(0);
+    fetchComments(undefined);
   }, [fetchComments]);
 
   const handleDelete = async (commentId: number) => {
@@ -84,7 +84,7 @@ const MyCommentsPage: FC = () => {
 
       {hasMore && (
         <button
-          onClick={() => fetchComments(page + 1, true)}
+          onClick={() => fetchComments(nextCursor, true)}
           disabled={isLoading}
           className="w-full py-4 text-xs text-gray-400"
         >
