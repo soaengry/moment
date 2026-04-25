@@ -1,3 +1,17 @@
+// ─── Pagination ───
+
+export interface PageInfo {
+  size: number;
+  number: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface SearchPageResponse<T> {
+  content: T[];
+  page: PageInfo;
+}
+
 // ─── Enums ───
 
 export type HostRole = "GROOM" | "BRIDE" | "HOST";

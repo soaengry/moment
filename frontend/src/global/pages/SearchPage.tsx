@@ -96,18 +96,22 @@ const SearchPage: FC = () => {
   const [searched, setSearched] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const loadingMoreRef = useRef(false);
 
   const fetchResults = useCallback(async (q: string, pageNum: number, replace: boolean) => {
     if (!q.trim()) return;
+    if (!replace && loadingMoreRef.current) return;
+    if (!replace) loadingMoreRef.current = true;
     pageNum === 0 ? setIsLoading(true) : setIsFetchingMore(true);
     try {
       const data = await eventApi.searchEvents(q.trim(), pageNum);
       setResults(prev => replace ? data.content : [...prev, ...data.content]);
-      setHasMore(!data.last);
+      setHasMore((data.page.number + 1) < data.page.totalPages);
       setPage(pageNum);
     } catch {
       // ignore
     } finally {
+      loadingMoreRef.current = false;
       setIsLoading(false);
       setIsFetchingMore(false);
     }
@@ -118,6 +122,7 @@ const SearchPage: FC = () => {
     if (!trimmed) { inputRef.current?.focus(); return; }
     setSubmittedQuery(trimmed);
     setSearched(true);
+    setHasMore(false);
     setPage(0);
     fetchResults(trimmed, 0, true);
   };
