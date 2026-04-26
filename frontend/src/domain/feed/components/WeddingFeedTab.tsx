@@ -14,7 +14,7 @@ interface Props {
 
 const WeddingFeedTab: FC<Props> = ({ eventId }) => {
   const [posts, setPosts] = useState<PostResponse[]>([]);
-  const [page, setPage] = useState(0);
+  const [nextCursor, setNextCursor] = useState<number | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [commentPostId, setCommentPostId] = useState<number | null>(null);
@@ -22,17 +22,17 @@ const WeddingFeedTab: FC<Props> = ({ eventId }) => {
 
   const user = useAuthStore((s) => s.user);
 
-  const fetchPosts = useCallback(async (pageNum: number, append = false) => {
+  const fetchPosts = useCallback(async (cursor?: number, append = false) => {
     setIsLoading(true);
     try {
-      const res = await feedApi.getEventFeed(eventId, pageNum);
+      const res = await feedApi.getEventFeed(eventId, cursor);
       if (append) {
         setPosts((prev) => [...prev, ...res.content]);
       } else {
         setPosts(res.content);
       }
-      setHasMore(!res.last);
-      setPage(pageNum);
+      setNextCursor(res.nextCursor ?? undefined);
+      setHasMore(res.hasNext);
     } catch (error) {
       handleApiError(error, "게시글을 불러오지 못했습니다.");
     } finally { setIsLoading(false); }
@@ -44,7 +44,7 @@ const WeddingFeedTab: FC<Props> = ({ eventId }) => {
 
   const handleRefresh = () => {
     setEditingPost(null);
-    fetchPosts(0);
+    fetchPosts(undefined);
   };
 
   const handleCommentCountChange = (postId: number, delta: number) => {
@@ -102,7 +102,7 @@ const WeddingFeedTab: FC<Props> = ({ eventId }) => {
       {/* Load more */}
       {hasMore && (
         <button
-          onClick={() => fetchPosts(page + 1, true)}
+          onClick={() => nextCursor != null && fetchPosts(nextCursor, true)}
           disabled={isLoading}
           className="w-full py-4 text-xs text-gray-400"
         >

@@ -15,12 +15,12 @@ const MyBookmarksPage: FC = () => {
   const headerVisible = useScrollVisibility();
   const [commentPostId, setCommentPostId] = useState<number | null>(null);
 
-  const { posts, page, hasMore, isLoading, fetchPosts, setPosts } =
+  const { items: posts, hasMore, isLoading, loadMore, reset, setItems: setPosts } =
     usePaginatedPosts(feedApi.getMyBookmarks, "북마크를 불러오지 못했습니다.");
 
   const handleCommentCountChange = (postId: number, delta: number) => {
     setPosts((prev) =>
-      prev.map((p) =>
+      prev.map((p: PostResponse) =>
         p.id === postId ? { ...p, commentCount: p.commentCount + delta } : p,
       ),
     );
@@ -43,7 +43,7 @@ const MyBookmarksPage: FC = () => {
             key={post.id}
             post={post}
             currentUserId={user?.id}
-            onPostDeleted={() => fetchPosts(0)}
+            onPostDeleted={() => reset()}
             onCommentClick={setCommentPostId}
           />
         ))}
@@ -51,7 +51,7 @@ const MyBookmarksPage: FC = () => {
 
       {hasMore && (
         <button
-          onClick={() => fetchPosts(page + 1, true)}
+          onClick={() => loadMore()}
           disabled={isLoading}
           className="w-full py-4 text-xs text-gray-400"
         >
