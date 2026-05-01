@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -36,7 +37,11 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 인증 없이 접근 가능한 경로
+                        // Spring Security 필터 경로 — MvcRequestMatcher가 인식 못하므로 AntPathRequestMatcher 사용
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/login/oauth2/**")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/oauth2/**")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/ws/**")).permitAll()
+                        // 인증 없이 접근 가능한 경로 (Spring MVC 경로)
                         .requestMatchers(
                                 "/favicon.ico",
                                 "/hc",
@@ -55,10 +60,7 @@ public class SecurityConfig {
                                 "/api/auth/verification-status",
                                 "/api/auth/oauth2/token",
                                 "/api/users/restore",
-                                "/api/banks/**",
-                                "/ws/**",
-                                "/login/oauth2/**",
-                                "/oauth2/**"
+                                "/api/banks/**"
                         ).permitAll()
                         // 초대장 공개 정보 조회 및 검색은 비인증 허용
                         .requestMatchers(HttpMethod.GET, "/api/events/search").permitAll()
