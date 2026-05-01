@@ -112,10 +112,6 @@ spring:
         static: ${AWS_REGION}
 
 
-logging:
-  level:
-    org.springframework.web.servlet.resource.NoResourceFoundException: OFF
-
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 86400000
