@@ -21,6 +21,11 @@ const TYPE_COLOR: Record<string, string> = {
   GATHERING: "bg-blue-50 text-blue-500",
 };
 
+const TYPE_GRADIENT: Record<string, string> = {
+  WEDDING: "from-rose-100 to-pink-200",
+  GATHERING: "from-indigo-100 to-blue-200",
+};
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
   return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}`;
@@ -41,8 +46,28 @@ function highlight(text: string, query: string): React.ReactNode {
   );
 }
 
+interface EventCardData extends EventResponse {
+  heroImageUrl: string | null;
+}
+
+async function attachHeroImages(events: EventResponse[]): Promise<EventCardData[]> {
+  const results = await Promise.allSettled(
+    events.map((e) => eventApi.getEventInfo(e.slug)),
+  );
+  return events.map((event, i) => {
+    let heroImageUrl: string | null = null;
+    const result = results[i];
+    if (result.status === "fulfilled") {
+      const images = result.value.heroImages;
+      const hero = images.find((img) => img.orderIndex === 0) ?? images[0] ?? null;
+      heroImageUrl = hero ? (hero.thumbnailUrl ?? hero.imageUrl) : null;
+    }
+    return { ...event, heroImageUrl };
+  });
+}
+
 interface EventCardProps {
-  event: EventResponse;
+  event: EventCardData;
   query: string;
   onClick: () => void;
 }
@@ -52,34 +77,50 @@ const EventCard: FC<EventCardProps> = ({ event, query, onClick }) => (
     type="button"
     onClick={onClick}
     whileTap={{ scale: 0.98 }}
-    className="w-full text-left bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200"
+    className="w-full text-left bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 flex gap-3"
   >
-    <div className="flex items-start justify-between gap-2 mb-2">
-      <h3 className="text-sm font-semibold text-gray-900 leading-snug flex-1 line-clamp-2">
-        {event.title}
-      </h3>
-      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${TYPE_COLOR[event.type] ?? "bg-gray-100 text-gray-500"}`}>
-        {TYPE_LABEL[event.type] ?? event.type}
-      </span>
+    {/* 히어로 이미지 */}
+    <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden">
+      {event.heroImageUrl ? (
+        <img
+          src={event.heroImageUrl}
+          alt={event.title}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className={`w-full h-full bg-gradient-to-br ${TYPE_GRADIENT[event.type] ?? "from-gray-100 to-gray-200"}`} />
+      )}
     </div>
 
-    <p className="text-xs text-primary/80 font-mono mb-3">
-      /{highlight(event.slug, query)}
-    </p>
+    {/* 이벤트 정보 */}
+    <div className="flex-1 min-w-0">
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <h3 className="text-sm font-semibold text-gray-900 leading-snug flex-1 line-clamp-2">
+          {event.title}
+        </h3>
+        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${TYPE_COLOR[event.type] ?? "bg-gray-100 text-gray-500"}`}>
+          {TYPE_LABEL[event.type] ?? event.type}
+        </span>
+      </div>
 
-    <div className="space-y-1.5">
-      {event.date && (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <IoCalendarOutline className="flex-shrink-0 text-gray-400" />
-          {formatDate(event.date)}
-        </div>
-      )}
-      {event.locationName && (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <IoLocationOutline className="flex-shrink-0 text-gray-400" />
-          <span className="truncate">{event.locationName}</span>
-        </div>
-      )}
+      <p className="text-xs text-primary/80 font-mono mb-2">
+        /{highlight(event.slug, query)}
+      </p>
+
+      <div className="space-y-1">
+        {event.date && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <IoCalendarOutline className="flex-shrink-0 text-gray-400" />
+            {formatDate(event.date)}
+          </div>
+        )}
+        {event.locationName && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <IoLocationOutline className="flex-shrink-0 text-gray-400" />
+            <span className="truncate">{event.locationName}</span>
+          </div>
+        )}
+      </div>
     </div>
   </motion.button>
 );
@@ -88,63 +129,113 @@ const SearchPage: FC = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
-  const [results, setResults] = useState<EventResponse[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const [searched, setSearched] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const loadingMoreRef = useRef(false);
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
-  const fetchResults = useCallback(async (q: string, pageNum: number, replace: boolean) => {
-    if (!q.trim()) return;
-    if (!replace && loadingMoreRef.current) return;
-    if (!replace) loadingMoreRef.current = true;
-    pageNum === 0 ? setIsLoading(true) : setIsFetchingMore(true);
+  // 기본 목록 상태 (검색 전)
+  const [browseItems, setBrowseItems] = useState<EventCardData[]>([]);
+  const [browsePage, setBrowsePage] = useState(0);
+  const [browseHasMore, setBrowseHasMore] = useState(false);
+  const [browseLoading, setBrowseLoading] = useState(true);
+  const [browseFetchingMore, setBrowseFetchingMore] = useState(false);
+  const browseLoadingRef = useRef(false);
+
+  // 검색 결과 상태
+  const [searchItems, setSearchItems] = useState<EventCardData[]>([]);
+  const [searchPage, setSearchPage] = useState(0);
+  const [searchHasMore, setSearchHasMore] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchFetchingMore, setSearchFetchingMore] = useState(false);
+  const searchLoadingRef = useRef(false);
+
+  const browseSentinelRef = useRef<HTMLDivElement>(null);
+  const searchSentinelRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const fetchBrowse = useCallback(async (pageNum: number, replace: boolean) => {
+    if (!replace && browseLoadingRef.current) return;
+    if (!replace) browseLoadingRef.current = true;
+    pageNum === 0 ? setBrowseLoading(true) : setBrowseFetchingMore(true);
     try {
-      const data = await eventApi.searchEvents(q.trim(), pageNum);
-      setResults(prev => replace ? data.content : [...prev, ...data.content]);
-      setHasMore((data.page.number + 1) < data.page.totalPages);
-      setPage(pageNum);
+      const data = await eventApi.searchEvents("", pageNum);
+      const cards = await attachHeroImages(data.content);
+      setBrowseItems(prev => replace ? cards : [...prev, ...cards]);
+      setBrowseHasMore((data.page.number + 1) < data.page.totalPages);
+      setBrowsePage(pageNum);
     } catch {
       // ignore
     } finally {
-      loadingMoreRef.current = false;
-      setIsLoading(false);
-      setIsFetchingMore(false);
+      browseLoadingRef.current = false;
+      setBrowseLoading(false);
+      setBrowseFetchingMore(false);
     }
   }, []);
 
+  const fetchSearch = useCallback(async (q: string, pageNum: number, replace: boolean) => {
+    if (!replace && searchLoadingRef.current) return;
+    if (!replace) searchLoadingRef.current = true;
+    pageNum === 0 ? setSearchLoading(true) : setSearchFetchingMore(true);
+    try {
+      const data = await eventApi.searchEvents(q, pageNum);
+      const cards = await attachHeroImages(data.content);
+      setSearchItems(prev => replace ? cards : [...prev, ...cards]);
+      setSearchHasMore((data.page.number + 1) < data.page.totalPages);
+      setSearchPage(pageNum);
+    } catch {
+      // ignore
+    } finally {
+      searchLoadingRef.current = false;
+      setSearchLoading(false);
+      setSearchFetchingMore(false);
+    }
+  }, []);
+
+  // 초기 목록 로드
+  useEffect(() => {
+    fetchBrowse(0, true);
+  }, [fetchBrowse]);
+
   const handleSearch = () => {
     const trimmed = query.trim();
-    if (!trimmed) { inputRef.current?.focus(); return; }
+    if (!trimmed) {
+      setIsSearchMode(false);
+      return;
+    }
     setSubmittedQuery(trimmed);
-    setSearched(true);
-    setHasMore(false);
-    setPage(0);
-    fetchResults(trimmed, 0, true);
+    setIsSearchMode(true);
+    setSearchPage(0);
+    setSearchHasMore(false);
+    fetchSearch(trimmed, 0, true);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSearch();
   };
 
-  // 무한스크롤: sentinel 관찰
+  // 기본 목록 무한스크롤
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore || isFetchingMore) return;
+    if (isSearchMode || !browseSentinelRef.current || !browseHasMore || browseFetchingMore) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchResults(submittedQuery, page + 1, false);
-        }
+        if (entries[0].isIntersecting) fetchBrowse(browsePage + 1, false);
       },
       { threshold: 0.1 },
     );
-    observer.observe(sentinelRef.current);
+    observer.observe(browseSentinelRef.current);
     return () => observer.disconnect();
-  }, [hasMore, isFetchingMore, submittedQuery, page, fetchResults]);
+  }, [isSearchMode, browseHasMore, browseFetchingMore, browsePage, fetchBrowse]);
+
+  // 검색 결과 무한스크롤
+  useEffect(() => {
+    if (!isSearchMode || !searchSentinelRef.current || !searchHasMore || searchFetchingMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) fetchSearch(submittedQuery, searchPage + 1, false);
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(searchSentinelRef.current);
+    return () => observer.disconnect();
+  }, [isSearchMode, searchHasMore, searchFetchingMore, submittedQuery, searchPage, fetchSearch]);
 
   return (
     <div className="min-h-screen bg-[#faf9f6]">
@@ -175,10 +266,10 @@ const SearchPage: FC = () => {
           <button
             type="button"
             onClick={handleSearch}
-            disabled={isLoading}
+            disabled={searchLoading}
             className="px-5 py-3.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors whitespace-nowrap flex items-center gap-1.5"
           >
-            {isLoading ? (
+            {searchLoading ? (
               <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <IoSearchOutline className="text-base" />
@@ -187,100 +278,102 @@ const SearchPage: FC = () => {
           </button>
         </div>
 
-        {/* 결과 영역 */}
+        {/* 콘텐츠 영역 */}
         <AnimatePresence mode="wait">
-          {isLoading && (
+          {isSearchMode ? (
             <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex justify-center py-16"
-            >
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            </motion.div>
-          )}
-
-          {!isLoading && searched && results.length === 0 && (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="text-center py-16 space-y-2"
-            >
-              <div className="text-4xl">🔍</div>
-              <p className="text-sm font-medium text-gray-600">
-                <span className="text-primary">"{submittedQuery}"</span>와 일치하는 공개 일정이 없습니다
-              </p>
-              <p className="text-xs text-gray-400">다른 키워드로 검색해보세요</p>
-            </motion.div>
-          )}
-
-          {!isLoading && results.length > 0 && (
-            <motion.div
-              key="results"
+              key="search"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-gray-500">
-                  <span className="font-medium text-primary">"{submittedQuery}"</span> 검색 결과
-                </p>
-                <div className="flex items-center gap-1 text-xs text-gray-400">
-                  {results[0].type === "WEDDING"
-                    ? <IoHeartOutline className="text-sm" />
-                    : <IoPeopleOutline className="text-sm" />}
-                  {results.length}건
+              {searchLoading ? (
+                <div className="flex justify-center py-16">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                {results.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    query={submittedQuery}
-                    onClick={() => navigate(`/event/${event.slug}`)}
-                  />
-                ))}
-              </div>
-
-              {/* 무한스크롤 sentinel */}
-              <div ref={sentinelRef} className="h-4" />
-
-              {isFetchingMore && (
-                <div className="flex justify-center py-4">
-                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : searchItems.length === 0 ? (
+                <div className="text-center py-16 space-y-2">
+                  <div className="text-4xl">🔍</div>
+                  <p className="text-sm font-medium text-gray-600">
+                    <span className="text-primary">"{submittedQuery}"</span>와 일치하는 공개 일정이 없습니다
+                  </p>
+                  <p className="text-xs text-gray-400">다른 키워드로 검색해보세요</p>
                 </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-gray-500">
+                      <span className="font-medium text-primary">"{submittedQuery}"</span> 검색 결과
+                    </p>
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      {searchItems[0].type === "WEDDING"
+                        ? <IoHeartOutline className="text-sm" />
+                        : <IoPeopleOutline className="text-sm" />}
+                      {searchItems.length}건
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {searchItems.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        query={submittedQuery}
+                        onClick={() => navigate(`/event/${event.slug}`)}
+                      />
+                    ))}
+                  </div>
+                  <div ref={searchSentinelRef} className="h-4" />
+                  {searchFetchingMore && (
+                    <div className="flex justify-center py-4">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                  {!searchHasMore && (
+                    <p className="text-center text-xs text-gray-300 py-4">모든 결과를 불러왔습니다</p>
+                  )}
+                </>
               )}
-
-              {!hasMore && results.length > 0 && (
-                <p className="text-center text-xs text-gray-300 py-4">모든 결과를 불러왔습니다</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="browse"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              {browseLoading ? (
+                <div className="flex justify-center py-16">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <>
+                  {browseItems.length > 0 && (
+                    <p className="text-xs text-gray-400 mb-3">공개 일정</p>
+                  )}
+                  <div className="space-y-3">
+                    {browseItems.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        query=""
+                        onClick={() => navigate(`/event/${event.slug}`)}
+                      />
+                    ))}
+                  </div>
+                  <div ref={browseSentinelRef} className="h-4" />
+                  {browseFetchingMore && (
+                    <div className="flex justify-center py-4">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                  {!browseHasMore && browseItems.length > 0 && (
+                    <p className="text-center text-xs text-gray-300 py-4">모든 일정을 불러왔습니다</p>
+                  )}
+                </>
               )}
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* 미검색 상태 안내 */}
-        {!searched && (
-          <div className="mt-6 rounded-2xl bg-white border border-gray-100 p-5 space-y-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">검색 방법</p>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              초대장 ID의 일부만 입력해도 검색됩니다.
-            </p>
-            <div className="space-y-1.5">
-              <div className="rounded-lg bg-gray-50 px-3 py-2">
-                <p className="text-xs text-gray-400 font-mono">
-                  <span className="text-primary font-semibold">reader</span>
-                  {" "}<span className="text-gray-300">→</span>{" "}
-                  reader, readers, we-are-readers-087
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

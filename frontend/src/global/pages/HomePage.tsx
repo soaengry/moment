@@ -10,13 +10,64 @@ import {
   IoSparkles,
   IoChatbubblesOutline,
   IoCalendar,
+  IoLocationOutline,
 } from "react-icons/io5";
 import { useAuthStore } from "../../domain/auth/store/useAuthStore";
 import type { UserResponse } from "../../domain/auth/types";
 import { attendanceApi } from "../../domain/attendance/api/attendanceApi";
 import { feedApi } from "../../domain/feed/api/feedApi";
+import { eventApi } from "../../domain/event/api/eventApi";
 import type { AttendanceResponse } from "../../domain/attendance/types";
 import type { PostResponse } from "../../domain/feed/types";
+import type { EventType } from "../../domain/event/types";
+
+// ─── Types ────────────────────────────────────────────────────
+
+interface PublicEventCardData {
+  slug: string;
+  title: string;
+  type: EventType;
+  date: string;
+  locationName: string;
+  heroImageUrl: string | null;
+}
+
+// ─── Fetch helpers ────────────────────────────────────────────
+
+async function fetchPublicEventsWithImages(
+  size = 10,
+): Promise<PublicEventCardData[]> {
+  const { content } = await eventApi.searchEvents("", 0, size);
+  if (content.length === 0) return [];
+
+  const results = await Promise.allSettled(
+    content.map((e) => eventApi.getEventInfo(e.slug)),
+  );
+
+  const cards: PublicEventCardData[] = content.map((event, i) => {
+    let heroImageUrl: string | null = null;
+    const result = results[i];
+    if (result.status === "fulfilled") {
+      const images = result.value.heroImages;
+      const hero =
+        images.find((img) => img.orderIndex === 0) ?? images[0] ?? null;
+      heroImageUrl = hero?.imageUrl ?? null;
+    }
+    return {
+      slug: event.slug,
+      title: event.title,
+      type: event.type,
+      date: event.date,
+      locationName: event.locationName,
+      heroImageUrl,
+    };
+  });
+
+  // Random shuffle
+  return [...cards].sort(() => Math.random() - 0.5);
+}
+
+// ─── Main ─────────────────────────────────────────────────────
 
 const HomePage = () => {
   const { user, isAuthenticated, isLoading } = useAuthStore();
@@ -64,6 +115,9 @@ const Landing = () => {
         <h1 className="text-3xl font-bold mb-2">Moment</h1>
         <p className="text-white/90 mb-6">소중한 순간을 함께 나누세요</p>
       </div>
+
+      {/* 공개 일정 */}
+      <PublicEventsSection />
 
       {/* 기능 소개 */}
       <div className="space-y-3">
@@ -184,6 +238,9 @@ const Dashboard = ({ user }: DashboardProps) => {
         ))}
       </div>
 
+      {/* 공개 일정 */}
+      <PublicEventsSection />
+
       {/* 다가오는 일정 */}
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <h2 className="font-semibold text-gray-800 mb-3">다가오는 일정</h2>
@@ -276,6 +333,123 @@ const Dashboard = ({ user }: DashboardProps) => {
     </div>
   );
 };
+
+// ─── 공개 일정 섹션 ───────────────────────────────────────────
+
+const PublicEventsSection = () => {
+  const [cards, setCards] = useState<PublicEventCardData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPublicEventsWithImages(10)
+      .then(setCards)
+      .catch(() => setCards([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!loading && cards.length === 0) return null;
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold text-gray-800">공개 일정 둘러보기</h2>
+        <Link to="/search" className="text-xs text-primary font-medium">
+          전체 보기
+        </Link>
+      </div>
+
+      <div
+        className="flex gap-3 overflow-x-auto pb-1"
+        style={{
+          scrollSnapType: "x mandatory",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        } as React.CSSProperties}
+      >
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))
+          : cards.map((card) => (
+              <PublicEventCard key={card.slug} card={card} />
+            ))}
+      </div>
+    </section>
+  );
+};
+
+// ─── 이벤트 카드 ─────────────────────────────────────────────
+
+interface PublicEventCardProps {
+  card: PublicEventCardData;
+}
+
+const PublicEventCard = ({ card }: PublicEventCardProps) => {
+  const isWedding = card.type === "WEDDING";
+
+  return (
+    <Link
+      to={`/event/${card.slug}`}
+      className="relative rounded-2xl overflow-hidden shrink-0 block active:scale-95 transition-transform"
+      style={{ width: 160, height: 240, scrollSnapAlign: "start" }}
+    >
+      {card.heroImageUrl ? (
+        <img
+          src={card.heroImageUrl}
+          alt={card.title}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div
+          className={`w-full h-full ${
+            isWedding
+              ? "bg-gradient-to-br from-rose-100 to-pink-200"
+              : "bg-gradient-to-br from-indigo-100 to-blue-200"
+          }`}
+        />
+      )}
+
+      {/* 하단 그라디언트 오버레이 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+
+      {/* 타입 배지 */}
+      <div className="absolute top-2.5 left-2.5">
+        <span
+          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+            isWedding
+              ? "bg-rose-500/90 text-white"
+              : "bg-indigo-500/90 text-white"
+          }`}
+        >
+          {isWedding ? "웨딩" : "모임"}
+        </span>
+      </div>
+
+      {/* 이벤트 정보 */}
+      <div className="absolute bottom-0 left-0 right-0 p-3">
+        <p className="text-white font-semibold text-sm leading-snug line-clamp-2 mb-1">
+          {card.title}
+        </p>
+        <p className="text-white/75 text-xs">{formatScheduleDate(card.date)}</p>
+        {card.locationName && (
+          <p className="text-white/60 text-xs truncate mt-0.5 flex items-center gap-0.5">
+            <IoLocationOutline className="w-3 h-3 shrink-0" />
+            {card.locationName}
+          </p>
+        )}
+      </div>
+    </Link>
+  );
+};
+
+// ─── 스켈레톤 카드 ────────────────────────────────────────────
+
+const SkeletonCard = () => (
+  <div
+    className="rounded-2xl shrink-0 bg-gray-100 animate-pulse"
+    style={{ width: 160, height: 240, scrollSnapAlign: "start" }}
+  />
+);
 
 // ─── 유틸 ─────────────────────────────────────────────────────
 

@@ -49,6 +49,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "마이페이지",
     icon: IoPersonOutline,
     activeIcon: IoPerson,
+    requiresAuth: true,
   },
 ];
 
