@@ -31,7 +31,7 @@ const WeddingFeedTab: FC<Props> = ({ eventId }) => {
       } else {
         setPosts(res.content);
       }
-      setHasMore(!res.last);
+      setHasMore(res.hasNext);
       setPage(pageNum);
     } catch (error) {
       handleApiError(error, "게시글을 불러오지 못했습니다.");
