@@ -20,7 +20,7 @@ const MyBookmarksPage: FC = () => {
 
   const handleCommentCountChange = (postId: number, delta: number) => {
     setPosts((prev) =>
-      prev.map((p) =>
+      prev.map((p: PostResponse) =>
         p.id === postId ? { ...p, commentCount: p.commentCount + delta } : p,
       ),
     );
