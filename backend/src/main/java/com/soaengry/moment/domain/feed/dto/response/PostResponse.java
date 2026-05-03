@@ -16,10 +16,15 @@ public record PostResponse(
         Boolean isLiked,
         Boolean isBookmarked,
         Long eventId,
+        String eventSlug,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
     public static PostResponse from(Post post, boolean isLiked, boolean isBookmarked) {
+        return from(post, isLiked, isBookmarked, null);
+    }
+
+    public static PostResponse from(Post post, boolean isLiked, boolean isBookmarked, String eventSlug) {
         return new PostResponse(
                 post.getId(),
                 new AuthorInfo(
@@ -34,6 +39,7 @@ public record PostResponse(
                 isLiked,
                 isBookmarked,
                 post.getEventId(),
+                eventSlug,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

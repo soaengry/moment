@@ -1,4 +1,5 @@
 import { type FC, useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { iconScale, buttonTap } from "../../../global/constants/animations";
 import {
@@ -184,6 +185,18 @@ const PostCard: FC<Props> = ({
           </div>
         )}
       </div>
+
+      {/* Event slug tag */}
+      {post.eventSlug && (
+        <div className="px-4 pb-1">
+          <Link
+            to={`/event/${post.eventSlug}/feed`}
+            className="inline-block text-xs text-primary font-medium bg-green-50 px-2 py-0.5 rounded-full hover:bg-green-100 transition-colors"
+          >
+            #{post.eventSlug}
+          </Link>
+        </div>
+      )}
 
       {/* Content */}
       <p className="px-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
