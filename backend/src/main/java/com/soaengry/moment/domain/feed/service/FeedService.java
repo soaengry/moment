@@ -237,6 +237,12 @@ public class FeedService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new FeedException(FeedErrorCode.UNAUTHORIZED_ACCESS));
 
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventException(EventErrorCode.EVENT_NOT_FOUND));
+        if (!event.getUser().getId().equals(userId) && !attendanceRepository.existsByUserIdAndEventId(userId, eventId)) {
+            throw new EventException(EventErrorCode.EVENT_UNAUTHORIZED);
+        }
+
         Post post = Post.create(user, request.content(), eventId);
         postRepository.save(post);
         attachImages(post, request.imageUrls());
