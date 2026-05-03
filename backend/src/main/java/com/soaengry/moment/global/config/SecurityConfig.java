@@ -59,6 +59,8 @@ public class SecurityConfig {
                                 "/api/auth/send-signup-verification",
                                 "/api/auth/verification-status",
                                 "/api/auth/oauth2/token",
+                                "/api/auth/password-reset/request",
+                                "/api/auth/password-reset/confirm",
                                 "/api/users/restore",
                                 "/api/banks/**"
                         ).permitAll()
