@@ -51,7 +51,7 @@ const WeddingFeedTab: FC<Props> = ({ eventId, eventOwnerId }) => {
   }, [eventId]);
 
   useEffect(() => {
-    fetchPosts(0);
+    fetchPosts(undefined);
   }, [fetchPosts]);
 
   const handleRefresh = () => {
