@@ -158,4 +158,23 @@ export const authApi = {
     );
     return data;
   },
+
+  requestPasswordReset: async (email: string): Promise<MessageResponse> => {
+    const { data } = await axiosInstance.post<MessageResponse>(
+      AUTH_API.PASSWORD_RESET_REQUEST,
+      { email },
+    );
+    return data;
+  },
+
+  confirmPasswordReset: async (
+    token: string,
+    newPassword: string,
+  ): Promise<MessageResponse> => {
+    const { data } = await axiosInstance.post<MessageResponse>(
+      AUTH_API.PASSWORD_RESET_CONFIRM,
+      { token, newPassword },
+    );
+    return data;
+  },
 };
