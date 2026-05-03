@@ -167,9 +167,14 @@ const LoginForm: FC = () => {
           >
             회원가입
           </Link>
-          <Link to="/restore-account" className="hover:underline text-gray-400">
-            계정 복구
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/forgot-password" className="hover:underline text-gray-400">
+              비밀번호 찾기
+            </Link>
+            <Link to="/restore-account" className="hover:underline text-gray-400">
+              계정 복구
+            </Link>
+          </div>
         </div>
       </div>
     </div>
