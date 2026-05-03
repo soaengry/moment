@@ -4,13 +4,17 @@ import com.soaengry.moment.domain.email.entity.EmailVerification;
 import com.soaengry.moment.domain.email.repository.EmailVerificationRepository;
 import com.soaengry.moment.domain.email.service.EmailService;
 import com.soaengry.moment.domain.user.dto.request.LoginRequest;
+import com.soaengry.moment.domain.user.dto.request.PasswordResetConfirmRequest;
+import com.soaengry.moment.domain.user.dto.request.PasswordResetRequest;
 import com.soaengry.moment.domain.user.dto.request.ResendVerificationRequest;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
 import com.soaengry.moment.domain.user.dto.response.SignupResponse;
 import com.soaengry.moment.domain.user.dto.response.TokenResponse;
+import com.soaengry.moment.domain.user.entity.PasswordResetToken;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.exception.UserErrorCode;
 import com.soaengry.moment.domain.user.exception.UserException;
+import com.soaengry.moment.domain.user.repository.PasswordResetTokenRepository;
 import com.soaengry.moment.domain.user.repository.RefreshTokenRepository;
 import com.soaengry.moment.domain.user.repository.UserRepository;
 import com.soaengry.moment.global.security.JwtProvider;
@@ -32,6 +36,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final EmailVerificationRepository emailVerificationRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final EmailService emailService;
@@ -316,6 +321,48 @@ public class AuthService {
             refreshTokenRepository.deleteOldestToken(userId);
             log.info("디바이스 제한 초과 - 가장 오래된 토큰 삭제");
         }
+    }
+
+    /**
+     * 비밀번호 재설정 요청 (이메일 발송)
+     * 이메일 존재 여부를 노출하지 않기 위해 항상 성공으로 처리
+     */
+    @Transactional
+    public void requestPasswordReset(PasswordResetRequest request) {
+        userRepository.findByEmail(request.email()).ifPresent(user -> {
+            passwordResetTokenRepository.findActiveTokensByUserId(user.getId())
+                    .forEach(PasswordResetToken::markAsUsed);
+
+            PasswordResetToken token = PasswordResetToken.builder()
+                    .userId(user.getId())
+                    .token(UUID.randomUUID().toString())
+                    .expiresAt(LocalDateTime.now().plusHours(1))
+                    .build();
+            passwordResetTokenRepository.save(token);
+            emailService.sendPasswordResetEmail(user.getEmail(), token.getToken());
+            log.info("비밀번호 재설정 메일 발송 - 사용자 ID: {}", user.getId());
+        });
+    }
+
+    /**
+     * 비밀번호 재설정 확인
+     */
+    @Transactional
+    public void confirmPasswordReset(PasswordResetConfirmRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.token())
+                .orElseThrow(() -> new UserException(UserErrorCode.TOKEN_NOT_FOUND));
+
+        if (!resetToken.isValid()) {
+            throw new UserException(UserErrorCode.AUTH_INVALID_TOKEN, "링크가 만료되었거나 이미 사용된 링크입니다");
+        }
+
+        User user = userRepository.findById(resetToken.getUserId())
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
+        resetToken.markAsUsed();
+
+        log.info("비밀번호 재설정 완료 - 사용자 ID: {}", user.getId());
     }
 
     /**
