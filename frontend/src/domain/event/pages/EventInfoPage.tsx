@@ -146,7 +146,7 @@ const EventInfoPage: FC = () => {
           </>
         )}
 
-        {activeTab === "feed" && <WeddingFeedTab eventId={eventId} />}
+        {activeTab === "feed" && <WeddingFeedTab eventId={eventId} eventOwnerId={event.userId} />}
 
         {activeTab === "guestbook" && weddingDetail && (
           <div className="px-4 py-6">
