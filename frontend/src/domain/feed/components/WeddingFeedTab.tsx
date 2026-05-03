@@ -6,21 +6,33 @@ import PostCard from "./PostCard";
 import PostComposer from "./PostComposer";
 import CommentSheet from "./CommentSheet";
 import { useAuthStore } from "../../auth/store/useAuthStore";
+import { attendanceApi } from "../../attendance/api/attendanceApi";
 import { IoClose } from "react-icons/io5";
 
 interface Props {
   eventId: number;
+  eventOwnerId: number;
 }
 
-const WeddingFeedTab: FC<Props> = ({ eventId }) => {
+const WeddingFeedTab: FC<Props> = ({ eventId, eventOwnerId }) => {
   const [posts, setPosts] = useState<PostResponse[]>([]);
   const [nextCursor, setNextCursor] = useState<number | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [commentPostId, setCommentPostId] = useState<number | null>(null);
   const [editingPost, setEditingPost] = useState<PostResponse | null>(null);
+  const [isParticipant, setIsParticipant] = useState(false);
 
   const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    if (!user) { setIsParticipant(false); return; }
+    attendanceApi.getMyAttendances()
+      .then((list) => setIsParticipant(list.some((a) => a.eventId === eventId)))
+      .catch(() => setIsParticipant(false));
+  }, [user, eventId]);
+
+  const canPost = !!user && (user.id === eventOwnerId || isParticipant);
 
   const fetchPosts = useCallback(async (cursor?: number, append = false) => {
     setIsLoading(true);
@@ -39,7 +51,7 @@ const WeddingFeedTab: FC<Props> = ({ eventId }) => {
   }, [eventId]);
 
   useEffect(() => {
-    fetchPosts(0);
+    fetchPosts(undefined);
   }, [fetchPosts]);
 
   const handleRefresh = () => {
@@ -57,8 +69,8 @@ const WeddingFeedTab: FC<Props> = ({ eventId }) => {
 
   return (
     <div>
-      {/* Composer — 로그인한 유저만 */}
-      {user && (
+      {/* Composer — 참석자 또는 주최자만 */}
+      {canPost && (
         <PostComposer
           eventId={eventId}
           onPostCreated={handleRefresh}

@@ -72,6 +72,11 @@ const LoginForm: FC = () => {
 
   return (
     <div className="w-full max-w-md mx-auto">
+      <div className="text-center mb-8">
+        <Link to="/" className="text-3xl font-bold text-primary tracking-widest select-none">
+          MOMENT
+        </Link>
+      </div>
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
         <h2 className="text-2xl font-bold text-center mb-2 text-primary">
           로그인
@@ -162,9 +167,14 @@ const LoginForm: FC = () => {
           >
             회원가입
           </Link>
-          <Link to="/restore-account" className="hover:underline text-gray-400">
-            계정 복구
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/forgot-password" className="hover:underline text-gray-400">
+              비밀번호 찾기
+            </Link>
+            <Link to="/restore-account" className="hover:underline text-gray-400">
+              계정 복구
+            </Link>
+          </div>
         </div>
       </div>
     </div>

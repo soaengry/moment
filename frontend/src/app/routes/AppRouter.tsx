@@ -6,6 +6,8 @@ import {
   VerifyEmailPage,
   RestoreAccountPage,
   OAuth2CallbackPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
 } from "../../domain/auth/pages";
 import {
   MyPage,
@@ -50,6 +52,8 @@ const AppRouter: FC = () => {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/restore-account" element={<RestoreAccountPage />} />
         <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/event/:slug" element={<EventInfoPage />} />
         <Route path="/event/:slug/feed" element={<EventInfoPage />} />
         <Route path="/event/:slug/guestbook" element={<EventInfoPage />} />

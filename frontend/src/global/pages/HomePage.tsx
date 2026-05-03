@@ -179,7 +179,7 @@ const Dashboard = ({ user }: DashboardProps) => {
       .finally(() => setSchedulesLoading(false));
 
     feedApi
-      .getFeed(0, 3)
+      .getFeed(undefined, 3)
       .then((data) => setPosts(data.content))
       .catch(() => setPosts([]))
       .finally(() => setPostsLoading(false));

@@ -14,6 +14,7 @@ export interface PostResponse {
   isLiked: boolean;
   isBookmarked: boolean;
   eventId: number | null;
+  eventSlug: string | null;
   createdAt: string;
   updatedAt: string;
 }

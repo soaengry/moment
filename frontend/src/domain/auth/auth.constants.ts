@@ -11,6 +11,8 @@ export const AUTH_API = {
   SEND_SIGNUP_VERIFICATION: "/api/auth/send-signup-verification",
   VERIFICATION_STATUS: "/api/auth/verification-status",
   OAUTH2_TOKEN: "/api/auth/oauth2/token",
+  PASSWORD_RESET_REQUEST: "/api/auth/password-reset/request",
+  PASSWORD_RESET_CONFIRM: "/api/auth/password-reset/confirm",
 } as const;
 
 export const USER_API = {

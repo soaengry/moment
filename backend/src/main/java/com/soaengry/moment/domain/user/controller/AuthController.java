@@ -3,6 +3,8 @@ package com.soaengry.moment.domain.user.controller;
 import com.soaengry.moment.domain.user.dto.request.CheckEmailRequest;
 import com.soaengry.moment.domain.user.dto.request.CheckNicknameRequest;
 import com.soaengry.moment.domain.user.dto.request.LoginRequest;
+import com.soaengry.moment.domain.user.dto.request.PasswordResetConfirmRequest;
+import com.soaengry.moment.domain.user.dto.request.PasswordResetRequest;
 import com.soaengry.moment.domain.user.dto.request.RefreshRequest;
 import com.soaengry.moment.domain.user.dto.request.ResendVerificationRequest;
 import com.soaengry.moment.domain.user.dto.request.SignupRequest;
@@ -224,6 +226,28 @@ public class AuthController {
     ) {
         boolean exists = userService.checkNicknameExists(request.nickname());
         return ResponseEntity.ok(new CheckNicknameResponse(exists));
+    }
+
+    /**
+     * 비밀번호 재설정 요청
+     */
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<ResendVerificationResponse> requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequest request
+    ) {
+        authService.requestPasswordReset(request);
+        return ResponseEntity.ok(new ResendVerificationResponse("비밀번호 재설정 메일을 발송했습니다"));
+    }
+
+    /**
+     * 비밀번호 재설정 확인
+     */
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<ResendVerificationResponse> confirmPasswordReset(
+            @Valid @RequestBody PasswordResetConfirmRequest request
+    ) {
+        authService.confirmPasswordReset(request);
+        return ResponseEntity.ok(new ResendVerificationResponse("비밀번호가 재설정되었습니다"));
     }
 
     /**
