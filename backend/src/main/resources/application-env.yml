@@ -26,7 +26,7 @@ server:
 app:
   email:
     verification-url: "http://localhost:8080/api/auth/verify-email"
-    password-reset-url: "http://localhost:8080/api/auth/reset-password"
+    password-reset-url: "http://localhost:3000/reset-password"
   oauth2:
     redirect-uri: "http://localhost:3000/oauth2/callback"
   cors:
@@ -57,7 +57,7 @@ server:
 app:
   email:
     verification-url: "${BASE_URL}/api/auth/verify-email"
-    password-reset-url: "${BASE_URL}/api/auth/reset-password"
+    password-reset-url: "${FRONT_URL}/reset-password"
   oauth2:
     redirect-uri: "${FRONT_URL}/oauth2/callback"
   cors:
@@ -89,7 +89,7 @@ server:
 app:
   email:
     verification-url: "${BASE_URL}/api/auth/verify-email"
-    password-reset-url: "${BASE_URL}/api/auth/reset-password"
+    password-reset-url: "${FRONT_URL}/reset-password"
   oauth2:
     redirect-uri: "${FRONT_URL}/oauth2/callback"
   cors:
@@ -120,7 +120,7 @@ server:
 app:
   email:
     verification-url: "${BASE_URL}/api/auth/verify-email"
-    password-reset-url: "${BASE_URL}/api/auth/reset-password"
+    password-reset-url: "${FRONT_URL}/reset-password"
   oauth2:
     redirect-uri: "${FRONT_URL}/oauth2/callback"
   cors:
