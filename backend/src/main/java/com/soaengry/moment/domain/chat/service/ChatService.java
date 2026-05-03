@@ -7,6 +7,7 @@ import com.soaengry.moment.domain.chat.entity.ChatMessage;
 import com.soaengry.moment.domain.chat.exception.ChatErrorCode;
 import com.soaengry.moment.domain.chat.exception.ChatException;
 import com.soaengry.moment.domain.chat.repository.ChatMessageRepository;
+import com.soaengry.moment.domain.event.entity.Event;
 import com.soaengry.moment.domain.event.repository.EventRepository;
 import com.soaengry.moment.domain.user.entity.User;
 import com.soaengry.moment.domain.user.repository.UserRepository;
@@ -28,11 +29,12 @@ public class ChatService {
     private final S3Service s3Service;
 
     public Page<ChatMessageResponse> getMessages(Long eventId, Long userId, Pageable pageable) {
-        if (!eventRepository.existsById(eventId)) {
-            throw new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND);
-        }
-        if (userId == null || !attendanceRepository.existsByUserIdAndEventId(userId, eventId)) {
-            throw new ChatException(ChatErrorCode.UNAUTHORIZED_ACCESS);
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_WEDDING_NOT_FOUND));
+        if (!event.isPublic()) {
+            if (userId == null || !attendanceRepository.existsByUserIdAndEventId(userId, eventId)) {
+                throw new ChatException(ChatErrorCode.UNAUTHORIZED_ACCESS);
+            }
         }
         return chatMessageRepository.findByEventIdOrderByCreatedAtDesc(eventId, pageable)
                 .map(ChatMessageResponse::from);
