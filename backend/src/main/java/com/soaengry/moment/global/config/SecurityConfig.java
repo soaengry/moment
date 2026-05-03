@@ -79,8 +79,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/rsvp/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/rsvp/stats").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/rsvp/list").authenticated()
-                        // 채팅 메시지 조회는 참석자만 (서비스에서 attendance 검증)
-                        .requestMatchers(HttpMethod.GET, "/api/events/*/chat/**").authenticated()
+                        // 이벤트 피드/채팅 조회는 공개 이벤트 허용 (서비스에서 공개 여부 검증)
+                        .requestMatchers(HttpMethod.GET, "/api/events/*/feed/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/*/chat/**").permitAll()
                         // 피드: GET은 공개, CUD는 인증 필요
                         .requestMatchers(HttpMethod.GET, "/api/weddings/*/feed/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/weddings/*/feed/**").authenticated()
