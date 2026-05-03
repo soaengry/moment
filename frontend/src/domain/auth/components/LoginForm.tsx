@@ -72,6 +72,11 @@ const LoginForm: FC = () => {
 
   return (
     <div className="w-full max-w-md mx-auto">
+      <div className="text-center mb-8">
+        <Link to="/" className="text-3xl font-bold text-primary tracking-widest select-none">
+          MOMENT
+        </Link>
+      </div>
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
         <h2 className="text-2xl font-bold text-center mb-2 text-primary">
           로그인
