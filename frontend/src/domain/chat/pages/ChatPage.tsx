@@ -9,6 +9,7 @@ import { useAuthStore } from "../../auth/store/useAuthStore";
 import { tokenStorage } from "../../auth/auth.utils";
 import { ENV } from "../../../global/config/env";
 import { eventApi } from "../../event/api/eventApi";
+import { attendanceApi } from "../../attendance/api/attendanceApi";
 import ImageViewer from "../../feed/components/ImageViewer";
 
 const ChatPage: FC = () => {
@@ -24,6 +25,7 @@ const ChatPage: FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [isParticipant, setIsParticipant] = useState(false);
 
   const clientRef = useRef<Client | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -97,6 +99,14 @@ const ChatPage: FC = () => {
       client.deactivate();
     };
   }, [eventId, isAuthenticated]);
+
+  // 참석자 여부 확인
+  useEffect(() => {
+    if (!isAuthenticated || eventId === null) { setIsParticipant(false); return; }
+    attendanceApi.getMyAttendances()
+      .then((list) => setIsParticipant(list.some((a) => a.eventId === eventId)))
+      .catch(() => setIsParticipant(false));
+  }, [isAuthenticated, eventId]);
 
   // 비로그인 유저: 30초 polling
   useEffect(() => {
@@ -264,8 +274,8 @@ const ChatPage: FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input - 로그인 유저만 */}
-      {isAuthenticated && (
+      {/* Input */}
+      {isAuthenticated && isParticipant ? (
         <div className="bg-white px-4 py-3 flex items-center gap-2">
           <input
             ref={fileInputRef}
@@ -297,6 +307,10 @@ const ChatPage: FC = () => {
           >
             <IoSend size={20} />
           </button>
+        </div>
+      ) : (
+        <div className="bg-white px-4 py-3 flex items-center justify-center border-t border-gray-100">
+          <p className="text-sm text-gray-400">일정 참석자만 채팅 사용 가능합니다.</p>
         </div>
       )}
 
