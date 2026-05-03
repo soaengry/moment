@@ -67,8 +67,9 @@ public class FeedService {
             return new CursorPageResponse<>(Collections.emptyList(), null, false);
         }
 
-        Map<Long, Post> postMap = postRepository.findWithUserAndImagesByIds(ids)
-                .stream().collect(Collectors.toMap(Post::getId, p -> p));
+        List<Post> posts = postRepository.findWithUserAndImagesByIds(ids);
+        Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
+        Map<Long, String> slugMap = fetchEventSlugMap(posts);
 
         Set<Long> likedSet = Collections.emptySet();
         Set<Long> bookmarkedSet = Collections.emptySet();
@@ -83,7 +84,8 @@ public class FeedService {
                 .map(id -> {
                     Post post = postMap.get(id);
                     if (post == null) return null;
-                    return PostResponse.from(post, finalLiked.contains(id), finalBookmarked.contains(id));
+                    return PostResponse.from(post, finalLiked.contains(id), finalBookmarked.contains(id),
+                            post.getEventId() != null ? slugMap.get(post.getEventId()) : null);
                 })
                 .filter(Objects::nonNull)
                 .toList();
@@ -283,13 +285,15 @@ public class FeedService {
 
         List<Post> posts = postRepository.findAllById(ids);
         Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
+        Map<Long, String> slugMap = fetchEventSlugMap(posts);
         Set<Long> bookmarkedPostIds = toBookmarkedPostIds(userId, ids);
 
         List<PostResponse> content = ids.stream()
                 .map(id -> {
                     Post post = postMap.get(id);
                     if (post == null) return null;
-                    return PostResponse.from(post, true, bookmarkedPostIds.contains(id));
+                    return PostResponse.from(post, true, bookmarkedPostIds.contains(id),
+                            post.getEventId() != null ? slugMap.get(post.getEventId()) : null);
                 })
                 .filter(Objects::nonNull)
                 .toList();
@@ -332,13 +336,15 @@ public class FeedService {
 
         List<Post> posts = postRepository.findAllById(ids);
         Map<Long, Post> postMap = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
+        Map<Long, String> slugMap = fetchEventSlugMap(posts);
         Set<Long> likedPostIds = toLikedPostIds(userId, ids);
 
         List<PostResponse> content = ids.stream()
                 .map(id -> {
                     Post post = postMap.get(id);
                     if (post == null) return null;
-                    return PostResponse.from(post, likedPostIds.contains(id), true);
+                    return PostResponse.from(post, likedPostIds.contains(id), true,
+                            post.getEventId() != null ? slugMap.get(post.getEventId()) : null);
                 })
                 .filter(Objects::nonNull)
                 .toList();
@@ -355,9 +361,11 @@ public class FeedService {
             return new CursorPageResponse<>(Collections.emptyList(), null, false);
         }
 
+        Map<Long, String> slugMap = fetchEventSlugMap(page);
         List<PostResponse> content;
         if (userId == null) {
-            content = page.stream().map(p -> PostResponse.from(p, false, false)).toList();
+            content = page.stream().map(p -> PostResponse.from(p, false, false,
+                    p.getEventId() != null ? slugMap.get(p.getEventId()) : null)).toList();
         } else {
             List<Long> postIds = page.stream().map(Post::getId).toList();
             Set<Long> likedPostIds = toLikedPostIds(userId, postIds);
@@ -365,11 +373,23 @@ public class FeedService {
             content = page.stream().map(post -> PostResponse.from(
                     post,
                     likedPostIds.contains(post.getId()),
-                    bookmarkedPostIds.contains(post.getId())
+                    bookmarkedPostIds.contains(post.getId()),
+                    post.getEventId() != null ? slugMap.get(post.getEventId()) : null
             )).toList();
         }
 
         return new CursorPageResponse<>(content, nextCursor, hasNext);
+    }
+
+    private Map<Long, String> fetchEventSlugMap(List<Post> posts) {
+        List<Long> eventIds = posts.stream()
+                .map(Post::getEventId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (eventIds.isEmpty()) return Collections.emptyMap();
+        return eventRepository.findAllById(eventIds).stream()
+                .collect(Collectors.toMap(Event::getId, Event::getSlug));
     }
 
     private <E, R> CursorPageResponse<R> toCursorPage(List<E> items, int size,
